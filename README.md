@@ -24,11 +24,13 @@
 
 - [About](#about)
 - [Getting Started](#getting_started)
+- [Usage](#usage)
 - [TODO](../TODO.md)
 - [Contributing](../CONTRIBUTING.md)
 - [Authors](#authors)
-<!-- - [Deployment](#deployment)
-- [Usage](#usage) -->
+
+<!-- - [Deployment](#deployment) -->
+
 ## 🧐 About <a name = "about"></a>
 
 Some About
@@ -91,7 +93,11 @@ Give an example
 
 ## 🎈 Usage <a name="usage"></a>
 
-Add notes about how to use the system.
+With the library installed. You can now start a new c++ project.
+Open a new c++ project and 
+`#include <rover-common/*>` 
+to start coding
+
 
 <!-- ## 🚀 Deployment <a name = "deployment"></a>
 
