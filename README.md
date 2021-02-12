@@ -97,7 +97,7 @@ Give an example
 
 With the library installed. You can now start a new c++ project.
 Open a new c++ project and 
-`#include <rover-common/*>` 
+`#include <librover/*>` 
 to start coding
 
 
@@ -111,4 +111,4 @@ Add additional notes about how to deploy this on a live system. -->
 - [@roverrobotics](https://github.com/roverrobotics)
 
 
-See also the list of [contributors](https://github.com/RoverRobotics/rover-common/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/RoverRobotics/librover/contributors) who participated in this project.
