@@ -1,15 +1,15 @@
 <p align="center">
   <a href="" rel="noopener">
- <img width=200px height=200px src="https://cdn.shopify.com/s/files/1/0055/0433/5925/files/mark_and_word_black_68_206.png?v=1582592595" alt="Rover Logo"></a>
+ <img width=206px height=68px src="https://cdn.shopify.com/s/files/1/0055/0433/5925/files/mark_and_word_black_68_206.png?v=1582592595" alt="Rover Logo"></a>
 </p>
 
-<h3 align="center">Project Title</h3>
+<h3 align="center">librover</h3>
 
 <div align="center">
 
 [![Status](someimg)]()
-[![GitHub Issues](someimg)](https://github.com/roverrobotics/rover-common/issues)
-[![GitHub Pull Requests](someimg)](https://github.com/kylelobo/The-Documentation-Compendium/pulls)
+[![GitHub Issues](someimg)](https://github.com/roverrobotics/librover/issues)
+[![GitHub Pull Requests](someimg)](https://github.com/RoverRobotics/librover/pulls)
 [![License](someimg)](/LICENSE)
 
 </div>
