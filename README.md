@@ -35,12 +35,14 @@
 
 Some About
 
-## 🏁 Getting Started <a name = "getting_started"></a>
+## 🏁 Installation <a name = "installation"></a>
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. 
 
 ```
-cmake
+git clone https://github.com/RoverRobotics/librover.git
+cd librover
+cmake .
 make
 sudo make install
 ```
