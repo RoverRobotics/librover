@@ -22,18 +22,17 @@ class OdomControl {
   OdomControl(bool use_control, PidGains pid_gains, int max, int min,
               std::ofstream* fs);  // max min values for returned value
   OdomControl(bool use_control, PidGains pid_gains, int max,
-              int min);  // max min values for returned value
+              int min, int neutral);  // max min values for returned value
 
-  unsigned char run(bool e_stop_on, bool control_on, double commanded_vel,
+  unsigned char run(double commanded_vel,
                     double measured_vel, double dt,
                     int firmwareBuildNumber);  // in m/s
-  void start(bool use_control, PidGains pid_gains, int max, int min);
   void reset();
 
   int MOTOR_MAX_;       // 250
   int MOTOR_MIN_;       // 0
   int MOTOR_DEADBAND_;  // = 9;
-
+  int MOTOR_NEUTRAL_;
   double MAX_ACCEL_CUTOFF_;  // 20
   double MIN_VELOCITY_;      // 0.04
   double MAX_VELOCITY_;      // 2.5ish?
@@ -57,7 +56,7 @@ class OdomControl {
   double velocity_error_;
 
   // Returned value
-  int motor_speed_;  // value between 0-250; (rover pro valeu)
+  int motor_command_; 
   unsigned char deadband_offset_;
 
   // velocity feedback
@@ -75,10 +74,10 @@ class OdomControl {
   bool hasZeroHistory(const std::vector<double>& vel_history);
   int boundMotorSpeed(int motor_speed, int max, int min);
   int deadbandOffset(int motor_speed, int deadband_offset);
-  double P(double error, double dt);
+  double P(double error);
   double I(double error, double dt);
   double D(double error, double dt);
   int PID(double error, double dt);
   int feedThroughControl();
 };
-}  // namespace openrover
+}  // namespace RoverRobotics

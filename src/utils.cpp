@@ -2,12 +2,6 @@
 
 namespace RoverRobotics {
 PidGains::PidGains() {}
-void OdomControl::start(bool use_control, PidGains pid_gains, int max,
-                        int min) {
-  K_P_ = pid_gains.Kp;
-  K_I_ = pid_gains.Ki;
-  K_D_ = pid_gains.Kd;
-}
 
 OdomControl::OdomControl()
     : MOTOR_MAX_(250),
@@ -66,9 +60,11 @@ OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min,
   }
 }
 
-OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min)
+OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min,
+                         int neutral)
     : MOTOR_MAX_(max),
       MOTOR_MIN_(min),
+      MOTOR_NEUTRAL_(neutral),
       MOTOR_DEADBAND_(9),
       MAX_ACCEL_CUTOFF_(5.0),
       MIN_VELOCITY_(0.03),
@@ -91,8 +87,7 @@ OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min)
       velocity_measured_(0),
       velocity_filtered_(0) {}
 
-unsigned char OdomControl::run(bool e_stop_on, bool control_on,
-                               double commanded_vel, double measured_vel,
+unsigned char OdomControl::run(double commanded_vel, double measured_vel,
                                double dt, int firmwareBuildNumber) {
   velocity_commanded_ = commanded_vel;
 
@@ -106,36 +101,31 @@ unsigned char OdomControl::run(bool e_stop_on, bool control_on,
   int firmwareBuildNumberTrunc = firmwareBuildNumber / 100;
   velocity_filtered_ = filter(measured_vel, dt, firmwareBuildNumberTrunc);
 
-  // If rover is E-Stopped, respond with NEUTRAL comman
-  if (e_stop_on) {
-    reset();
-    return 125;
-  }
-
   // If stopping, stop now when velocity has slowed.
   if ((commanded_vel == 0.0) && (fabs(velocity_filtered_) < 0.3)) {
     integral_error_ = 0;
     if (hasZeroHistory(velocity_filtered_history_)) {
-      return 125;
+      return MOTOR_NEUTRAL_;
     }
   }
 
   // If controller should be ON, run it.
-  if (control_on) {
+  if (use_control_) {
     velocity_error_ = commanded_vel - velocity_filtered_;
     if (!skip_measurement_) {
-      motor_speed_ = PID(velocity_error_, dt);
+      motor_command_ =
+          feedThroughControl() + int(round(PID(velocity_error_, dt)));
     }
   } else {
-    motor_speed_ = feedThroughControl();
+    motor_command_ = feedThroughControl();
   }
 
-  motor_speed_ = boundMotorSpeed(motor_speed_, MOTOR_MAX_, MOTOR_MIN_);
-  return (unsigned char)motor_speed_;
+  motor_command_ = boundMotorSpeed(motor_command_, MOTOR_MAX_, MOTOR_MIN_);
+  return (unsigned char)motor_command_;
 }
 
 int OdomControl::feedThroughControl() {
-  return (int)round(velocity_commanded_ * 50 + 125);
+  return (int)round(velocity_commanded_ * 50 + MOTOR_NEUTRAL_);
 }
 
 void OdomControl::reset() {
@@ -146,16 +136,15 @@ void OdomControl::reset() {
   velocity_filtered_ = 0;
   std::fill(velocity_filtered_history_.begin(),
             velocity_filtered_history_.end(), 0);
-  motor_speed_ = 125;
+  motor_command_ = MOTOR_NEUTRAL_;
   skip_measurement_ = false;
 }
 
 int OdomControl::PID(double error, double dt) {
-  double p_val = P(error, dt);
+  double p_val = P(error);
   double i_val = I(error, dt);
   double d_val = D(error, dt);
   double pid_val = p_val + i_val + d_val;
-
   if (fabs(pid_val) > (MOTOR_MAX_ / 2.0))
   // Only integrate if the motor's aren't already at full speed
   {
@@ -163,8 +152,7 @@ int OdomControl::PID(double error, double dt) {
   } else {
     stop_integrating_ = false;
   }
-
-  return (int)round(pid_val + 125.0);
+  return pid_val;
 }
 
 double OdomControl::D(double error, double dt) {
@@ -180,9 +168,9 @@ double OdomControl::I(double error, double dt) {
   return K_I_ * integral_error_;
 }
 
-double OdomControl::P(double error, double dt) {
+double OdomControl::P(double error) {
   double p_val = error * K_P_;
-  return error * K_P_;
+  return p_val;
 }
 
 bool OdomControl::hasZeroHistory(const std::vector<double>& vel_history) {
@@ -217,9 +205,9 @@ int OdomControl::boundMotorSpeed(int motor_speed, int max, int min) {
 
 int OdomControl::deadbandOffset(int motor_speed, int deadband_offset) {
   // Compensate for deadband
-  if (motor_speed > 125) {
+  if (motor_speed > MOTOR_NEUTRAL_) {
     return (motor_speed + deadband_offset);
-  } else if (motor_speed < 125) {
+  } else if (motor_speed < MOTOR_NEUTRAL_) {
     return (motor_speed - deadband_offset);
   }
 }
