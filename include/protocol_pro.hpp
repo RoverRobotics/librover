@@ -1,5 +1,5 @@
 #pragma once
-#define DEBUG true
+#define DEBUG false
 
 #include "protocol_base.hpp"
 
@@ -56,7 +56,7 @@ class RoverRobotics::ProProtocolObject
   enum robot_motors { LEFT_MOTOR, RIGHT_MOTOR, FLIPPER_MOTOR };
 
   enum uart_param {
-    REG_PWR_TOTAL_CURRENT,
+    REG_PWR_TOTAL_CURRENT = 0,
     REG_MOTOR_FB_RPM_LEFT = 2,
     REG_MOTOR_FB_RPM_RIGHT = 4,
     REG_FLIPPER_FB_POSITION_POT1 = 6,

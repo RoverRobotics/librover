@@ -47,6 +47,6 @@ struct statusData {
   unsigned short int motor3_sensor2;
 
   //Robot Info
-  float linear_vel;
-  float angular_vel;
+  double linear_vel;
+  double angular_vel;
 };

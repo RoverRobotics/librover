@@ -64,7 +64,8 @@ void ProProtocolObject::send_speed(double *controlarray) {
     double linear_rate = controlarray[0];
     double turn_rate = controlarray[1];
     double flipper_rate = controlarray[2];
-    std::cerr << linear_rate << " " << turn_rate << " " << flipper_rate;
+    if (DEBUG)
+      std::cerr << linear_rate << " " << turn_rate << " " << flipper_rate;
     // apply trim value
 
     if (turn_rate == 0) {
@@ -74,6 +75,8 @@ void ProProtocolObject::send_speed(double *controlarray) {
         turn_rate = -trimvalue;
       }
     }
+    robotstatus_.linear_vel = 0;
+    robotstatus_.angular_vel = 0;
     // !Applying some Skid-steer math
     double diff_vel_commanded = turn_rate;
     double motor1_vel = linear_rate - 0.5 * diff_vel_commanded;
@@ -87,7 +90,9 @@ void ProProtocolObject::send_speed(double *controlarray) {
     robotstatus_.linear_vel = 0.5 * (motor1_measured_vel + motor2_measured_vel);
     robotstatus_.angular_vel = (motor2_measured_vel - motor1_measured_vel) *
                                odom_angular_coef_ * odom_traction_factor_;
-
+    std::cerr << "protocol linear " << 0.5 * (motor1_measured_vel + motor2_measured_vel) << std::endl;
+    std::cerr << "protocol angular" << (motor2_measured_vel - motor1_measured_vel) *
+                               odom_angular_coef_ * odom_traction_factor_ << std::endl;
     motors_speeds_[FLIPPER_MOTOR] =
         (int)round(flipper_rate + MOTOR_NEUTRAL) % MOTOR_MAX;
     if (DEBUG) {
@@ -184,17 +189,17 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
     checksum =
         (255 - int(msgqueue[1]) - int(msgqueue[2]) - int(msgqueue[3])) % 255;
     if (checksum == int(msgqueue[4])) {  // verify checksum
-      // (data1 << 8) + data2;
       int b = (data1 << 8) + data2;
       switch (int(msgqueue[1])) {
         case REG_PWR_TOTAL_CURRENT:
+          break;
         case REG_MOTOR_FB_RPM_LEFT:
           motor1_prev_t = std::chrono::steady_clock::now();
           robotstatus_.motor1_rpm = b;
+          std::cerr << "MOTOR RPM" << b << std::endl;
           break;
         case REG_MOTOR_FB_RPM_RIGHT:  // motor2_rpm;
           motor2_prev_t = std::chrono::steady_clock::now();
-          // std::cerr << int(b) << std::endl;
           robotstatus_.motor2_rpm = b;
           break;
         case REG_FLIPPER_FB_POSITION_POT1:
@@ -317,7 +322,7 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
     // !ran out of data; waiting for more
     if (DEBUG) std::cerr << "no start byte found!";
   }
-  std::cerr << std::endl;
+  if (DEBUG) std::cerr << std::endl;
   writemutex.unlock();
 }
 
