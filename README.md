@@ -16,7 +16,7 @@
 
 ---
 
-<p align="center"> C++ Library for communicating with all Rover Robotics Products including Rover Pro 1, Rover Zero, Rover Zero 2, Rover Pro 2, and Rover Mini.
+<p align="center"> C++ Library for communicating with all Rover Robotics Products including Rover Pro 1, Rover Zero v2, Rover Pro 2, and Rover Mini.
     <br> 
 </p>
 
