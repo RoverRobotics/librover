@@ -1,4 +1,5 @@
 #pragma once
+#define DEBUG true
 
 #include "protocol_base.hpp"
 
@@ -52,11 +53,7 @@ class RoverRobotics::ProProtocolObject
   std::chrono::steady_clock::time_point motor1_prev_t;
   std::chrono::steady_clock::time_point motor2_prev_t;
 
-  enum robot_motors{
-    LEFT_MOTOR,
-    RIGHT_MOTOR,
-    FLIPPER_MOTOR
-  };
+  enum robot_motors { LEFT_MOTOR, RIGHT_MOTOR, FLIPPER_MOTOR };
 
   enum uart_param {
     REG_PWR_TOTAL_CURRENT,

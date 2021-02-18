@@ -85,15 +85,19 @@ void ProProtocolObject::send_speed(double *controlarray) {
         rpm2 / MOTOR_RPM_TO_MPS_RATIO + MOTOR_RPM_TO_MPS_CFB;
 
     robotstatus_.linear_vel = 0.5 * (motor1_measured_vel + motor2_measured_vel);
-    robotstatus_.angular_vel = (motor2_measured_vel - motor1_measured_vel) * odom_angular_coef_ * odom_traction_factor_;
+    robotstatus_.angular_vel = (motor2_measured_vel - motor1_measured_vel) *
+                               odom_angular_coef_ * odom_traction_factor_;
 
     motors_speeds_[FLIPPER_MOTOR] =
         (int)round(flipper_rate + MOTOR_NEUTRAL) % MOTOR_MAX;
-    std::cerr << "commanded motor speed from ROS (m/s): "
-              << "left:" << motor1_vel << " right:" << motor2_vel << std::endl;
-    std::cerr << "measured motor speed (m/s)"
-              << " left:" << motor1_measured_vel
-              << " right:" << motor2_measured_vel << std::endl;
+    if (DEBUG) {
+      std::cerr << "commanded motor speed from ROS (m/s): "
+                << "left:" << motor1_vel << " right:" << motor2_vel
+                << std::endl;
+      std::cerr << "measured motor speed (m/s)"
+                << " left:" << motor1_measured_vel
+                << " right:" << motor2_measured_vel << std::endl;
+    }
     std::chrono::steady_clock::time_point current_time =
         std::chrono::steady_clock::now();
     motors_speeds_[LEFT_MOTOR] = motor1_control.run(
@@ -110,14 +114,15 @@ void ProProtocolObject::send_speed(double *controlarray) {
                 .count() /
             1000000.0,
         firmware);
-    
-    std::cerr << "open loop motor command"
-              << " left:" << (int)round(motor1_vel * 50 + MOTOR_NEUTRAL)
-              << " right:" << (int)round(motor2_vel * 50 + MOTOR_NEUTRAL)
-              << std::endl;
-    std::cerr << "closed loop motor command"
-              << " left:" << motors_speeds_[0] << " right:" << motors_speeds_[1]
-              << std::endl;
+    if (DEBUG) {
+      std::cerr << "open loop motor command"
+                << " left:" << (int)round(motor1_vel * 50 + MOTOR_NEUTRAL)
+                << " right:" << (int)round(motor2_vel * 50 + MOTOR_NEUTRAL)
+                << std::endl;
+      std::cerr << "closed loop motor command"
+                << " left:" << motors_speeds_[0]
+                << " right:" << motors_speeds_[1] << std::endl;
+    }
   } else {
     motors_speeds_[LEFT_MOTOR] = MOTOR_NEUTRAL;
     motors_speeds_[RIGHT_MOTOR] = MOTOR_NEUTRAL;
@@ -129,20 +134,23 @@ void ProProtocolObject::send_speed(double *controlarray) {
 void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
   static std::vector<uint32_t> msgqueue;
   writemutex.lock();
-  std::cerr << "Byte's' From Robot: ";
-  for (auto data : robotmsg) {
-    std::cerr << data << " ";
+  if (DEBUG) {
+    std::cerr << "Byte's' From Robot: ";
+    for (auto data : robotmsg) {
+      std::cerr << data << " ";
+    }
+    std::cerr << std::endl;
   }
-  std::cerr << std::endl;
-
   msgqueue.insert(msgqueue.end(), robotmsg.begin(),
                   robotmsg.end());  // insert robotmsg to msg list
-  std::cerr << "Byte's' In Queue: ";
-  for (auto a : msgqueue) {
-    std::cerr << a << " ";
+  if (DEBUG) {
+    std::cerr << "Byte's' In Queue: ";
+    for (auto a : msgqueue) {
+      std::cerr << a << " ";
+    }
+    std::cerr << std::endl;
+    std::cerr << "finding start byte";
   }
-  std::cerr << std::endl;
-  std::cerr << "finding start byte";
   // ! Delete bytes until valid start byte is found
   if (msgqueue[0] != startbyte && msgqueue.size() > RECEIVE_MSG_LEN) {
     int startbyte_index = 0;
@@ -166,7 +174,7 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
     }
   }
   if (msgqueue[0] == startbyte) {  // if valid start byte
-    std::cerr << "start byte found!";
+    if (DEBUG) std::cerr << "start byte found!";
     unsigned char start_byte_read, data1, data2, dataNO;
     int checksum, read_checksum;
     start_byte_read = msgqueue[0];
@@ -294,7 +302,7 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
       temp.clear();
     } else {  // !Found start byte but the msg contents were invalid, throw away
               // broken message
-      std::cerr << "failed checksum" << std::endl;
+      if (DEBUG) std::cerr << "failed checksum" << std::endl;
       std::vector<uint32_t> temp;
       for (int x = 1; x < msgqueue.size(); x++) {
         temp.push_back(msgqueue[x]);
@@ -307,7 +315,7 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
 
   } else {
     // !ran out of data; waiting for more
-    std::cerr << "no start byte found!";
+    if (DEBUG) std::cerr << "no start byte found!";
   }
   std::cerr << std::endl;
   writemutex.unlock();
