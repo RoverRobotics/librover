@@ -7,6 +7,7 @@ ProProtocolObject::ProProtocolObject(const char *device,
                                      bool closed_loop, PidGains pid) {
   comm_type = new_comm_type;
   closed_loop_ = closed_loop;
+  robotstatus_ = {0};
   estop_ = false;
   motors_speeds_[LEFT_MOTOR] = MOTOR_NEUTRAL;
   motors_speeds_[RIGHT_MOTOR] = MOTOR_NEUTRAL;
@@ -83,6 +84,9 @@ void ProProtocolObject::send_speed(double *controlarray) {
     double motor2_measured_vel =
         rpm2 / MOTOR_RPM_TO_MPS_RATIO + MOTOR_RPM_TO_MPS_CFB;
 
+    robotstatus_.linear_vel = 0.5 * (motor1_measured_vel + motor2_measured_vel);
+    robotstatus_.angular_vel = (motor2_measured_vel - motor1_measured_vel) * odom_angular_coef_ * odom_traction_factor_;
+
     motors_speeds_[FLIPPER_MOTOR] =
         (int)round(flipper_rate + MOTOR_NEUTRAL) % MOTOR_MAX;
     std::cerr << "commanded motor speed from ROS (m/s): "
@@ -106,7 +110,7 @@ void ProProtocolObject::send_speed(double *controlarray) {
                 .count() /
             1000000.0,
         firmware);
-
+    
     std::cerr << "open loop motor command"
               << " left:" << (int)round(motor1_vel * 50 + MOTOR_NEUTRAL)
               << " right:" << (int)round(motor2_vel * 50 + MOTOR_NEUTRAL)

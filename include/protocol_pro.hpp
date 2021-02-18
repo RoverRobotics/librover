@@ -31,6 +31,8 @@ class RoverRobotics::ProProtocolObject
   const int requestbyte = 10;
   const int baudrate = 4097;
   const int RECEIVE_MSG_LEN = 5;
+  const double odom_angular_coef_ = 2.3;
+  const double odom_traction_factor_ = 1;
   // const int commandbit = 20;
   std::unique_ptr<CommBase> comm_base;
   std::string comm_type;
