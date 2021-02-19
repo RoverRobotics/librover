@@ -6,14 +6,8 @@ add_compile_options(-std=c++14)
 include(GNUInstallDirs)
 
 add_library(librover SHARED
-${PROJECT_SOURCE_DIR}/src/protocol_pro.cpp
+src/protocol_pro.cpp
 src/comm_serial.cpp
-src/utils.cpp)
-
-set(SOURCES_FILES 
-src/comm_serial.cpp
-# src/comm_can.cpp
-src/comm_base.cpp
 src/utils.cpp)
 
 
