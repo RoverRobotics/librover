@@ -49,12 +49,12 @@ CommSerial::CommSerial(const char *device,
     printf("Error %i from tcsetattr: \n", errno);
   }
   readthread = std::thread(
-      [this, parsefunction]() { this->readfromdevice(parsefunction); });
+      [this, parsefunction]() { this->read_from_device(parsefunction); });
 }
 
 CommSerial::~CommSerial() { close(serial_port); }
 
-void CommSerial::writetodevice(std::vector<uint32_t> msg) {
+void CommSerial::write_to_device(std::vector<uint32_t> msg) {
   writemutex.lock();
   unsigned char write_buffer[msg.size()];
   for (int x = 0 ; x < msg.size(); x ++){
@@ -65,7 +65,7 @@ void CommSerial::writetodevice(std::vector<uint32_t> msg) {
   writemutex.unlock();
 }
 
-void CommSerial::readfromdevice(
+void CommSerial::read_from_device(
     std::function<void(std::vector<uint32_t>)> parsefunction) {
    //! Only support fixed read_size_ data stream.
   while (true) {
@@ -86,6 +86,6 @@ void CommSerial::readfromdevice(
   }
 }
 
-bool CommSerial::isConnect() { return (serial_port > 0); }
+bool CommSerial::is_connected() { return (serial_port > 0); }
 
 }  // namespace RoverRobotics

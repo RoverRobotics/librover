@@ -1,11 +1,11 @@
-//Use to create utility classes that share across all robot.
+// Use to create utility classes that share across all robot.
 #pragma once
-#include <ctime>
-#include <vector>
-#include <string>
 #include <cmath>
+#include <ctime>
 #include <fstream>
 #include <iostream>
+#include <string>
+#include <vector>
 
 namespace RoverRobotics {
 struct PidGains {
@@ -17,25 +17,46 @@ struct PidGains {
 };
 class OdomControl {
  public:
-  OdomControl();  // default
-
-  OdomControl(bool use_control, PidGains pid_gains, int max, int min,
+  /*
+   * @brief Odom Control Default contructor
+   */
+  OdomControl();
+  /*
+   * @brief Odom Control contructor
+   * @param use_control A boolean to enable or disable odom control functions
+   * @param pid_gains A structure of (double P , Double I, Double D) gains.
+   * @param max A double to store max_velocity for controlled motor
+   * @param min A double to store min_velocity for controlled motor
+   */
+  OdomControl(bool use_control, PidGains pid_gains, double max,
+              double min);  // max min values for returned value
+  /*
+   * @brief Odom Control contructor with debug stream
+   * @param use_control A boolean to enable or disable odom control functions
+   * @param pid_gains A structure of (double P , Double I, Double D) gains.
+   * @param max A double to store max_velocity for controlled motor
+   * @param min A double to store min_velocity for controlled motor
+   */
+  OdomControl(bool use_control, PidGains pid_gains, double max, double min,
               std::ofstream* fs);  // max min values for returned value
-  OdomControl(bool use_control, PidGains pid_gains, int max,
-              int min, int neutral);  // max min values for returned value
-
-  unsigned char run(double commanded_vel,
-                    double measured_vel, double dt,
-                    int firmwareBuildNumber);  // in m/s
+  /*
+   * @brief use commaned velocity and compare with measured_vel and applied Pids
+   * @param commanded_vel A double
+   * @param measured_vel A structure of (double P , Double I, Double D) gains.
+   * @param dt A double to store max_velocity for controlled motor
+   * @param firmwareBuildNumber A double to store min_velocity for controlled
+   * motor
+   * @return
+   */
+  double run(double commanded_vel, double measured_vel, double dt,
+             int firmwareBuildNumber);  // in m/s
   void reset();
-
-  int MOTOR_MAX_;       // 250
-  int MOTOR_MIN_;       // 0
-  int MOTOR_DEADBAND_;  // = 9;
-  int MOTOR_NEUTRAL_;
+  double boundMotorSpeed(double motor_speed, double max, double min);
+  
+  double MOTOR_MAX_VEL_;
+  double MOTOR_MIN_VEL_;
+  double MOTOR_DEADBAND_;
   double MAX_ACCEL_CUTOFF_;  // 20
-  double MIN_VELOCITY_;      // 0.04
-  double MAX_VELOCITY_;      // 2.5ish?
 
   bool use_control_;
 
@@ -56,8 +77,8 @@ class OdomControl {
   double velocity_error_;
 
   // Returned value
-  int motor_command_; 
-  unsigned char deadband_offset_;
+  double motor_command_vel_;
+  double deadband_offset_;
 
   // velocity feedback
   double velocity_commanded_;
@@ -72,12 +93,11 @@ class OdomControl {
   void velocityController();
   double filter(double left_motor_vel, double dt, int firmwareBuildNumber);
   bool hasZeroHistory(const std::vector<double>& vel_history);
-  int boundMotorSpeed(int motor_speed, int max, int min);
-  int deadbandOffset(int motor_speed, int deadband_offset);
+  double deadbandOffset(double motor_speed, double deadband_offset);
   double P(double error);
   double I(double error, double dt);
   double D(double error, double dt);
-  int PID(double error, double dt);
-  int feedThroughControl();
+  double PID(double error, double dt);
+  double feedThroughControl();
 };
 }  // namespace RoverRobotics

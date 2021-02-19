@@ -36,12 +36,12 @@ class RoverRobotics::CommBase {
  public:
   /* Accept a vector of unsigned int 32.
    * Convert vector of data into a buffer for then write to serial device*/
-  virtual void writetodevice(std::vector<uint32_t> output) = 0;
+  virtual void write_to_device(std::vector<uint32_t> output) = 0;
   /* Accept a callback function.
    * Read from serial device then convert to an unsigned int 32 for the
    * callback*/
-  virtual void readfromdevice(std::function<void(std::vector<uint32_t>)>) = 0;
+  virtual void read_from_device(std::function<void(std::vector<uint32_t>)>) = 0;
   /* Check if the serial device is still connected.
    * Return boolean*/
-  virtual bool isConnect() = 0;
+  virtual bool is_connected() = 0;
 };

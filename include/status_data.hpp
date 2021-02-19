@@ -1,5 +1,5 @@
 #pragma once
-struct statusData {
+struct robotData {
   // Motor Infos
   signed short int motor1_id;
   signed short int motor1_rpm;

@@ -21,10 +21,9 @@ ProProtocolObject::ProProtocolObject(const char *device,
       REG_MOTOR_CHARGER_STATE,   BuildNO,
       BATTERY_VOLTAGE_A};
   pid_ = pid;
-  motor1_control =
-      OdomControl(closed_loop_, pid_, MOTOR_MAX, MOTOR_MIN, MOTOR_NEUTRAL);
-  motor2_control =
-      OdomControl(closed_loop_, pid_, MOTOR_MAX, MOTOR_MIN, MOTOR_NEUTRAL);
+  motor1_control = OdomControl(closed_loop_, pid_, MOTOR_MAX, MOTOR_MIN);
+  motor2_control = OdomControl(closed_loop_, pid_, MOTOR_MAX, MOTOR_MIN);
+
   register_comm_base(device);
   motor1_prev_t = std::chrono::steady_clock::now();
   motor2_prev_t = std::chrono::steady_clock::now();
@@ -45,11 +44,11 @@ void ProProtocolObject::send_estop(bool estop) {
   writemutex.unlock();
 }
 
-statusData ProProtocolObject::status_request() { return robotstatus_; }
+robotData ProProtocolObject::status_request() { return robotstatus_; }
 
-statusData ProProtocolObject::info_request() { return robotstatus_; }
+robotData ProProtocolObject::info_request() { return robotstatus_; }
 
-void ProProtocolObject::send_speed(double *controlarray) {
+void ProProtocolObject::set_robot_velocity(double *controlarray) {
   // prevent constant lock
   writemutex.lock();
   std::chrono::steady_clock::time_point motor1_prev_temp;
@@ -109,6 +108,7 @@ void ProProtocolObject::send_speed(double *controlarray) {
                 .count() /
             1000000.0,
         firmware);
+
     motors_speeds_[RIGHT_MOTOR] = motor2_control.run(
         motor2_vel, motor2_measured_vel,
         std::chrono::duration_cast<std::chrono::microseconds>(current_time -
@@ -116,14 +116,23 @@ void ProProtocolObject::send_speed(double *controlarray) {
                 .count() /
             1000000.0,
         firmware);
+
+    // convert to robot usable command
+    motors_speeds_[LEFT_MOTOR] = motor1_control.boundMotorSpeed(
+        int(round(motors_speeds_[LEFT_MOTOR] * 50 + MOTOR_NEUTRAL)), MOTOR_MAX,
+        MOTOR_MIN);
+    motors_speeds_[RIGHT_MOTOR] = motor2_control.boundMotorSpeed(
+        int(round(motors_speeds_[RIGHT_MOTOR] * 50 + MOTOR_NEUTRAL)), MOTOR_MAX,
+        MOTOR_MIN);
+
     if (DEBUG) {
       std::cerr << "open loop motor command"
                 << " left:" << (int)round(motor1_vel * 50 + MOTOR_NEUTRAL)
                 << " right:" << (int)round(motor2_vel * 50 + MOTOR_NEUTRAL)
                 << std::endl;
       std::cerr << "closed loop motor command"
-                << " left:" << motors_speeds_[0]
-                << " right:" << motors_speeds_[1] << std::endl;
+                << " left:" << motors_speeds_[LEFT_MOTOR]
+                << " right:" << motors_speeds_[RIGHT_MOTOR] << std::endl;
     }
   } else {
     motors_speeds_[LEFT_MOTOR] = MOTOR_NEUTRAL;
@@ -322,7 +331,7 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
   writemutex.unlock();
 }
 
-bool ProProtocolObject::isConnected() { comm_base->isConnect(); }
+bool ProProtocolObject::is_connected() { comm_base->is_connected(); }
 
 void ProProtocolObject::register_comm_base(const char *device) {
   if (comm_type == "serial") {
@@ -356,10 +365,10 @@ void ProProtocolObject::sendCommand(int sleeptime,
 
         write_buffer.push_back(
             (char)255 -
-            (motors_speeds_[LEFT_MOTOR] + motors_speeds_[RIGHT_MOTOR] +
-             motors_speeds_[FLIPPER_MOTOR] + requestbyte + x) %
+            (int(motors_speeds_[LEFT_MOTOR]) + int(motors_speeds_[RIGHT_MOTOR]) +
+             int(motors_speeds_[FLIPPER_MOTOR]) + requestbyte + x) %
                 255);
-        comm_base->writetodevice(write_buffer);
+        comm_base->write_to_device(write_buffer);
         writemutex.unlock();
       } else if (comm_type == "can") {
         return;  //* no CAN for rover pro

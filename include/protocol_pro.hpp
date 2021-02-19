@@ -9,16 +9,16 @@ class ProProtocolObject;
 class RoverRobotics::ProProtocolObject
     : public RoverRobotics::BaseProtocolObject {
  public:
+  
   ProProtocolObject(const char* device, std::string new_comm_type,
                     bool closed_loop, PidGains pid);
-  // ~ProProtocolObject() override;
   void update_drivetrim(double) override;
   void send_estop(bool) override;
-  statusData status_request() override;
-  statusData info_request() override;
-  void send_speed(double*) override;
+  robotData status_request() override;
+  robotData info_request() override;
+  void set_robot_velocity(double* controllarray) override;
   void unpack_comm_response(std::vector<uint32_t>) override;
-  bool isConnected() override;
+  bool is_connected() override;
   void register_comm_base(const char* device) override;
   void sendCommand(int sleeptime, std::vector<uint32_t> datalist);
 
@@ -39,8 +39,8 @@ class RoverRobotics::ProProtocolObject
   std::string comm_type;
 
   std::mutex writemutex;
-  statusData robotstatus_;
-  int motors_speeds_[3];
+  robotData robotstatus_;
+  double motors_speeds_[3];
   double trimvalue;
   std::thread writethread;
   std::thread writethread2;
