@@ -21,8 +21,8 @@ ProProtocolObject::ProProtocolObject(const char *device,
       REG_MOTOR_CHARGER_STATE,   BuildNO,
       BATTERY_VOLTAGE_A};
   pid_ = pid;
-  motor1_control = OdomControl(closed_loop_, pid_, MOTOR_MAX, MOTOR_MIN);
-  motor2_control = OdomControl(closed_loop_, pid_, MOTOR_MAX, MOTOR_MIN);
+  motor1_control = OdomControl(closed_loop_, pid_, 1.5, 0);
+  motor2_control = OdomControl(closed_loop_, pid_, 1.5, 0);
 
   register_comm_base(device);
   motor1_prev_t = std::chrono::steady_clock::now();
@@ -57,7 +57,9 @@ void ProProtocolObject::set_robot_velocity(double *controlarray) {
   double rpm1 = robotstatus_.motor1_rpm;
   double rpm2 = robotstatus_.motor2_rpm;
   writemutex.unlock();
-
+  // if (DEBUG) {
+    std::cerr << "angular vel" << controlarray[1] << std::endl;
+  // }
   writemutex.lock();
   if (!estop_) {
     double linear_rate = controlarray[0];
@@ -138,6 +140,7 @@ void ProProtocolObject::set_robot_velocity(double *controlarray) {
     motors_speeds_[LEFT_MOTOR] = MOTOR_NEUTRAL;
     motors_speeds_[RIGHT_MOTOR] = MOTOR_NEUTRAL;
     motors_speeds_[FLIPPER_MOTOR] = MOTOR_NEUTRAL;
+    if (DEBUG) std::cerr << "not moving" << std::endl;
   }
 
   writemutex.unlock();
@@ -357,9 +360,9 @@ void ProProtocolObject::sendCommand(int sleeptime,
         writemutex.lock();
         std::vector<uint32_t> write_buffer = {
             (unsigned char)startbyte,
-            (unsigned char)motors_speeds_[LEFT_MOTOR],
-            (unsigned char)motors_speeds_[RIGHT_MOTOR],
-            (unsigned char)motors_speeds_[FLIPPER_MOTOR],
+            (unsigned char)int(motors_speeds_[LEFT_MOTOR]),
+            (unsigned char)int(motors_speeds_[RIGHT_MOTOR]),
+            (unsigned char)int(motors_speeds_[FLIPPER_MOTOR]),
             (unsigned char)requestbyte,
             (unsigned char)x};
 

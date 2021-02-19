@@ -4,7 +4,7 @@ namespace RoverRobotics {
 PidGains::PidGains() {}
 
 OdomControl::OdomControl()
-    : MOTOR_MAX_VEL_(250),
+    : MOTOR_MAX_VEL_(0.5),
       MOTOR_MIN_VEL_(0),
       MOTOR_DEADBAND_(9),
       MAX_ACCEL_CUTOFF_(5.0),
