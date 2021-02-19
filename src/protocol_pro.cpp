@@ -90,9 +90,6 @@ void ProProtocolObject::send_speed(double *controlarray) {
     robotstatus_.linear_vel = 0.5 * (motor1_measured_vel + motor2_measured_vel);
     robotstatus_.angular_vel = (motor2_measured_vel - motor1_measured_vel) *
                                odom_angular_coef_ * odom_traction_factor_;
-    std::cerr << "protocol linear " << 0.5 * (motor1_measured_vel + motor2_measured_vel) << std::endl;
-    std::cerr << "protocol angular" << (motor2_measured_vel - motor1_measured_vel) *
-                               odom_angular_coef_ * odom_traction_factor_ << std::endl;
     motors_speeds_[FLIPPER_MOTOR] =
         (int)round(flipper_rate + MOTOR_NEUTRAL) % MOTOR_MAX;
     if (DEBUG) {
@@ -196,7 +193,6 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
         case REG_MOTOR_FB_RPM_LEFT:
           motor1_prev_t = std::chrono::steady_clock::now();
           robotstatus_.motor1_rpm = b;
-          std::cerr << "MOTOR RPM" << b << std::endl;
           break;
         case REG_MOTOR_FB_RPM_RIGHT:  // motor2_rpm;
           motor2_prev_t = std::chrono::steady_clock::now();
