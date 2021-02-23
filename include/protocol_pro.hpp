@@ -9,7 +9,6 @@ class ProProtocolObject;
 class RoverRobotics::ProProtocolObject
     : public RoverRobotics::BaseProtocolObject {
  public:
-  
   ProProtocolObject(const char* device, std::string new_comm_type,
                     bool closed_loop, PidGains pid);
   void update_drivetrim(double) override;
@@ -23,8 +22,9 @@ class RoverRobotics::ProProtocolObject
   void sendCommand(int sleeptime, std::vector<uint32_t> datalist);
 
  private:
+  void updatemotors(int sleeptime);
   const float MOTOR_RPM_TO_MPS_RATIO = 13749 / 1.26 / 0.77;
-  const float MOTOR_RPM_TO_MPS_CFB = 0 ;//-0.015;
+  const float MOTOR_RPM_TO_MPS_CFB = 0;  //-0.015;
   const int MOTOR_NEUTRAL = 125;
   const int MOTOR_MAX = 250;
   const int MOTOR_MIN = 0;
@@ -36,7 +36,8 @@ class RoverRobotics::ProProtocolObject
   const int baudrate = 4097;
   const int RECEIVE_MSG_LEN = 5;
   const double odom_angular_coef_ = 2.3;
-  const double odom_traction_factor_ = 1;
+  const double odom_traction_factor_ = 0.7;
+  const double CONTROL_LOOP_TIMEOUT_MS = 50;
   // const int commandbit = 20;
   std::unique_ptr<CommBase> comm_base;
   std::string comm_type;
@@ -47,6 +48,7 @@ class RoverRobotics::ProProtocolObject
   double trimvalue;
   std::thread writethread;
   std::thread writethread2;
+  std::thread motorthread;
   bool estop_;
   // Motor PID variables
   OdomControl motor1_control;

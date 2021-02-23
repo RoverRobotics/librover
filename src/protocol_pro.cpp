@@ -34,6 +34,7 @@ ProProtocolObject::ProProtocolObject(const char *device,
   // Create a new Thread with 50 mili seconds sleep timer
   writethread2 =
       std::thread([this, slow_data]() { this->sendCommand(50, slow_data); });
+  motorthread = std::thread([this]() { this->updatemotors(50); });
 }
 
 void ProProtocolObject::update_drivetrim(double value) { trimvalue = value; }
@@ -49,96 +50,183 @@ robotData ProProtocolObject::status_request() { return robotstatus_; }
 robotData ProProtocolObject::info_request() { return robotstatus_; }
 
 void ProProtocolObject::set_robot_velocity(double *controlarray) {
-  // prevent constant lock
   writemutex.lock();
-  std::chrono::steady_clock::time_point motor1_prev_temp;
-  std::chrono::steady_clock::time_point motor2_prev_temp;
-  int firmware = robotstatus_.robot_firmware;
-  double rpm1 = robotstatus_.motor1_rpm;
-  double rpm2 = robotstatus_.motor2_rpm;
+  robotstatus_.cmd_linear_vel = controlarray[0];
+  robotstatus_.cmd_angular_vel = controlarray[1];
+  motors_speeds_[FLIPPER_MOTOR] =
+      (int)round(controlarray[2] + MOTOR_NEUTRAL) % MOTOR_MAX;
+  robotstatus_.cmd_ts = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::system_clock::now().time_since_epoch());
   writemutex.unlock();
-  // if (DEBUG) {
-  // std::cerr << "angular vel" << controlarray[1] << std::endl;
+  // writemutex.lock();
+  // std::chrono::steady_clock::time_point motor1_prev_temp;
+  // std::chrono::steady_clock::time_point motor2_prev_temp;
+  // int firmware = robotstatus_.robot_firmware;
+  // double rpm1 = robotstatus_.motor1_rpm;
+  // double rpm2 = robotstatus_.motor2_rpm;
+  // writemutex.unlock();
+
+  // writemutex.lock();
+  // if (!estop_) {
+  //   double linear_rate = controlarray[0];
+  //   double turn_rate = controlarray[1];
+  //   double flipper_rate = controlarray[2];
+  //   if (DEBUG)
+  //     std::cerr << linear_rate << " " << turn_rate << " " << flipper_rate;
+  //   // apply trim value
+
+  //   if (turn_rate == 0) {
+  //     if (linear_rate > 0) {
+  //       turn_rate = trimvalue;
+  //     } else if (linear_rate < 0) {
+  //       turn_rate = -trimvalue;
+  //     }
+  //   }
+  //   // !Applying some Skid-steer math
+  //   double diff_vel_commanded = turn_rate;
+  //   double motor1_vel = linear_rate - 0.5 * diff_vel_commanded;
+  //   double motor2_vel = linear_rate + 0.5 * diff_vel_commanded;
+
+  //   double motor1_measured_vel = rpm1 / MOTOR_RPM_TO_MPS_RATIO;
+  //   double motor2_measured_vel = rpm2 / MOTOR_RPM_TO_MPS_RATIO;
+
+  //   motors_speeds_[FLIPPER_MOTOR] =
+  //       (int)round(flipper_rate + MOTOR_NEUTRAL) % MOTOR_MAX;
+  //   if (DEBUG) {
+  //     std::cerr << "commanded motor speed from ROS (m/s): "
+  //               << "left:" << motor1_vel << " right:" << motor2_vel
+  //               << std::endl;
+  //     std::cerr << "measured motor speed (m/s)"
+  //               << " left:" << motor1_measured_vel
+  //               << " right:" << motor2_measured_vel << std::endl;
+  //   }
+  //   std::chrono::steady_clock::time_point current_time =
+  //       std::chrono::steady_clock::now();
+  //   motors_speeds_[LEFT_MOTOR] = motor1_control.run(
+  //       motor1_vel, motor1_measured_vel,
+  //       std::chrono::duration_cast<std::chrono::milliseconds>(current_time -
+  //                                                             motor1_prev_temp)
+  //               .count() /
+  //           10000000.0,
+  //       firmware);
+  //   // std::cerr << motors_speeds_[LEFT_MOTOR] << std::endl;
+  //   motors_speeds_[RIGHT_MOTOR] = motor2_control.run(
+  //       motor2_vel, motor2_measured_vel,
+  //       std::chrono::duration_cast<std::chrono::milliseconds>(current_time -
+  //                                                             motor2_prev_temp)
+  //               .count() /
+  //           10000000.0,
+  //       firmware);
+  //   // std::cerr << motors_speeds_[RIGHT_MOTOR] << std::endl;
+
+  //   // convert to robot usable command
+  //   std::cerr << "motor 1 speed after PID: " << motors_speeds_[LEFT_MOTOR]
+  //             << std::endl;
+
+  //   motors_speeds_[LEFT_MOTOR] = motor1_control.boundMotorSpeed(
+  //       int(round(motors_speeds_[LEFT_MOTOR] * 50 + MOTOR_NEUTRAL)),
+  //       MOTOR_MAX, MOTOR_MIN);
+  //   std::cerr << "motor 1 speed in 8 bit: " << motors_speeds_[LEFT_MOTOR]
+  //             << std::endl;
+
+  //   motors_speeds_[RIGHT_MOTOR] = motor2_control.boundMotorSpeed(
+  //       int(round(motors_speeds_[RIGHT_MOTOR] * 50 + MOTOR_NEUTRAL)),
+  //       MOTOR_MAX, MOTOR_MIN);
+
+  //   if (DEBUG) {
+  //     std::cerr << "open loop motor command"
+  //               << " left:" << (int)round(motor1_vel * 50 + MOTOR_NEUTRAL)
+  //               << " right:" << (int)round(motor2_vel * 50 + MOTOR_NEUTRAL)
+  //               << std::endl;
+  //     std::cerr << "closed loop motor command"
+  //               << " left:" << motors_speeds_[LEFT_MOTOR]
+  //               << " right:" << motors_speeds_[RIGHT_MOTOR] << std::endl;
+  //   }
+  // } else {
+  //   motors_speeds_[LEFT_MOTOR] = MOTOR_NEUTRAL;
+  //   motors_speeds_[RIGHT_MOTOR] = MOTOR_NEUTRAL;
+  //   motors_speeds_[FLIPPER_MOTOR] = MOTOR_NEUTRAL;
+  //   if (DEBUG) std::cerr << "not moving" << std::endl;
   // }
 
-  writemutex.lock();
-  if (!estop_) {
-    double linear_rate = controlarray[0];
-    double turn_rate = controlarray[1];
-    double flipper_rate = controlarray[2];
-    if (DEBUG)
-      std::cerr << linear_rate << " " << turn_rate << " " << flipper_rate;
-    // apply trim value
+  // writemutex.unlock();
+}
 
-    if (turn_rate == 0) {
-      if (linear_rate > 0) {
-        turn_rate = trimvalue;
-      } else if (linear_rate < 0) {
-        turn_rate = -trimvalue;
+void ProProtocolObject::updatemotors(int sleeptime) {
+  double linear_vel;
+  double angular_vel;
+  double rpm1;
+  double rpm2;
+  int firmware = robotstatus_.robot_firmware;
+
+  std::chrono::milliseconds time_last =
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::system_clock::now().time_since_epoch());
+  std::chrono::milliseconds time_from_msg;
+
+  while (true) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));
+    std::chrono::milliseconds time_now =
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch());
+    writemutex.lock();
+    linear_vel = robotstatus_.cmd_linear_vel;
+    angular_vel = robotstatus_.cmd_angular_vel;
+    rpm1 = robotstatus_.motor1_rpm;
+    rpm2 = robotstatus_.motor2_rpm;
+    time_from_msg = robotstatus_.cmd_ts;
+    writemutex.unlock();
+    float ctrl_update_elapsedtime = (time_now - time_from_msg).count();
+    float pid_update_elapsedtime = (time_now - time_last).count();
+    std::cerr << "control elapse time: " << ctrl_update_elapsedtime
+              << std::endl;
+    std::cerr << "pid elapse time:     " << pid_update_elapsedtime
+              << std::endl;
+
+    if (ctrl_update_elapsedtime > CONTROL_LOOP_TIMEOUT_MS || estop_) {
+      writemutex.lock();
+      motors_speeds_[LEFT_MOTOR] = MOTOR_NEUTRAL;
+      motors_speeds_[RIGHT_MOTOR] = MOTOR_NEUTRAL;
+      motors_speeds_[FLIPPER_MOTOR] = MOTOR_NEUTRAL;
+      writemutex.unlock();
+      time_last = time_now;
+      continue;
+    }
+
+    if (angular_vel == 0) {
+      if (linear_vel > 0) {
+        angular_vel = trimvalue;
+      } else if (linear_vel < 0) {
+        angular_vel = -trimvalue;
       }
     }
     // !Applying some Skid-steer math
-    double diff_vel_commanded = turn_rate;
-    double motor1_vel = linear_rate - 0.5 * diff_vel_commanded;
-    double motor2_vel = linear_rate + 0.5 * diff_vel_commanded;
+    double motor1_vel = linear_vel - 0.5 * angular_vel;
+    double motor2_vel = linear_vel + 0.5 * angular_vel;
 
     double motor1_measured_vel = rpm1 / MOTOR_RPM_TO_MPS_RATIO;
     double motor2_measured_vel = rpm2 / MOTOR_RPM_TO_MPS_RATIO;
+    writemutex.lock();
+    //motor speeds in m/s
+    motors_speeds_[LEFT_MOTOR] =
+        motor1_control.run(motor1_vel, motor1_measured_vel,
+                           pid_update_elapsedtime/1000, firmware);
+    motors_speeds_[RIGHT_MOTOR] =
+        motor2_control.run(motor2_vel, motor2_measured_vel,
+                           pid_update_elapsedtime/1000, firmware);
 
-    motors_speeds_[FLIPPER_MOTOR] =
-        (int)round(flipper_rate + MOTOR_NEUTRAL) % MOTOR_MAX;
-    if (DEBUG) {
-      std::cerr << "commanded motor speed from ROS (m/s): "
-                << "left:" << motor1_vel << " right:" << motor2_vel
-                << std::endl;
-      std::cerr << "measured motor speed (m/s)"
-                << " left:" << motor1_measured_vel
-                << " right:" << motor2_measured_vel << std::endl;
-    }
-    std::chrono::steady_clock::time_point current_time =
-        std::chrono::steady_clock::now();
-    motors_speeds_[LEFT_MOTOR] = motor1_control.run(
-        motor1_vel, motor1_measured_vel,
-        std::chrono::duration_cast<std::chrono::milliseconds>(current_time -
-                                                              motor1_prev_temp)
-                .count() /
-            10000000.0,
-        firmware);
-    // std::cerr << motors_speeds_[LEFT_MOTOR] << std::endl;
-    motors_speeds_[RIGHT_MOTOR] = motor2_control.run(
-        motor2_vel, motor2_measured_vel,
-        std::chrono::duration_cast<std::chrono::milliseconds>(current_time -
-                                                              motor2_prev_temp)
-                .count() /
-            10000000.0,
-        firmware);
-    // std::cerr << motors_speeds_[RIGHT_MOTOR] << std::endl;
 
-    // convert to robot usable command
+    //Convert to 8 bit Command
     motors_speeds_[LEFT_MOTOR] = motor1_control.boundMotorSpeed(
         int(round(motors_speeds_[LEFT_MOTOR] * 50 + MOTOR_NEUTRAL)), MOTOR_MAX,
         MOTOR_MIN);
+
     motors_speeds_[RIGHT_MOTOR] = motor2_control.boundMotorSpeed(
         int(round(motors_speeds_[RIGHT_MOTOR] * 50 + MOTOR_NEUTRAL)), MOTOR_MAX,
         MOTOR_MIN);
-
-    if (DEBUG) {
-      std::cerr << "open loop motor command"
-                << " left:" << (int)round(motor1_vel * 50 + MOTOR_NEUTRAL)
-                << " right:" << (int)round(motor2_vel * 50 + MOTOR_NEUTRAL)
-                << std::endl;
-      std::cerr << "closed loop motor command"
-                << " left:" << motors_speeds_[LEFT_MOTOR]
-                << " right:" << motors_speeds_[RIGHT_MOTOR] << std::endl;
-    }
-  } else {
-    motors_speeds_[LEFT_MOTOR] = MOTOR_NEUTRAL;
-    motors_speeds_[RIGHT_MOTOR] = MOTOR_NEUTRAL;
-    motors_speeds_[FLIPPER_MOTOR] = MOTOR_NEUTRAL;
-    if (DEBUG) std::cerr << "not moving" << std::endl;
+    writemutex.unlock();
+    time_last = time_now;
   }
-
-  writemutex.unlock();
 }
 void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
   static std::vector<uint32_t> msgqueue;

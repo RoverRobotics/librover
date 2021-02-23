@@ -226,7 +226,7 @@ double OdomControl::filter(double velocity, double dt,
 
   if (firmwareBuildNumber == 100) {
     // apha-beta moving average
-    velocity_filtered_ = 0.8 * velocity + 0.2 * velocity_filtered_history_[0];
+    velocity_filtered_ = 0.95 * velocity + 0.05 * velocity_filtered_history_[0];
 
   } else {
     float change_in_velocity = 0;
