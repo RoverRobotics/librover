@@ -6,3 +6,4 @@ install_manifest.txt
 librover-common.a
 liblibrover.a
 liblibrover.so
+.vscode/extensions.json

@@ -34,7 +34,7 @@ ProProtocolObject::ProProtocolObject(const char *device,
   // Create a new Thread with 50 mili seconds sleep timer
   writethread2 =
       std::thread([this, slow_data]() { this->sendCommand(50, slow_data); });
-  motorthread = std::thread([this]() { this->updatemotors(50); });
+  motorthread = std::thread([this]() { this->updatemotors(30); });
 }
 
 void ProProtocolObject::update_drivetrim(double value) { trimvalue = value; }
@@ -157,7 +157,6 @@ void ProProtocolObject::updatemotors(int sleeptime) {
   double angular_vel;
   double rpm1;
   double rpm2;
-  int firmware = robotstatus_.robot_firmware;
 
   std::chrono::milliseconds time_last =
       std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -170,6 +169,7 @@ void ProProtocolObject::updatemotors(int sleeptime) {
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch());
     writemutex.lock();
+    int firmware = robotstatus_.robot_firmware;
     linear_vel = robotstatus_.cmd_linear_vel;
     angular_vel = robotstatus_.cmd_angular_vel;
     rpm1 = robotstatus_.motor1_rpm;
@@ -178,16 +178,18 @@ void ProProtocolObject::updatemotors(int sleeptime) {
     writemutex.unlock();
     float ctrl_update_elapsedtime = (time_now - time_from_msg).count();
     float pid_update_elapsedtime = (time_now - time_last).count();
-    std::cerr << "control elapse time: " << ctrl_update_elapsedtime
-              << std::endl;
-    std::cerr << "pid elapse time:     " << pid_update_elapsedtime
-              << std::endl;
+    // std::cerr << "control elapse time: " << ctrl_update_elapsedtime
+    //           << std::endl;
+    // std::cerr << "pid elapse time:     " << pid_update_elapsedtime
+    //           << std::endl;
 
     if (ctrl_update_elapsedtime > CONTROL_LOOP_TIMEOUT_MS || estop_) {
       writemutex.lock();
       motors_speeds_[LEFT_MOTOR] = MOTOR_NEUTRAL;
       motors_speeds_[RIGHT_MOTOR] = MOTOR_NEUTRAL;
       motors_speeds_[FLIPPER_MOTOR] = MOTOR_NEUTRAL;
+      motor1_control.reset();
+      motor2_control.reset();
       writemutex.unlock();
       time_last = time_now;
       continue;
@@ -203,20 +205,21 @@ void ProProtocolObject::updatemotors(int sleeptime) {
     // !Applying some Skid-steer math
     double motor1_vel = linear_vel - 0.5 * angular_vel;
     double motor2_vel = linear_vel + 0.5 * angular_vel;
+    if (motor1_vel == 0) motor1_control.reset();
+    if (motor2_vel == 0) motor2_control.reset();
 
     double motor1_measured_vel = rpm1 / MOTOR_RPM_TO_MPS_RATIO;
     double motor2_measured_vel = rpm2 / MOTOR_RPM_TO_MPS_RATIO;
     writemutex.lock();
-    //motor speeds in m/s
+    // motor speeds in m/s
     motors_speeds_[LEFT_MOTOR] =
         motor1_control.run(motor1_vel, motor1_measured_vel,
-                           pid_update_elapsedtime/1000, firmware);
+                           pid_update_elapsedtime / 1000, firmware);
     motors_speeds_[RIGHT_MOTOR] =
         motor2_control.run(motor2_vel, motor2_measured_vel,
-                           pid_update_elapsedtime/1000, firmware);
+                           pid_update_elapsedtime / 1000, firmware);
 
-
-    //Convert to 8 bit Command
+    // Convert to 8 bit Command
     motors_speeds_[LEFT_MOTOR] = motor1_control.boundMotorSpeed(
         int(round(motors_speeds_[LEFT_MOTOR] * 50 + MOTOR_NEUTRAL)), MOTOR_MAX,
         MOTOR_MIN);

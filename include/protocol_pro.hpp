@@ -23,7 +23,7 @@ class RoverRobotics::ProProtocolObject
 
  private:
   void updatemotors(int sleeptime);
-  const float MOTOR_RPM_TO_MPS_RATIO = 13749 / 1.26 / 0.77;
+  const float MOTOR_RPM_TO_MPS_RATIO = 13749 / 1.26 / 0.72;
   const float MOTOR_RPM_TO_MPS_CFB = 0;  //-0.015;
   const int MOTOR_NEUTRAL = 125;
   const int MOTOR_MAX = 250;
