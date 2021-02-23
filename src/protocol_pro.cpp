@@ -21,8 +21,8 @@ ProProtocolObject::ProProtocolObject(const char *device,
       REG_MOTOR_CHARGER_STATE,   BuildNO,
       BATTERY_VOLTAGE_A};
   pid_ = pid;
-  motor1_control = OdomControl(closed_loop_, pid_, MOTOR_MAX_MS, 0);
-  motor2_control = OdomControl(closed_loop_, pid_, MOTOR_MAX_MS, 0);
+  motor1_control = OdomControl(closed_loop_, pid_, 1.5, 0);
+  motor2_control = OdomControl(closed_loop_, pid_, 1.5, 0);
 
   register_comm_base(device);
   motor1_prev_t = std::chrono::steady_clock::now();

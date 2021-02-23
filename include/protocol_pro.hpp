@@ -28,8 +28,8 @@ class RoverRobotics::ProProtocolObject
   const int MOTOR_NEUTRAL = 125;
   const int MOTOR_MAX = 250;
   const int MOTOR_MIN = 0;
-  const float MOTOR_MAX_MS = 1.5;
-  const float MOTOR_MIN_MS = -1.5;
+  // const float MOTOR_MAX_MS = 1.5;
+  // const float MOTOR_MIN_MS = -1.5;
 
   const unsigned char startbyte = 253;
   const int requestbyte = 10;
