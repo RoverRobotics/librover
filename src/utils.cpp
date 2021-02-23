@@ -106,21 +106,22 @@ double OdomControl::run(double commanded_vel, double measured_vel, double dt,
   if (use_control_) {
     velocity_error_ = commanded_vel - velocity_filtered_;
     if (!skip_measurement_) {
-      motor_command_vel_ =
-          feedThroughControl() + PID(velocity_error_, dt);
+      double tempPID = PID(velocity_error_, dt);
+      std::cerr << "velocity error" << velocity_error_;
+      std::cerr << " dt " << dt;
+      std::cerr << " PID " << tempPID << std::endl;
+      motor_command_vel_ = feedThroughControl() + tempPID;
     }
   } else {
     motor_command_vel_ = feedThroughControl();
   }
 
-  // motor_command_vel_ = boundMotorSpeed(motor_command_vel_, MOTOR_MAX_VEL_,
-  // MOTOR_MIN_VEL_);
+  // motor_command_vel_ =
+  //     boundMotorSpeed(motor_command_vel_, MOTOR_MAX_VEL_, MOTOR_MIN_VEL_);
   return motor_command_vel_;
 }
 
-double OdomControl::feedThroughControl() {
-  return velocity_commanded_ ;
-}
+double OdomControl::feedThroughControl() { return velocity_commanded_; }
 
 void OdomControl::reset() {
   integral_error_ = 0;
@@ -138,14 +139,15 @@ double OdomControl::PID(double error, double dt) {
   double p_val = P(error);
   double i_val = I(error, dt);
   double d_val = D(error, dt);
+  std::cerr << "P " << p_val << " I " << i_val << " D" << d_val << std::endl;
   double pid_val = p_val + i_val + d_val;
-  if (fabs(pid_val) > (MOTOR_MAX_VEL_ / 2.0))
-  // Only integrate if the motor's aren't already at full speed
-  {
-    stop_integrating_ = true;
-  } else {
-    stop_integrating_ = false;
-  }
+  // if (fabs(pid_val) > (MOTOR_MAX_VEL_))
+  // // Only integrate if the motor's aren't already at full speed
+  // {
+  //   stop_integrating_ = true;
+  // } else {
+  //   stop_integrating_ = false;
+  // }
   return pid_val;
 }
 
@@ -158,6 +160,12 @@ double OdomControl::D(double error, double dt) {
 double OdomControl::I(double error, double dt) {
   if (!stop_integrating_) {
     integral_error_ += error * dt;
+    std::cerr << "integral error " << integral_error_ << std::endl;
+  }
+  if (integral_error_ > .5) {
+    integral_error_ = .5;
+  } else if (integral_error_ < -.5) {
+    integral_error_ = -.5;
   }
   return K_I_ * integral_error_;
 }
@@ -217,7 +225,8 @@ double OdomControl::filter(double velocity, double dt,
   velocity_history_.pop_back();
 
   if (firmwareBuildNumber == 100) {
-    velocity_filtered_ = 0.9 * velocity + 0.1 * velocity_filtered_history_[0];
+    // apha-beta moving average
+    velocity_filtered_ = 0.8 * velocity + 0.2 * velocity_filtered_history_[0];
 
   } else {
     float change_in_velocity = 0;

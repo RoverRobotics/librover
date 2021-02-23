@@ -23,12 +23,15 @@ class RoverRobotics::ProProtocolObject
   void sendCommand(int sleeptime, std::vector<uint32_t> datalist);
 
  private:
-  const float MOTOR_RPM_TO_MPS_RATIO = 13749 / 1.26;
-  const float MOTOR_RPM_TO_MPS_CFB = -0.07;
+  const float MOTOR_RPM_TO_MPS_RATIO = 13749 / 1.26 / 0.77;
+  const float MOTOR_RPM_TO_MPS_CFB = 0 ;//-0.015;
   const int MOTOR_NEUTRAL = 125;
   const int MOTOR_MAX = 250;
   const int MOTOR_MIN = 0;
-  const int startbyte = 253;
+  const float MOTOR_MAX_MS = 1.5;
+  const float MOTOR_MIN_MS = -1.5;
+
+  const unsigned char startbyte = 253;
   const int requestbyte = 10;
   const int baudrate = 4097;
   const int RECEIVE_MSG_LEN = 5;
