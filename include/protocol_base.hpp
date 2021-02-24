@@ -46,7 +46,7 @@ class RoverRobotics::BaseProtocolObject {
   virtual robotData info_request() = 0;
   /*
    * @brief Unpack bytes from the robot
-   * This is meant to use as a callback function when there are bytes avaible to
+   * This is meant to use as a callback function when there are bytes available to
    * process
    * @param std::vector<uin32_t> Bytes stream from the robot
    * @return structure of statusData
