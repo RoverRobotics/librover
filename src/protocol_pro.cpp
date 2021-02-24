@@ -36,7 +36,7 @@ ProProtocolObject::ProProtocolObject(const char *device,
       std::thread([this]() { this->motors_update_loop(30); });
 }
 
-void ProProtocolObject::update_drivetrim(double value) { trimvalue = value; }
+void ProProtocolObject::update_drivetrim(double value) { trimvalue += value; }
 
 void ProProtocolObject::send_estop(bool estop) {
   robotstatus_mutex.lock();
