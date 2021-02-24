@@ -25,16 +25,15 @@ ProProtocolObject::ProProtocolObject(const char *device,
   motor2_control = OdomControl(closed_loop_, pid_, 1.5, 0);
 
   register_comm_base(device);
-  motor1_prev_t = std::chrono::steady_clock::now();
-  motor2_prev_t = std::chrono::steady_clock::now();
 
   // Create a New Thread with 20 mili seconds sleep timer
-  writethread =
+  fast_data_write_thread =
       std::thread([this, fast_data]() { this->sendCommand(30, fast_data); });
   // Create a new Thread with 50 mili seconds sleep timer
-  writethread2 =
+  slow_data_write_thread =
       std::thread([this, slow_data]() { this->sendCommand(50, slow_data); });
-  motorthread = std::thread([this]() { this->updatemotors(30); });
+  motor_commands_update_thread =
+      std::thread([this]() { this->updatemotors(30); });
 }
 
 void ProProtocolObject::update_drivetrim(double value) { trimvalue = value; }
@@ -86,10 +85,6 @@ void ProProtocolObject::updatemotors(int sleeptime) {
     robotstatus_mutex.unlock();
     float ctrl_update_elapsedtime = (time_now - time_from_msg).count();
     float pid_update_elapsedtime = (time_now - time_last).count();
-    // std::cerr << "control elapse time: " << ctrl_update_elapsedtime
-    //           << std::endl;
-    // std::cerr << "pid elapse time:     " << pid_update_elapsedtime
-    //           << std::endl;
 
     if (ctrl_update_elapsedtime > CONTROL_LOOP_TIMEOUT_MS || estop_) {
       robotstatus_mutex.lock();
@@ -184,11 +179,9 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
         case REG_PWR_TOTAL_CURRENT:
           break;
         case REG_MOTOR_FB_RPM_LEFT:
-          motor1_prev_t = std::chrono::steady_clock::now();
           robotstatus_.motor1_rpm = b;
           break;
         case REG_MOTOR_FB_RPM_RIGHT:  // motor2_rpm;
-          motor2_prev_t = std::chrono::steady_clock::now();
           robotstatus_.motor2_rpm = b;
           break;
         case REG_FLIPPER_FB_POSITION_POT1:
@@ -287,15 +280,11 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
 
       robotstatus_.linear_vel =
           0.5 * (robotstatus_.motor1_rpm / MOTOR_RPM_TO_MPS_RATIO +
-                 MOTOR_RPM_TO_MPS_CFB +
-                 robotstatus_.motor2_rpm / MOTOR_RPM_TO_MPS_RATIO +
-                 MOTOR_RPM_TO_MPS_CFB);
+                 robotstatus_.motor2_rpm / MOTOR_RPM_TO_MPS_RATIO);
 
       robotstatus_.angular_vel =
-          ((robotstatus_.motor1_rpm / MOTOR_RPM_TO_MPS_RATIO +
-            MOTOR_RPM_TO_MPS_CFB) -
-           (robotstatus_.motor2_rpm / MOTOR_RPM_TO_MPS_RATIO +
-            MOTOR_RPM_TO_MPS_CFB)) *
+          ((robotstatus_.motor1_rpm / MOTOR_RPM_TO_MPS_RATIO) -
+           (robotstatus_.motor2_rpm / MOTOR_RPM_TO_MPS_RATIO)) *
           odom_angular_coef_ * odom_traction_factor_;
 
       std::vector<uint32_t> temp;
@@ -339,8 +328,9 @@ void ProProtocolObject::register_comm_base(const char *device) {
     comm_base = std::make_unique<CommSerial>(
         device, [this](std::vector<uint32_t> c) { unpack_comm_response(c); },
         setting_);
-  } else if (comm_type == "can") {
-    std::cerr << "not available" << std::endl;
+  } else {  // generic case
+    std::cerr << "unknown or not supported communication type " << comm_type
+              << std::endl;
     throw(-1);
   }
 }
@@ -359,11 +349,12 @@ void ProProtocolObject::sendCommand(int sleeptime,
             (unsigned char)requestbyte,
             (unsigned char)x};
 
-        write_buffer.push_back((char)255 - ((unsigned char)int(motors_speeds_[LEFT_MOTOR]) +
-                                            (unsigned char)int(motors_speeds_[RIGHT_MOTOR]) +
-                                            (unsigned char)int(motors_speeds_[FLIPPER_MOTOR]) +
-                                            requestbyte + x) %
-                                               255);
+        write_buffer.push_back(
+            (char)255 - ((unsigned char)int(motors_speeds_[LEFT_MOTOR]) +
+                         (unsigned char)int(motors_speeds_[RIGHT_MOTOR]) +
+                         (unsigned char)int(motors_speeds_[FLIPPER_MOTOR]) +
+                         requestbyte + x) %
+                            255);
         comm_base->write_to_device(write_buffer);
         robotstatus_mutex.unlock();
       } else if (comm_type == "can") {
