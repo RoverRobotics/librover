@@ -90,7 +90,6 @@ class OdomControl {
   bool skip_measurement_;
 
  private:
-  void velocityController();
   bool hasZeroHistory(const std::vector<double>& vel_history);
   double deadbandOffset(double motor_speed, double deadband_offset);
   double P(double error);
