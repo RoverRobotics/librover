@@ -31,7 +31,7 @@ class RoverRobotics::CommSerial : public RoverRobotics::CommBase {
    * int 32.
    * @param callback to process the unsigned int 32.
    */
-  void read_from_device(std::function<void(std::vector<uint32_t>)>);
+  void read_device_loop(std::function<void(std::vector<uint32_t>)>);
   /*
    * @brief Check if Serial device is still connected by check the state of the
    * file descriptor

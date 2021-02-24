@@ -48,7 +48,7 @@ CommSerial::CommSerial(const char *device,
     printf("Error %i from tcsetattr: \n", errno);
   }
   serial_read_thread = std::thread(
-      [this, parsefunction]() { this->read_from_device(parsefunction); });
+      [this, parsefunction]() { this->read_device_loop(parsefunction); });
 }
 
 CommSerial::~CommSerial() { close(serial_port); }
@@ -66,7 +66,7 @@ void CommSerial::write_to_device(std::vector<uint32_t> msg) {
   serial_write_mutex.unlock();
 }
 
-void CommSerial::read_from_device(
+void CommSerial::read_device_loop(
     std::function<void(std::vector<uint32_t>)> parsefunction) {
   while (true) {
     unsigned char read_buf[read_size_];

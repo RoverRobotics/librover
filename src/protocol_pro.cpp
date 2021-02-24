@@ -33,7 +33,7 @@ ProProtocolObject::ProProtocolObject(const char *device,
   slow_data_write_thread =
       std::thread([this, slow_data]() { this->sendCommand(50, slow_data); });
   motor_commands_update_thread =
-      std::thread([this]() { this->updatemotors(30); });
+      std::thread([this]() { this->motors_update_loop(30); });
 }
 
 void ProProtocolObject::update_drivetrim(double value) { trimvalue = value; }
@@ -59,7 +59,7 @@ void ProProtocolObject::set_robot_velocity(double *controlarray) {
   robotstatus_mutex.unlock();
 }
 
-void ProProtocolObject::updatemotors(int sleeptime) {
+void ProProtocolObject::motors_update_loop(int sleeptime) {
   double linear_vel;
   double angular_vel;
   double rpm1;

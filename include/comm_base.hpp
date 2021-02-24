@@ -50,7 +50,7 @@ class RoverRobotics::CommBase {
    * inside the callback function accepted from this method.
    * @param callbackfunction to decode the message
    */
-  virtual void read_from_device(std::function<void(std::vector<uint32_t>)>) = 0;
+  virtual void read_device_loop(std::function<void(std::vector<uint32_t>)>) = 0;
   /*
    * @brief Pure Virtual Interface to check if the communication device is still
    * connected. The implementation of this function should check the status of
