@@ -152,8 +152,6 @@ double OdomControl::D(double error, double dt) {
 
 double OdomControl::I(double error, double dt) {
   if (!stop_integrating_) {
-    std::cerr << " integral error " << integral_error_ << std::endl;
-
     integral_error_ += error * dt;
   }
   return K_I_ * integral_error_;
