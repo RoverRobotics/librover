@@ -83,7 +83,7 @@ class OdomControl {
   // velocity feedback
   double velocity_commanded_;
   double velocity_measured_;
-  double velocity_filtered_;
+  double measured_vel;
   std::vector<double> velocity_filtered_history_;
   std::vector<double> velocity_history_;
   bool velocity_control_on_;
@@ -91,7 +91,6 @@ class OdomControl {
 
  private:
   void velocityController();
-  double filter(double left_motor_vel, double dt, int firmwareBuildNumber);
   bool hasZeroHistory(const std::vector<double>& vel_history);
   double deadbandOffset(double motor_speed, double deadband_offset);
   double P(double error);
