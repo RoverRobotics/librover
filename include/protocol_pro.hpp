@@ -24,12 +24,9 @@ class RoverRobotics::ProProtocolObject
  private:
   void updatemotors(int sleeptime);
   const float MOTOR_RPM_TO_MPS_RATIO = 13749 / 1.26 / 0.72;
-  const float MOTOR_RPM_TO_MPS_CFB = 0;  //-0.015;
   const int MOTOR_NEUTRAL = 125;
   const int MOTOR_MAX = 250;
   const int MOTOR_MIN = 0;
-  // const float MOTOR_MAX_MS = 1.5;
-  // const float MOTOR_MIN_MS = -1.5;
 
   const unsigned char startbyte = 253;
   const int requestbyte = 10;
@@ -38,7 +35,6 @@ class RoverRobotics::ProProtocolObject
   const double odom_angular_coef_ = 2.3;
   const double odom_traction_factor_ = 0.7;
   const double CONTROL_LOOP_TIMEOUT_MS = 50;
-  // const int commandbit = 20;
   std::unique_ptr<CommBase> comm_base;
   std::string comm_type;
 
@@ -46,17 +42,15 @@ class RoverRobotics::ProProtocolObject
   robotData robotstatus_;
   double motors_speeds_[3];
   double trimvalue;
-  std::thread writethread;
-  std::thread writethread2;
-  std::thread motorthread;
+  std::thread fast_data_write_thread;
+  std::thread slow_data_write_thread;
+  std::thread motor_commands_update_thread;
   bool estop_;
   // Motor PID variables
   OdomControl motor1_control;
   OdomControl motor2_control;
   bool closed_loop_;
   PidGains pid_;
-  std::chrono::steady_clock::time_point motor1_prev_t;
-  std::chrono::steady_clock::time_point motor2_prev_t;
 
   enum robot_motors { LEFT_MOTOR, RIGHT_MOTOR, FLIPPER_MOTOR };
 
