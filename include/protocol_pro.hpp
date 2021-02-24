@@ -86,7 +86,7 @@ class RoverRobotics::ProProtocolObject
 
   const unsigned char startbyte = 253;
   const int requestbyte = 10;
-  const int baudrate = 4097;
+  const int termios_baud_code = 4097; // THIS = baudrate of 57600
   const int RECEIVE_MSG_LEN = 5;
   const double odom_angular_coef_ = 2.3;
   const double odom_traction_factor_ = 0.7;
