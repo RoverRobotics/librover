@@ -10,7 +10,9 @@ class RoverRobotics::BaseProtocolObject {
  public:
   /*
    * @brief Trim Robot Velocity
-   * Modify robot velocity offset with the input parameter
+   * Modify robot velocity differential (between the left side/right side) with
+   * the input parameter. Useful to compensate if the robot tends to drift
+   * either left or right while commanded to drive straight.
    * @param double of velocity offset
    */
   virtual void update_drivetrim(double) = 0;
@@ -22,12 +24,13 @@ class RoverRobotics::BaseProtocolObject {
   virtual void send_estop(bool) = 0;
   /*
    * @brief Set Robot velocity
-   * Set Robot velocity: IF closed_loop_ TRUE, this function will attempt a speed PID loop 
-   * which uses all the available sensor data (wheels, IMUs, etc) from the robot to produce
-   * the commanded velocity as best as possible. IF closed_loop_ FALSE, this function simply
-   * translates the commanded velocities into motor duty cycles and there is no expectation that
-   * the commanded velocities will be realized by the robot. In closed_loop_ FALSE mode, motor
-   * power is roughly proportional to commanded velocity.
+   * Set Robot velocity: IF closed_loop_ TRUE, this function will attempt a
+   * speed PID loop which uses all the available sensor data (wheels, IMUs, etc)
+   * from the robot to produce the commanded velocity as best as possible. IF
+   * closed_loop_ FALSE, this function simply translates the commanded
+   * velocities into motor duty cycles and there is no expectation that the
+   * commanded velocities will be realized by the robot. In closed_loop_ FALSE
+   * mode, motor power is roughly proportional to commanded velocity.
    * @param controllarray an double array of control in m/s
    */
   virtual void set_robot_velocity(double* controllarray) = 0;
@@ -43,7 +46,8 @@ class RoverRobotics::BaseProtocolObject {
   virtual robotData info_request() = 0;
   /*
    * @brief Unpack bytes from the robot
-   * This is meant to use as a callback function when there are bytes avaible to process
+   * This is meant to use as a callback function when there are bytes avaible to
+   * process
    * @param std::vector<uin32_t> Bytes stream from the robot
    * @return structure of statusData
    */
