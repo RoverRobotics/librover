@@ -43,7 +43,6 @@ CommSerial::CommSerial(const char *device,
   cfsetispeed(&tty, (int)setting[0]);
   cfsetospeed(&tty, (int)setting[0]);
   read_size_ = (int)setting[1];
-  std::cerr << "baudrate " << (int)setting[0] << " write size " << write_size_ << " read size "<< read_size_ << std::endl;
   // Save tty settings, also checking for error
   if (tcsetattr(serial_port, TCSANOW, &tty) != 0) {
     printf("Error %i from tcsetattr: \n", errno);
@@ -56,12 +55,14 @@ CommSerial::~CommSerial() { close(serial_port); }
 
 void CommSerial::write_to_device(std::vector<uint32_t> msg) {
   writemutex.lock();
-  unsigned char write_buffer[msg.size()];
-  for (int x = 0 ; x < msg.size(); x ++){
-    write_buffer[x] = msg[x];
-  }
+  if (serial_port >= 0) {
+    unsigned char write_buffer[msg.size()];
+    for (int x = 0; x < msg.size(); x++) {
+      write_buffer[x] = msg[x];
+    }
 
-  write(serial_port, write_buffer, msg.size());
+    write(serial_port, write_buffer, msg.size());
+  }
   writemutex.unlock();
 }
 
@@ -70,7 +71,7 @@ void CommSerial::read_from_device(
   while (true) {
     unsigned char read_buf[read_size_];
     int num_bytes = read(serial_port, &read_buf, read_size_);
-    if (num_bytes <= 0){
+    if (num_bytes <= 0) {
       continue;
     }
     static std::vector<uint32_t> output;
