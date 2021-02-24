@@ -40,9 +40,9 @@ ProProtocolObject::ProProtocolObject(const char *device,
 void ProProtocolObject::update_drivetrim(double value) { trimvalue = value; }
 
 void ProProtocolObject::send_estop(bool estop) {
-  writemutex.lock();
+  robotstatus_mutex.lock();
   estop_ = estop;
-  writemutex.unlock();
+  robotstatus_mutex.unlock();
 }
 
 robotData ProProtocolObject::status_request() { return robotstatus_; }
@@ -50,106 +50,14 @@ robotData ProProtocolObject::status_request() { return robotstatus_; }
 robotData ProProtocolObject::info_request() { return robotstatus_; }
 
 void ProProtocolObject::set_robot_velocity(double *controlarray) {
-  writemutex.lock();
+  robotstatus_mutex.lock();
   robotstatus_.cmd_linear_vel = controlarray[0];
   robotstatus_.cmd_angular_vel = controlarray[1];
   motors_speeds_[FLIPPER_MOTOR] =
       (int)round(controlarray[2] + MOTOR_NEUTRAL) % MOTOR_MAX;
   robotstatus_.cmd_ts = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::system_clock::now().time_since_epoch());
-  writemutex.unlock();
-  // writemutex.lock();
-  // std::chrono::steady_clock::time_point motor1_prev_temp;
-  // std::chrono::steady_clock::time_point motor2_prev_temp;
-  // int firmware = robotstatus_.robot_firmware;
-  // double rpm1 = robotstatus_.motor1_rpm;
-  // double rpm2 = robotstatus_.motor2_rpm;
-  // writemutex.unlock();
-
-  // writemutex.lock();
-  // if (!estop_) {
-  //   double linear_rate = controlarray[0];
-  //   double turn_rate = controlarray[1];
-  //   double flipper_rate = controlarray[2];
-  //   if (DEBUG)
-  //     std::cerr << linear_rate << " " << turn_rate << " " << flipper_rate;
-  //   // apply trim value
-
-  //   if (turn_rate == 0) {
-  //     if (linear_rate > 0) {
-  //       turn_rate = trimvalue;
-  //     } else if (linear_rate < 0) {
-  //       turn_rate = -trimvalue;
-  //     }
-  //   }
-  //   // !Applying some Skid-steer math
-  //   double diff_vel_commanded = turn_rate;
-  //   double motor1_vel = linear_rate - 0.5 * diff_vel_commanded;
-  //   double motor2_vel = linear_rate + 0.5 * diff_vel_commanded;
-
-  //   double motor1_measured_vel = rpm1 / MOTOR_RPM_TO_MPS_RATIO;
-  //   double motor2_measured_vel = rpm2 / MOTOR_RPM_TO_MPS_RATIO;
-
-  //   motors_speeds_[FLIPPER_MOTOR] =
-  //       (int)round(flipper_rate + MOTOR_NEUTRAL) % MOTOR_MAX;
-  //   if (DEBUG) {
-  //     std::cerr << "commanded motor speed from ROS (m/s): "
-  //               << "left:" << motor1_vel << " right:" << motor2_vel
-  //               << std::endl;
-  //     std::cerr << "measured motor speed (m/s)"
-  //               << " left:" << motor1_measured_vel
-  //               << " right:" << motor2_measured_vel << std::endl;
-  //   }
-  //   std::chrono::steady_clock::time_point current_time =
-  //       std::chrono::steady_clock::now();
-  //   motors_speeds_[LEFT_MOTOR] = motor1_control.run(
-  //       motor1_vel, motor1_measured_vel,
-  //       std::chrono::duration_cast<std::chrono::milliseconds>(current_time -
-  //                                                             motor1_prev_temp)
-  //               .count() /
-  //           10000000.0,
-  //       firmware);
-  //   // std::cerr << motors_speeds_[LEFT_MOTOR] << std::endl;
-  //   motors_speeds_[RIGHT_MOTOR] = motor2_control.run(
-  //       motor2_vel, motor2_measured_vel,
-  //       std::chrono::duration_cast<std::chrono::milliseconds>(current_time -
-  //                                                             motor2_prev_temp)
-  //               .count() /
-  //           10000000.0,
-  //       firmware);
-  //   // std::cerr << motors_speeds_[RIGHT_MOTOR] << std::endl;
-
-  //   // convert to robot usable command
-  //   std::cerr << "motor 1 speed after PID: " << motors_speeds_[LEFT_MOTOR]
-  //             << std::endl;
-
-  //   motors_speeds_[LEFT_MOTOR] = motor1_control.boundMotorSpeed(
-  //       int(round(motors_speeds_[LEFT_MOTOR] * 50 + MOTOR_NEUTRAL)),
-  //       MOTOR_MAX, MOTOR_MIN);
-  //   std::cerr << "motor 1 speed in 8 bit: " << motors_speeds_[LEFT_MOTOR]
-  //             << std::endl;
-
-  //   motors_speeds_[RIGHT_MOTOR] = motor2_control.boundMotorSpeed(
-  //       int(round(motors_speeds_[RIGHT_MOTOR] * 50 + MOTOR_NEUTRAL)),
-  //       MOTOR_MAX, MOTOR_MIN);
-
-  //   if (DEBUG) {
-  //     std::cerr << "open loop motor command"
-  //               << " left:" << (int)round(motor1_vel * 50 + MOTOR_NEUTRAL)
-  //               << " right:" << (int)round(motor2_vel * 50 + MOTOR_NEUTRAL)
-  //               << std::endl;
-  //     std::cerr << "closed loop motor command"
-  //               << " left:" << motors_speeds_[LEFT_MOTOR]
-  //               << " right:" << motors_speeds_[RIGHT_MOTOR] << std::endl;
-  //   }
-  // } else {
-  //   motors_speeds_[LEFT_MOTOR] = MOTOR_NEUTRAL;
-  //   motors_speeds_[RIGHT_MOTOR] = MOTOR_NEUTRAL;
-  //   motors_speeds_[FLIPPER_MOTOR] = MOTOR_NEUTRAL;
-  //   if (DEBUG) std::cerr << "not moving" << std::endl;
-  // }
-
-  // writemutex.unlock();
+  robotstatus_mutex.unlock();
 }
 
 void ProProtocolObject::updatemotors(int sleeptime) {
@@ -168,14 +76,14 @@ void ProProtocolObject::updatemotors(int sleeptime) {
     std::chrono::milliseconds time_now =
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch());
-    writemutex.lock();
+    robotstatus_mutex.lock();
     int firmware = robotstatus_.robot_firmware;
     linear_vel = robotstatus_.cmd_linear_vel;
     angular_vel = robotstatus_.cmd_angular_vel;
     rpm1 = robotstatus_.motor1_rpm;
     rpm2 = robotstatus_.motor2_rpm;
     time_from_msg = robotstatus_.cmd_ts;
-    writemutex.unlock();
+    robotstatus_mutex.unlock();
     float ctrl_update_elapsedtime = (time_now - time_from_msg).count();
     float pid_update_elapsedtime = (time_now - time_last).count();
     // std::cerr << "control elapse time: " << ctrl_update_elapsedtime
@@ -184,13 +92,13 @@ void ProProtocolObject::updatemotors(int sleeptime) {
     //           << std::endl;
 
     if (ctrl_update_elapsedtime > CONTROL_LOOP_TIMEOUT_MS || estop_) {
-      writemutex.lock();
+      robotstatus_mutex.lock();
       motors_speeds_[LEFT_MOTOR] = MOTOR_NEUTRAL;
       motors_speeds_[RIGHT_MOTOR] = MOTOR_NEUTRAL;
       motors_speeds_[FLIPPER_MOTOR] = MOTOR_NEUTRAL;
       motor1_control.reset();
       motor2_control.reset();
-      writemutex.unlock();
+      robotstatus_mutex.unlock();
       time_last = time_now;
       continue;
     }
@@ -210,7 +118,7 @@ void ProProtocolObject::updatemotors(int sleeptime) {
 
     double motor1_measured_vel = rpm1 / MOTOR_RPM_TO_MPS_RATIO;
     double motor2_measured_vel = rpm2 / MOTOR_RPM_TO_MPS_RATIO;
-    writemutex.lock();
+    robotstatus_mutex.lock();
     // motor speeds in m/s
     motors_speeds_[LEFT_MOTOR] =
         motor1_control.run(motor1_vel, motor1_measured_vel,
@@ -227,30 +135,15 @@ void ProProtocolObject::updatemotors(int sleeptime) {
     motors_speeds_[RIGHT_MOTOR] = motor2_control.boundMotorSpeed(
         int(round(motors_speeds_[RIGHT_MOTOR] * 50 + MOTOR_NEUTRAL)), MOTOR_MAX,
         MOTOR_MIN);
-    writemutex.unlock();
+    robotstatus_mutex.unlock();
     time_last = time_now;
   }
 }
 void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
   static std::vector<uint32_t> msgqueue;
-  writemutex.lock();
-  if (DEBUG) {
-    std::cerr << "Byte's' From Robot: ";
-    for (auto data : robotmsg) {
-      std::cerr << data << " ";
-    }
-    std::cerr << std::endl;
-  }
+  robotstatus_mutex.lock();
   msgqueue.insert(msgqueue.end(), robotmsg.begin(),
                   robotmsg.end());  // insert robotmsg to msg list
-  if (DEBUG) {
-    std::cerr << "Byte's' In Queue: ";
-    for (auto a : msgqueue) {
-      std::cerr << a << " ";
-    }
-    std::cerr << std::endl;
-    std::cerr << "finding start byte";
-  }
   // ! Delete bytes until valid start byte is found
   if ((unsigned char)msgqueue[0] != startbyte &&
       msgqueue.size() > RECEIVE_MSG_LEN) {
@@ -262,8 +155,8 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
     if (startbyte_index > msgqueue.size()) {
       msgqueue.clear();
       return;
-    } else {  // !Reconstruct the vector so that the start byte is at the 0
-              // position
+    } else {
+      // !Reconstruct the vector so that the start byte is at the 0 position
       std::vector<uint32_t> temp;
       for (int x = startbyte_index; x < msgqueue.size(); x++) {
         temp.push_back(msgqueue[x]);
@@ -274,7 +167,8 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
       temp.clear();
     }
   }
-  if ((unsigned char)msgqueue[0] == startbyte) {  // if valid start byte
+  if ((unsigned char)msgqueue[0] == startbyte &&
+      msgqueue.size() >= RECEIVE_MSG_LEN) {  // if valid start byte
     if (DEBUG) std::cerr << "start byte found!";
     unsigned char start_byte_read, data1, data2, dataNO, checksum,
         read_checksum;
@@ -286,7 +180,7 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
     read_checksum = (unsigned char)msgqueue[4];
     if (checksum == read_checksum) {  // verify checksum
       int b = (data1 << 8) + data2;
-      switch (int(msgqueue[1])) {
+      switch (int(dataNO)) {
         case REG_PWR_TOTAL_CURRENT:
           break;
         case REG_MOTOR_FB_RPM_LEFT:
@@ -396,14 +290,13 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
                  MOTOR_RPM_TO_MPS_CFB +
                  robotstatus_.motor2_rpm / MOTOR_RPM_TO_MPS_RATIO +
                  MOTOR_RPM_TO_MPS_CFB);
+
       robotstatus_.angular_vel =
           ((robotstatus_.motor1_rpm / MOTOR_RPM_TO_MPS_RATIO +
             MOTOR_RPM_TO_MPS_CFB) -
            (robotstatus_.motor2_rpm / MOTOR_RPM_TO_MPS_RATIO +
             MOTOR_RPM_TO_MPS_CFB)) *
           odom_angular_coef_ * odom_traction_factor_;
-      // std::cerr << "rpm 1 " << robotstatus_.motor1_rpm;
-      // std::cerr << " rpm 2 " << robotstatus_.motor1_rpm << std::endl;
 
       std::vector<uint32_t> temp;
       // !Remove processed msg from queue
@@ -432,7 +325,7 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
     if (DEBUG) std::cerr << "no start byte found!";
   }
   if (DEBUG) std::cerr << std::endl;
-  writemutex.unlock();
+  robotstatus_mutex.unlock();
 }
 
 bool ProProtocolObject::is_connected() { comm_base->is_connected(); }
@@ -457,7 +350,7 @@ void ProProtocolObject::sendCommand(int sleeptime,
   while (true) {
     for (int x : datalist) {
       if (comm_type == "serial") {
-        writemutex.lock();
+        robotstatus_mutex.lock();
         std::vector<uint32_t> write_buffer = {
             (unsigned char)startbyte,
             (unsigned char)int(motors_speeds_[LEFT_MOTOR]),
@@ -466,13 +359,13 @@ void ProProtocolObject::sendCommand(int sleeptime,
             (unsigned char)requestbyte,
             (unsigned char)x};
 
-        write_buffer.push_back((char)255 - (int(motors_speeds_[LEFT_MOTOR]) +
-                                            int(motors_speeds_[RIGHT_MOTOR]) +
-                                            int(motors_speeds_[FLIPPER_MOTOR]) +
+        write_buffer.push_back((char)255 - ((unsigned char)int(motors_speeds_[LEFT_MOTOR]) +
+                                            (unsigned char)int(motors_speeds_[RIGHT_MOTOR]) +
+                                            (unsigned char)int(motors_speeds_[FLIPPER_MOTOR]) +
                                             requestbyte + x) %
                                                255);
         comm_base->write_to_device(write_buffer);
-        writemutex.unlock();
+        robotstatus_mutex.unlock();
       } else if (comm_type == "can") {
         return;  //* no CAN for rover pro
       } else {   //! How did you get here?

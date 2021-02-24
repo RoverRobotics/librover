@@ -42,7 +42,7 @@ class RoverRobotics::ProProtocolObject
   std::unique_ptr<CommBase> comm_base;
   std::string comm_type;
 
-  std::mutex writemutex;
+  std::mutex robotstatus_mutex;
   robotData robotstatus_;
   double motors_speeds_[3];
   double trimvalue;

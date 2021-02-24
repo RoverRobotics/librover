@@ -67,10 +67,7 @@ void CommSerial::write_to_device(std::vector<uint32_t> msg) {
 
 void CommSerial::read_from_device(
     std::function<void(std::vector<uint32_t>)> parsefunction) {
-   //! Only support fixed read_size_ data stream.
   while (true) {
-    readmutex.lock();
-    
     unsigned char read_buf[read_size_];
     int num_bytes = read(serial_port, &read_buf, read_size_);
     if (num_bytes <= 0){
@@ -81,7 +78,6 @@ void CommSerial::read_from_device(
       output.push_back(read_buf[x]);
     }
     parsefunction(output);
-    readmutex.unlock();
     output.clear();
   }
 }
