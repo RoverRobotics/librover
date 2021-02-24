@@ -51,8 +51,6 @@ CommSerial::CommSerial(const char *device,
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
 }
 
-CommSerial::~CommSerial() { close(serial_port); }
-
 void CommSerial::write_to_device(std::vector<uint32_t> msg) {
   serial_write_mutex.lock();
   if (serial_port >= 0) {
