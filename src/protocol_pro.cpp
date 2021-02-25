@@ -317,7 +317,7 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
   robotstatus_mutex.unlock();
 }
 
-bool ProProtocolObject::is_connected() { comm_base->is_connected(); }
+bool ProProtocolObject::is_connected() { return comm_base->is_connected(); }
 
 void ProProtocolObject::register_comm_base(const char *device) {
   if (comm_type == "serial") {
