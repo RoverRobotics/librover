@@ -90,7 +90,7 @@ class RoverRobotics::ProProtocolObject
   const int RECEIVE_MSG_LEN = 5;
   const double odom_angular_coef_ = 2.3;
   const double odom_traction_factor_ = 0.7;
-  const double CONTROL_LOOP_TIMEOUT_MS = 50;
+  const double CONTROL_LOOP_TIMEOUT_MS = 200;
   std::unique_ptr<CommBase> comm_base;
   std::string comm_type;
 
