@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mxfile host="app.diagrams.net" modified="2021-02-12T18:35:48.355Z" agent="5.0 (X11)" etag="5Ddv8DVS8r2mzePY13nG" version="14.3.0" type="google">
+<mxfile host="app.diagrams.net" modified="2021-03-03T16:21:22.784Z" agent="5.0 (X11)" etag="6IFWzHqL5U6bO0JWdWpu" version="14.4.3" type="google">
   <diagram id="ufqlmuz46rO6wIUu3oV5" name="Page-1">
-    <mxGraphModel dx="3271" dy="-187" grid="1" gridSize="8" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="3122" dy="-269" grid="1" gridSize="8" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="wZvIUrBWHqtrsH1sA8PV-93" value="&lt;div&gt;Base Protocol Object&lt;/div&gt;&lt;div&gt;(Pure Virtual)&lt;br&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="-1237.5" y="1388" width="195" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="wZvIUrBWHqtrsH1sA8PV-95" value="&lt;div align=&quot;left&quot;&gt;send_speed()&lt;/div&gt;&lt;div align=&quot;left&quot;&gt;update_drivertrim()&lt;/div&gt;&lt;div align=&quot;left&quot;&gt;send_estop()&lt;/div&gt;&lt;div align=&quot;left&quot;&gt;status_request()&lt;/div&gt;&lt;div align=&quot;left&quot;&gt;info_request()&lt;/div&gt;&lt;div align=&quot;left&quot;&gt;unpack_comm_response()&lt;/div&gt;&lt;div align=&quot;left&quot;&gt;isConnected()&lt;/div&gt;&lt;div align=&quot;left&quot;&gt;register_comm_base()&lt;br&gt;&lt;/div&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+        <mxCell id="wZvIUrBWHqtrsH1sA8PV-95" value="&lt;div align=&quot;left&quot;&gt;set_robot_velocity()&lt;/div&gt;&lt;div align=&quot;left&quot;&gt;update_drivertrim()&lt;/div&gt;&lt;div align=&quot;left&quot;&gt;send_estop()&lt;/div&gt;&lt;div align=&quot;left&quot;&gt;status_request()&lt;/div&gt;&lt;div align=&quot;left&quot;&gt;info_request()&lt;/div&gt;&lt;div align=&quot;left&quot;&gt;unpack_comm_response()&lt;/div&gt;&lt;div align=&quot;left&quot;&gt;is_connected()&lt;/div&gt;&lt;div align=&quot;left&quot;&gt;register_comm_base()&lt;br&gt;&lt;/div&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="-1250" y="1448" width="220" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="wZvIUrBWHqtrsH1sA8PV-97" value="Comm Manager" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="-1073.75" y="1718" width="195" height="40" as="geometry" />
+        <mxCell id="wZvIUrBWHqtrsH1sA8PV-97" value="&lt;div&gt;Base Comm Object &lt;br&gt;&lt;/div&gt;&lt;div&gt;(Pure Virtual)&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="-1216" y="1718" width="195" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="wZvIUrBWHqtrsH1sA8PV-98" value="&lt;div&gt;writetodevice()&lt;/div&gt;&lt;div&gt;readfromdevice()&lt;/div&gt;&lt;div&gt;isConnect()&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="-1071.25" y="1768" width="220" height="150" as="geometry" />
+        <mxCell id="wZvIUrBWHqtrsH1sA8PV-98" value="&lt;div&gt;write_to_device()&lt;/div&gt;&lt;div&gt;read_device_loop()&lt;/div&gt;&lt;div&gt;is_connected()&lt;/div&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="-1213.5" y="1768" width="220" height="150" as="geometry" />
         </mxCell>
         <mxCell id="wZvIUrBWHqtrsH1sA8PV-99" value="Pro Protocol Object" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="-880" y="1458" width="195" height="40" as="geometry" />
+          <mxGeometry x="-888" y="1388" width="195" height="40" as="geometry" />
         </mxCell>
         <mxCell id="wZvIUrBWHqtrsH1sA8PV-100" value="" style="endArrow=classic;html=1;dashed=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="wZvIUrBWHqtrsH1sA8PV-99" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
@@ -31,8 +31,8 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="wZvIUrBWHqtrsH1sA8PV-103" value="Zero Protocol Object" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="-881.5" y="1338" width="195" height="40" as="geometry" />
+        <mxCell id="wZvIUrBWHqtrsH1sA8PV-103" value="Other Robots Protocol Object" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="-896" y="1488" width="195" height="40" as="geometry" />
         </mxCell>
         <mxCell id="wZvIUrBWHqtrsH1sA8PV-105" value="" style="endArrow=classic;html=1;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="wZvIUrBWHqtrsH1sA8PV-93" target="wZvIUrBWHqtrsH1sA8PV-103" edge="1">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
@@ -80,6 +80,34 @@
         </mxCell>
         <mxCell id="wZvIUrBWHqtrsH1sA8PV-165" value="Beyond this point the data transmission is out of application space and out of our hands!" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="-1104.25" y="1988" width="228.75" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="v0qB65_rCawSuVxlzfy9-2" value="" style="endArrow=classic;html=1;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" target="v0qB65_rCawSuVxlzfy9-4">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="-1021" y="1738" as="sourcePoint" />
+            <mxPoint x="-942.25" y="1738" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="v0qB65_rCawSuVxlzfy9-3" value="inherits" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="v0qB65_rCawSuVxlzfy9-2">
+          <mxGeometry x="-0.2388" y="2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="v0qB65_rCawSuVxlzfy9-4" value="Serial Comm Manager" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-936" y="1718" width="195" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="v0qB65_rCawSuVxlzfy9-5" value="Other Comm Manager" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-936" y="1784" width="195" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="v0qB65_rCawSuVxlzfy9-6" value="" style="endArrow=classic;html=1;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="wZvIUrBWHqtrsH1sA8PV-97">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="-1021" y="1803.5" as="sourcePoint" />
+            <mxPoint x="-936" y="1803.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="v0qB65_rCawSuVxlzfy9-7" value="inherits" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="v0qB65_rCawSuVxlzfy9-6">
+          <mxGeometry x="-0.2388" y="2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
         </mxCell>
       </root>
     </mxGraphModel>
