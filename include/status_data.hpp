@@ -1,5 +1,7 @@
+#include <chrono>
 #pragma once
-struct statusData {
+
+struct robotData {
   // Motor Infos
   signed short int motor1_id;
   signed short int motor1_rpm;
@@ -34,7 +36,7 @@ struct statusData {
   unsigned short int battery1_fault_flag;
   unsigned short int battery2_fault_flag;
 
-  // Robot FEEDBACK Infos 
+  // Robot FEEDBACK Infos
   unsigned short int robot_guid;
   unsigned short int robot_firmware;
   unsigned short int robot_fault_flag;
@@ -46,7 +48,12 @@ struct statusData {
   unsigned short int motor3_sensor1;
   unsigned short int motor3_sensor2;
 
-  //Robot Info
+  // Robot Info
   double linear_vel;
   double angular_vel;
+
+  // Velocity Info
+  double cmd_linear_vel;
+  double cmd_angular_vel;
+  std::chrono::milliseconds cmd_ts;
 };

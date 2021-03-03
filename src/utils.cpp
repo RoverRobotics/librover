@@ -4,12 +4,10 @@ namespace RoverRobotics {
 PidGains::PidGains() {}
 
 OdomControl::OdomControl()
-    : MOTOR_MAX_(250),
-      MOTOR_MIN_(0),
+    : MOTOR_MAX_VEL_(0.5),
+      MOTOR_MIN_VEL_(0),
       MOTOR_DEADBAND_(9),
       MAX_ACCEL_CUTOFF_(5.0),
-      MIN_VELOCITY_(0.03),
-      MAX_VELOCITY_(5),
       fs_(nullptr),
       K_P_(0),
       K_I_(0),
@@ -26,16 +24,14 @@ OdomControl::OdomControl()
       differential_error_(0),
       velocity_commanded_(0),
       velocity_measured_(0),
-      velocity_filtered_(0) {}
+      measured_vel(0) {}
 
-OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min,
-                         std::ofstream* fs)
-    : MOTOR_MAX_(max),
-      MOTOR_MIN_(min),
+OdomControl::OdomControl(bool use_control, PidGains pid_gains, double max,
+                         double min, std::ofstream* fs)
+    : MOTOR_MAX_VEL_(max),
+      MOTOR_MIN_VEL_(min),
       MOTOR_DEADBAND_(9),
       MAX_ACCEL_CUTOFF_(5.0),
-      MIN_VELOCITY_(0.03),
-      MAX_VELOCITY_(3),
       fs_(fs),
       K_P_(pid_gains.Kp),
       K_I_(pid_gains.Ki),
@@ -52,7 +48,7 @@ OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min,
       differential_error_(0),
       velocity_commanded_(0),
       velocity_measured_(0),
-      velocity_filtered_(0) {
+      measured_vel(0) {
   if (fs_ != nullptr && fs_->is_open()) {
     *fs_ << "time,Kp,Ki,Kd,error,integral_error,differential_error,error_"
             "filtered,meas_vel,filt_vel,cmd_vel,dt,motor_cmd\n";
@@ -60,15 +56,12 @@ OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min,
   }
 }
 
-OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min,
-                         int neutral)
-    : MOTOR_MAX_(max),
-      MOTOR_MIN_(min),
-      MOTOR_NEUTRAL_(neutral),
+OdomControl::OdomControl(bool use_control, PidGains pid_gains, double max,
+                         double min)
+    : MOTOR_MAX_VEL_(max),
+      MOTOR_MIN_VEL_(min),
       MOTOR_DEADBAND_(9),
       MAX_ACCEL_CUTOFF_(5.0),
-      MIN_VELOCITY_(0.03),
-      MAX_VELOCITY_(3),
       fs_(nullptr),
       K_P_(pid_gains.Kp),
       K_I_(pid_gains.Ki),
@@ -85,10 +78,10 @@ OdomControl::OdomControl(bool use_control, PidGains pid_gains, int max, int min,
       differential_error_(0),
       velocity_commanded_(0),
       velocity_measured_(0),
-      velocity_filtered_(0) {}
+      measured_vel(0) {}
 
-unsigned char OdomControl::run(double commanded_vel, double measured_vel,
-                               double dt, int firmwareBuildNumber) {
+double OdomControl::run(double commanded_vel, double measured_vel, double dt,
+                        int firmwareBuildNumber) {
   velocity_commanded_ = commanded_vel;
 
   velocity_measured_ = measured_vel;
@@ -99,53 +92,49 @@ unsigned char OdomControl::run(double commanded_vel, double measured_vel,
   cc since we don't care about the PATCH field of semantic versioning
   */
   int firmwareBuildNumberTrunc = firmwareBuildNumber / 100;
-  velocity_filtered_ = filter(measured_vel, dt, firmwareBuildNumberTrunc);
 
   // If stopping, stop now when velocity has slowed.
-  if ((commanded_vel == 0.0) && (fabs(velocity_filtered_) < 0.3)) {
+  if ((commanded_vel == 0.0) && (fabs(measured_vel) < 0.3)) {
     integral_error_ = 0;
     if (hasZeroHistory(velocity_filtered_history_)) {
-      return MOTOR_NEUTRAL_;
+      return 0;  // return 0 vel
     }
   }
 
   // If controller should be ON, run it.
   if (use_control_) {
-    velocity_error_ = commanded_vel - velocity_filtered_;
+    velocity_error_ = commanded_vel - measured_vel;
+
     if (!skip_measurement_) {
-      motor_command_ =
-          feedThroughControl() + int(round(PID(velocity_error_, dt)));
+      double tempPID = PID(velocity_error_, dt);
+      motor_command_vel_ = feedThroughControl() + tempPID;
     }
   } else {
-    motor_command_ = feedThroughControl();
+    motor_command_vel_ = feedThroughControl();
   }
-
-  motor_command_ = boundMotorSpeed(motor_command_, MOTOR_MAX_, MOTOR_MIN_);
-  return (unsigned char)motor_command_;
+  return motor_command_vel_;
 }
 
-int OdomControl::feedThroughControl() {
-  return (int)round(velocity_commanded_ * 50 + MOTOR_NEUTRAL_);
-}
+double OdomControl::feedThroughControl() { return velocity_commanded_; }
 
 void OdomControl::reset() {
   integral_error_ = 0;
   velocity_error_ = 0;
   velocity_commanded_ = 0;
   velocity_measured_ = 0;
-  velocity_filtered_ = 0;
+  measured_vel = 0;
   std::fill(velocity_filtered_history_.begin(),
             velocity_filtered_history_.end(), 0);
-  motor_command_ = MOTOR_NEUTRAL_;
+  motor_command_vel_ = 0;  // reset velocity
   skip_measurement_ = false;
 }
 
-int OdomControl::PID(double error, double dt) {
+double OdomControl::PID(double error, double dt) {
   double p_val = P(error);
   double i_val = I(error, dt);
   double d_val = D(error, dt);
   double pid_val = p_val + i_val + d_val;
-  if (fabs(pid_val) > (MOTOR_MAX_ / 2.0))
+  if (fabs(pid_val) > (MOTOR_MAX_VEL_))
   // Only integrate if the motor's aren't already at full speed
   {
     stop_integrating_ = true;
@@ -183,9 +172,9 @@ bool OdomControl::hasZeroHistory(const std::vector<double>& vel_history) {
     return false;
 }
 
-int OdomControl::boundMotorSpeed(int motor_speed, int max, int min) {
-  int test_motor;
-  int test_factor = 18;
+double OdomControl::boundMotorSpeed(double motor_speed, double max,
+                                    double min) {
+  double test_motor;
   at_max_motor_speed_ = false;
   at_min_motor_speed_ = false;
 
@@ -203,50 +192,13 @@ int OdomControl::boundMotorSpeed(int motor_speed, int max, int min) {
   return test_motor;
 }
 
-int OdomControl::deadbandOffset(int motor_speed, int deadband_offset) {
+double OdomControl::deadbandOffset(double motor_speed, double deadband_offset) {
   // Compensate for deadband
-  if (motor_speed > MOTOR_NEUTRAL_) {
+  if (motor_speed > 0) {
     return (motor_speed + deadband_offset);
-  } else if (motor_speed < MOTOR_NEUTRAL_) {
+  } else if (motor_speed < 0) {
     return (motor_speed - deadband_offset);
   }
 }
-
-double OdomControl::filter(double velocity, double dt,
-                           int firmwareBuildNumber) {
-  static double time = 0;
-
-  // Check for impossible acceleration, if it is impossible, ignore the
-  // measurement.
-  float accel = (velocity - velocity_filtered_history_[0]) / dt;
-  velocity_history_.insert(velocity_history_.begin(), velocity);
-  velocity_history_.pop_back();
-
-  if (firmwareBuildNumber == 100) {
-    velocity_filtered_ = 0.9 * velocity + 0.1 * velocity_filtered_history_[0];
-
-  } else {
-    float change_in_velocity = 0;
-
-    if (accel > MAX_ACCEL_CUTOFF_) {
-      change_in_velocity = 0.5 * dt * MAX_ACCEL_CUTOFF_;
-      velocity = velocity_filtered_history_[0] + change_in_velocity;
-    } else if (accel < -MAX_ACCEL_CUTOFF_) {
-      change_in_velocity = -0.5 * dt * MAX_ACCEL_CUTOFF_;
-      velocity = velocity_filtered_history_[0] + change_in_velocity;
-    }
-
-    velocity_filtered_ = 0.1 * velocity + 0.25 * velocity_filtered_history_[0] +
-                         0.30 * velocity_filtered_history_[1] +
-                         0.25 * velocity_filtered_history_[2] +
-                         0.1 * velocity_filtered_history_[3];
-  }
-
-  velocity_filtered_history_.insert(velocity_filtered_history_.begin(),
-                                    velocity_filtered_);
-  velocity_filtered_history_.pop_back();
-
-  return velocity_filtered_;
-}  // class OdomControl
 
 }  // namespace RoverRobotics

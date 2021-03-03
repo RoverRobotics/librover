@@ -43,37 +43,33 @@ CommSerial::CommSerial(const char *device,
   cfsetispeed(&tty, (int)setting[0]);
   cfsetospeed(&tty, (int)setting[0]);
   read_size_ = (int)setting[1];
-  std::cerr << "baudrate " << (int)setting[0] << " write size " << write_size_ << " read size "<< read_size_ << std::endl;
   // Save tty settings, also checking for error
   if (tcsetattr(serial_port, TCSANOW, &tty) != 0) {
     printf("Error %i from tcsetattr: \n", errno);
   }
-  readthread = std::thread(
-      [this, parsefunction]() { this->readfromdevice(parsefunction); });
+  serial_read_thread = std::thread(
+      [this, parsefunction]() { this->read_device_loop(parsefunction); });
 }
 
-CommSerial::~CommSerial() { close(serial_port); }
+void CommSerial::write_to_device(std::vector<uint32_t> msg) {
+  serial_write_mutex.lock();
+  if (serial_port >= 0) {
+    unsigned char write_buffer[msg.size()];
+    for (int x = 0; x < msg.size(); x++) {
+      write_buffer[x] = msg[x];
+    }
 
-void CommSerial::writetodevice(std::vector<uint32_t> msg) {
-  writemutex.lock();
-  unsigned char write_buffer[msg.size()];
-  for (int x = 0 ; x < msg.size(); x ++){
-    write_buffer[x] = msg[x];
+    write(serial_port, write_buffer, msg.size());
   }
-
-  write(serial_port, write_buffer, msg.size());
-  writemutex.unlock();
+  serial_write_mutex.unlock();
 }
 
-void CommSerial::readfromdevice(
+void CommSerial::read_device_loop(
     std::function<void(std::vector<uint32_t>)> parsefunction) {
-   //! Only support fixed read_size_ data stream.
   while (true) {
-    readmutex.lock();
-    
     unsigned char read_buf[read_size_];
     int num_bytes = read(serial_port, &read_buf, read_size_);
-    if (num_bytes <= 0){
+    if (num_bytes <= 0) {
       continue;
     }
     static std::vector<uint32_t> output;
@@ -81,11 +77,10 @@ void CommSerial::readfromdevice(
       output.push_back(read_buf[x]);
     }
     parsefunction(output);
-    readmutex.unlock();
     output.clear();
   }
 }
 
-bool CommSerial::isConnect() { return (serial_port > 0); }
+bool CommSerial::is_connected() { return (serial_port > 0); }
 
 }  // namespace RoverRobotics

@@ -11,47 +11,102 @@ class RoverRobotics::ProProtocolObject
  public:
   ProProtocolObject(const char* device, std::string new_comm_type,
                     bool closed_loop, PidGains pid);
-  // ~ProProtocolObject() override;
+  /*
+   * @brief Trim Robot Velocity
+   * Modify robot velocity differential (between the left side/right side) with
+   * the input parameter. Useful to compensate if the robot tends to drift
+   * either left or right while commanded to drive straight.
+   * @param double of velocity offset
+   */
   void update_drivetrim(double) override;
+  /*
+   * @brief Handle Estop Event
+   * Send an estop event to the robot
+   * @param bool accept a estop state
+   */
   void send_estop(bool) override;
-  statusData status_request() override;
-  statusData info_request() override;
-  void send_speed(double*) override;
+  /*
+   * @brief Request Robot Status
+   * @return structure of statusData
+   */
+  robotData status_request() override;
+  /*
+   * @brief Request Robot Unique Infomation
+   * @return structure of statusData
+   */
+  robotData info_request() override;
+  /*
+   * @brief Set Robot velocity
+   * Set Robot velocity: IF closed_loop_ TRUE, this function will attempt a
+   * speed PID loop which uses all the available sensor data (wheels, IMUs, etc)
+   * from the robot to produce the commanded velocity as best as possible. IF
+   * closed_loop_ FALSE, this function simply translates the commanded
+   * velocities into motor duty cycles and there is no expectation that the
+   * commanded velocities will be realized by the robot. In closed_loop_ FALSE
+   * mode, motor power is roughly proportional to commanded velocity.
+   * @param controllarray an double array of control in m/s
+   */
+  void set_robot_velocity(double* controllarray) override;
+  /*
+   * @brief Unpack bytes from the robot
+   * This is meant to use as a callback function when there are bytes available
+   * to process
+   * @param std::vector<uin32_t> Bytes stream from the robot
+   * @return structure of statusData
+   */
   void unpack_comm_response(std::vector<uint32_t>) override;
-  bool isConnected() override;
+  /*
+   * @brief Check if Communication still exist
+   * @return bool
+   */
+  bool is_connected() override;
+  /*
+   * @brief Attempt to make connection to robot via device
+   * @param device is the address of the device (ttyUSB0 , can0, ttyACM0)
+   */
   void register_comm_base(const char* device) override;
-  void sendCommand(int sleeptime, std::vector<uint32_t> datalist);
 
  private:
-  const float MOTOR_RPM_TO_MPS_RATIO = 13749 / 1.26;
-  const float MOTOR_RPM_TO_MPS_CFB = -0.07;
+  /*
+   * @brief Thread Driven function that will send commands to the robot at set
+   * interval
+   * @param sleeptime sleep time between each cycle
+   * @param datalist list of data to request
+   */
+  void sendCommand(int sleeptime, std::vector<uint32_t> datalist);
+  /*
+   * @brief Thread Driven function update the robot motors using pid
+   * @param sleeptime sleep time between each cycle
+   */
+  void motors_control_loop(int sleeptime);
+  const float MOTOR_RPM_TO_MPS_RATIO = 13749 / 1.26 / 0.72;
   const int MOTOR_NEUTRAL = 125;
   const int MOTOR_MAX = 250;
   const int MOTOR_MIN = 0;
-  const int startbyte = 253;
+
+  const unsigned char startbyte = 253;
   const int requestbyte = 10;
-  const int baudrate = 4097;
+  const int termios_baud_code = 4097; // THIS = baudrate of 57600
   const int RECEIVE_MSG_LEN = 5;
   const double odom_angular_coef_ = 2.3;
-  const double odom_traction_factor_ = 1;
-  // const int commandbit = 20;
+  const double odom_traction_factor_ = 0.7;
+  const double CONTROL_LOOP_TIMEOUT_MS = 200;
   std::unique_ptr<CommBase> comm_base;
   std::string comm_type;
 
-  std::mutex writemutex;
-  statusData robotstatus_;
-  int motors_speeds_[3];
+  std::mutex robotstatus_mutex;
+  robotData robotstatus_;
+  double motors_speeds_[3];
   double trimvalue;
-  std::thread writethread;
-  std::thread writethread2;
+  std::thread fast_data_write_thread;
+  std::thread slow_data_write_thread;
+  std::thread motor_commands_update_thread;
   bool estop_;
   // Motor PID variables
   OdomControl motor1_control;
   OdomControl motor2_control;
   bool closed_loop_;
   PidGains pid_;
-  std::chrono::steady_clock::time_point motor1_prev_t;
-  std::chrono::steady_clock::time_point motor2_prev_t;
 
   enum robot_motors { LEFT_MOTOR, RIGHT_MOTOR, FLIPPER_MOTOR };
 
