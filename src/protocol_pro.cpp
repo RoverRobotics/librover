@@ -333,8 +333,8 @@ void ProProtocolObject::register_comm_base(const char *device) {
       throw(i);
     }
 
-  } else {  // generic case
-    throw(-1);
+  } else {  // not supported device
+    throw(-2);
   }
 }
 
