@@ -321,16 +321,18 @@ bool ProProtocolObject::is_connected() { return comm_base->is_connected(); }
 
 void ProProtocolObject::register_comm_base(const char *device) {
   if (comm_type == "serial") {
-    std::cerr << "making serial connection" << std::endl;
     std::vector<uint32_t> setting_;
     setting_.push_back(termios_baud_code);
     setting_.push_back(RECEIVE_MSG_LEN);
-    comm_base = std::make_unique<CommSerial>(
-        device, [this](std::vector<uint32_t> c) { unpack_comm_response(c); },
-        setting_);
+    try {
+      comm_base = std::make_unique<CommSerial>(
+          device, [this](std::vector<uint32_t> c) { unpack_comm_response(c); },
+          setting_);
+    } catch (int i){
+      throw(i);
+    }
+
   } else {  // generic case
-    std::cerr << "unknown or not supported communication type " << comm_type
-              << std::endl;
     throw(-1);
   }
 }

@@ -10,7 +10,7 @@ CommSerial::CommSerial(const char *device,
 
   struct termios tty;
   if (tcgetattr(serial_port, &tty) != 0) {
-    printf("Error %i from tcgetattr: \n", errno);
+    throw(-1);
     return;
   }
   tty.c_cflag &= ~PARENB;  // Clear parity bit, disabling parity (most common)
@@ -45,7 +45,8 @@ CommSerial::CommSerial(const char *device,
   read_size_ = (int)setting[1];
   // Save tty settings, also checking for error
   if (tcsetattr(serial_port, TCSANOW, &tty) != 0) {
-    printf("Error %i from tcsetattr: \n", errno);
+    throw(-1);
+    return;
   }
   serial_read_thread = std::thread(
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
