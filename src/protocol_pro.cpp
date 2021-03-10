@@ -26,14 +26,15 @@ ProProtocolObject::ProProtocolObject(const char *device,
 
   register_comm_base(device);
 
-  // Create a New Thread with 20 mili seconds sleep timer
+  // Create a New Thread with 30 mili seconds sleep timer
   fast_data_write_thread =
       std::thread([this, fast_data]() { this->sendCommand(30, fast_data); });
   // Create a new Thread with 50 mili seconds sleep timer
   slow_data_write_thread =
       std::thread([this, slow_data]() { this->sendCommand(50, slow_data); });
+  // Create a motor update thread with 30 mili second sleep timer 
   motor_commands_update_thread =
-      std::thread([this]() { this->motors_update_loop(30); });
+      std::thread([this]() { this->motors_control_loop(30); });
 }
 
 void ProProtocolObject::update_drivetrim(double value) { trimvalue += value; }
@@ -59,7 +60,7 @@ void ProProtocolObject::set_robot_velocity(double *controlarray) {
   robotstatus_mutex.unlock();
 }
 
-void ProProtocolObject::motors_update_loop(int sleeptime) {
+void ProProtocolObject::motors_control_loop(int sleeptime) {
   double linear_vel;
   double angular_vel;
   double rpm1;
