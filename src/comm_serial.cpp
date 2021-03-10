@@ -48,12 +48,13 @@ CommSerial::CommSerial(const char *device,
     throw(-1);
     return;
   }
-  serial_read_thread = std::thread(
+  is_connected_ = false;
+  serial_read_thread_ = std::thread(
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
 }
 
 void CommSerial::write_to_device(std::vector<uint32_t> msg) {
-  serial_write_mutex.lock();
+  serial_write_mutex_.lock();
   if (serial_port >= 0) {
     unsigned char write_buffer[msg.size()];
     for (int x = 0; x < msg.size(); x++) {
@@ -62,17 +63,28 @@ void CommSerial::write_to_device(std::vector<uint32_t> msg) {
 
     write(serial_port, write_buffer, msg.size());
   }
-  serial_write_mutex.unlock();
+  serial_write_mutex_.unlock();
 }
 
 void CommSerial::read_device_loop(
     std::function<void(std::vector<uint32_t>)> parsefunction) {
+  std::chrono::milliseconds time_last =
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::system_clock::now().time_since_epoch());
   while (true) {
     unsigned char read_buf[read_size_];
     int num_bytes = read(serial_port, &read_buf, read_size_);
+    std::chrono::milliseconds time_now =
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch());
     if (num_bytes <= 0) {
+      if ((time_now - time_last).count() > TIMEOUT_MS_) {
+        is_connected_ = false;
+      }
       continue;
     }
+    is_connected_ = true;
+    time_last = time_now;
     static std::vector<uint32_t> output;
     for (int x = 0; x < num_bytes; x++) {
       output.push_back(read_buf[x]);
@@ -82,6 +94,6 @@ void CommSerial::read_device_loop(
   }
 }
 
-bool CommSerial::is_connected() { return (serial_port > 0); }
+bool CommSerial::is_connected() { return (is_connected_); }
 
 }  // namespace RoverRobotics

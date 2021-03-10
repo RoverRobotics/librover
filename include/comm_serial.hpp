@@ -40,8 +40,10 @@ class RoverRobotics::CommSerial : public RoverRobotics::CommBase {
   bool is_connected();
 
  private:
-  std::mutex serial_write_mutex;
+  std::mutex serial_write_mutex_;
   int read_size_;
   int serial_port;
-  std::thread serial_read_thread;
+  std::atomic<bool> is_connected_;
+  std::thread serial_read_thread_;
+  const int TIMEOUT_MS_ = 1000; //1 sec timeout
 };
