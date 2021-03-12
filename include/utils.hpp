@@ -83,7 +83,7 @@ class OdomControl {
   // velocity feedback
   double velocity_commanded_;
   double velocity_measured_;
-  double measured_vel;
+  double measured_vel_;
   std::vector<double> velocity_filtered_history_;
   std::vector<double> velocity_history_;
   bool velocity_control_on_;
