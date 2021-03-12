@@ -26,6 +26,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <atomic>
 
 #include "status_data.hpp"
 #include "utils.hpp"

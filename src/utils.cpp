@@ -24,7 +24,7 @@ OdomControl::OdomControl()
       differential_error_(0),
       velocity_commanded_(0),
       velocity_measured_(0),
-      measured_vel(0) {}
+      measured_vel_(0) {}
 
 OdomControl::OdomControl(bool use_control, PidGains pid_gains, double max,
                          double min, std::ofstream* fs)
@@ -48,7 +48,7 @@ OdomControl::OdomControl(bool use_control, PidGains pid_gains, double max,
       differential_error_(0),
       velocity_commanded_(0),
       velocity_measured_(0),
-      measured_vel(0) {
+      measured_vel_(0) {
   if (fs_ != nullptr && fs_->is_open()) {
     *fs_ << "time,Kp,Ki,Kd,error,integral_error,differential_error,error_"
             "filtered,meas_vel,filt_vel,cmd_vel,dt,motor_cmd\n";
@@ -78,7 +78,7 @@ OdomControl::OdomControl(bool use_control, PidGains pid_gains, double max,
       differential_error_(0),
       velocity_commanded_(0),
       velocity_measured_(0),
-      measured_vel(0) {}
+      measured_vel_(0) {}
 
 double OdomControl::run(double commanded_vel, double measured_vel, double dt,
                         int firmwareBuildNumber) {
@@ -122,7 +122,7 @@ void OdomControl::reset() {
   velocity_error_ = 0;
   velocity_commanded_ = 0;
   velocity_measured_ = 0;
-  measured_vel = 0;
+  measured_vel_ = 0;
   std::fill(velocity_filtered_history_.begin(),
             velocity_filtered_history_.end(), 0);
   motor_command_vel_ = 0;  // reset velocity
