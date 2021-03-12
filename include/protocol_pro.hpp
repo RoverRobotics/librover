@@ -79,32 +79,32 @@ class RoverRobotics::ProProtocolObject
    * @param sleeptime sleep time between each cycle
    */
   void motors_control_loop(int sleeptime);
-  const float MOTOR_RPM_TO_MPS_RATIO = 13749 / 1.26 / 0.72;
-  const int MOTOR_NEUTRAL = 125;
-  const int MOTOR_MAX = 250;
-  const int MOTOR_MIN = 0;
+  const float MOTOR_RPM_TO_MPS_RATIO_ = 13749 / 1.26 / 0.72;
+  const int MOTOR_NEUTRAL_ = 125;
+  const int MOTOR_MAX_ = 250;
+  const int MOTOR_MIN_ = 0;
 
-  const unsigned char startbyte = 253;
-  const int requestbyte = 10;
-  const int termios_baud_code = 4097; // THIS = baudrate of 57600
-  const int RECEIVE_MSG_LEN = 5;
+  const unsigned char startbyte_ = 253;
+  const int requestbyte_ = 10;
+  const int termios_baud_code_ = 4097; // THIS = baudrate of 57600
+  const int RECEIVE_MSG_LEN_ = 5;
   const double odom_angular_coef_ = 2.3;
   const double odom_traction_factor_ = 0.7;
-  const double CONTROL_LOOP_TIMEOUT_MS = 200;
-  std::unique_ptr<CommBase> comm_base;
-  std::string comm_type;
+  const double CONTROL_LOOP_TIMEOUT_MS_ = 200;
+  std::unique_ptr<CommBase> comm_base_;
+  std::string comm_type_;
 
-  std::mutex robotstatus_mutex;
+  std::mutex robotstatus_mutex_;
   robotData robotstatus_;
   double motors_speeds_[3];
-  double trimvalue;
-  std::thread fast_data_write_thread;
-  std::thread slow_data_write_thread;
-  std::thread motor_commands_update_thread;
+  double trimvalue_;
+  std::thread fast_data_write_thread_;
+  std::thread slow_data_write_thread_;
+  std::thread motor_commands_update_thread_;
   bool estop_;
   // Motor PID variables
-  OdomControl motor1_control;
-  OdomControl motor2_control;
+  OdomControl motor1_control_;
+  OdomControl motor2_control_;
   bool closed_loop_;
   PidGains pid_;
 

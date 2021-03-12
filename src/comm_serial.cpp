@@ -6,10 +6,10 @@ CommSerial::CommSerial(const char *device,
                        std::function<void(std::vector<uint32_t>)> parsefunction,
                        std::vector<uint32_t> setting) {
   // open serial port at specified port
-  serial_port = open(device, 02);
+  serial_port_ = open(device, 02);
 
   struct termios tty;
-  if (tcgetattr(serial_port, &tty) != 0) {
+  if (tcgetattr(serial_port_, &tty) != 0) {
     throw(-1);
     return;
   }
@@ -44,7 +44,7 @@ CommSerial::CommSerial(const char *device,
   cfsetospeed(&tty, (int)setting[0]);
   read_size_ = (int)setting[1];
   // Save tty settings, also checking for error
-  if (tcsetattr(serial_port, TCSANOW, &tty) != 0) {
+  if (tcsetattr(serial_port_, TCSANOW, &tty) != 0) {
     throw(-1);
     return;
   }
@@ -55,13 +55,13 @@ CommSerial::CommSerial(const char *device,
 
 void CommSerial::write_to_device(std::vector<uint32_t> msg) {
   serial_write_mutex_.lock();
-  if (serial_port >= 0) {
+  if (serial_port_ >= 0) {
     unsigned char write_buffer[msg.size()];
     for (int x = 0; x < msg.size(); x++) {
       write_buffer[x] = msg[x];
     }
 
-    write(serial_port, write_buffer, msg.size());
+    write(serial_port_, write_buffer, msg.size());
   }
   serial_write_mutex_.unlock();
 }
@@ -73,7 +73,7 @@ void CommSerial::read_device_loop(
           std::chrono::system_clock::now().time_since_epoch());
   while (true) {
     unsigned char read_buf[read_size_];
-    int num_bytes = read(serial_port, &read_buf, read_size_);
+    int num_bytes = read(serial_port_, &read_buf, read_size_);
     std::chrono::milliseconds time_now =
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch());
