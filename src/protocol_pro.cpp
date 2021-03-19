@@ -165,7 +165,6 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
   }
   if ((unsigned char)msgqueue[0] == startbyte_ &&
       msgqueue.size() >= RECEIVE_MSG_LEN_) {  // if valid start byte
-    if (DEBUG) std::cerr << "start byte found!";
     unsigned char start_byte_read, data1, data2, dataNO, checksum,
         read_checksum;
     start_byte_read = (unsigned char)msgqueue[0];
@@ -299,7 +298,6 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
       temp.clear();
     } else {  // !Found start byte but the msg contents were invalid, throw away
               // broken message
-      if (DEBUG) std::cerr << "failed checksum" << std::endl;
       std::vector<uint32_t> temp;
       for (int x = 1; x < msgqueue.size(); x++) {
         temp.push_back(msgqueue[x]);
@@ -312,9 +310,7 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
 
   } else {
     // !ran out of data; waiting for more
-    if (DEBUG) std::cerr << "no start byte found!";
   }
-  if (DEBUG) std::cerr << std::endl;
   robotstatus_mutex_.unlock();
 }
 
