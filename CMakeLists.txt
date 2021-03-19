@@ -6,7 +6,9 @@ add_compile_options(-std=c++14)
 add_library(librover SHARED
 src/protocol_pro.cpp
 src/comm_serial.cpp
-src/utils.cpp)
+src/utils.cpp
+src/comm_can.cpp
+src/protocol_pro_2.cpp)
 
 set(CMAKE_INSTALL_LIBDIR "/usr/lib")
 set(CMAKE_INSTALL_INCLUDEDIR "/usr/include")

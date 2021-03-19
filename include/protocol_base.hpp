@@ -2,6 +2,7 @@
 
 #include "comm_base.hpp"
 #include "comm_serial.hpp"
+#include "comm_can.hpp"
 
 namespace RoverRobotics {
 class BaseProtocolObject;

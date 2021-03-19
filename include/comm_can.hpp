@@ -18,7 +18,7 @@ class RoverRobotics::CommCan : public RoverRobotics::CommBase {
    * @param settings
    */
   CommCan(const char *device, std::function<void(std::vector<uint32_t>)>,
-             std::vector<uint32_t>);
+          std::vector<uint32_t>);
   /*
    * @brief Write data to Can Device
    * by accepting a vector of unsigned int 32 and convert it to a byte stream
@@ -40,10 +40,15 @@ class RoverRobotics::CommCan : public RoverRobotics::CommBase {
   bool is_connected();
 
  private:
-  std::mutex Can_write_mutex_;
+  struct sockaddr_can addr;  // CAN Address
+  struct can_frame frame;
+  struct can_frame robot_frame;
+  struct ifreq ifr;
+  int fd;
   int read_size_;
   int Can_port_;
   std::atomic<bool> is_connected_;
+  std::mutex Can_write_mutex_;
   std::thread Can_read_thread_;
-  const int TIMEOUT_MS_ = 1000; //1 sec timeout
+  const int TIMEOUT_MS_ = 1000;  // 1 sec timeout
 };
