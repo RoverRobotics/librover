@@ -1,5 +1,4 @@
 #pragma once
-#define DEBUG false
 
 #include "protocol_base.hpp"
 

@@ -322,13 +322,13 @@ bool ProProtocolObject::is_connected() { return comm_base_->is_connected(); }
 
 void ProProtocolObject::register_comm_base(const char *device) {
   if (comm_type_ == "serial") {
-    std::vector<uint32_t> setting_;
-    setting_.push_back(termios_baud_code_);
-    setting_.push_back(RECEIVE_MSG_LEN_);
+    std::vector<uint32_t> setting;
+    setting.push_back(termios_baud_code_);
+    setting.push_back(RECEIVE_MSG_LEN_);
     try {
       comm_base_ = std::make_unique<CommSerial>(
           device, [this](std::vector<uint32_t> c) { unpack_comm_response(c); },
-          setting_);
+          setting);
     } catch (int i){
       throw(i);
     }
