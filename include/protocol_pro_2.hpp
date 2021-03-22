@@ -1,6 +1,7 @@
 #pragma once
 
 #include "protocol_base.hpp"
+#include "control.hpp"
 
 namespace RoverRobotics {
 class Pro2ProtocolObject;
