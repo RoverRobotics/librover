@@ -42,8 +42,8 @@ struct pid_gains {
 };
 
 struct pid_output_limits {
-  float max;
-  float min;
+  float posmax;
+  float negmax;
 };
 
 struct same_side_wheel_data {
@@ -68,7 +68,7 @@ class Control::PidController {
  public:
   /* constructors */
   PidController(pid_gains pid_gains);
-  PidController(pid_gains pid_gains, float max_output, float min_output);
+  PidController(pid_gains pid_gains, pid_output_limits pid_output_limits);
 
   void setGains(pid_gains pid_gains);
   pid_gains getGains();
@@ -87,6 +87,8 @@ class Control::PidController {
   float kd_;
   float integral_error_;
   float integral_error_limit_;
+  float pos_max_output_;
+  float neg_max_output_;
   std::chrono::milliseconds time_last_;
 };
 
