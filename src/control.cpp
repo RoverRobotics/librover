@@ -56,5 +56,76 @@ pid_output_limits PidController::getOutputLimits() {
   return returnstruct;
 }
 
+void PidController::setIntegralErrorLimit(float error_limit) {
+  integral_error_limit_ = error_limit;
+}
+
+float PidController::getIntegralErrorLimit() { return integral_error_limit_; }
+
+float PidController::runControl(float target, float measured) {
+  /* current time */
+  std::chrono::milliseconds time_now =
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::system_clock::now().time_since_epoch());
+
+  /* delta time (mS) */
+  float delta_time_ms = (time_now - time_last_).count();
+
+  /* update time bookkeeping */
+  time_last_ = time_now;
+
+#ifdef DEBUG
+  std::cerr << 'dt ' << delta_time_ms << std::endl;
+#endif
+
+  /* error */
+  float error = target - measured;
+#ifdef DEBUG
+  std::cerr << 'error ' << error << std::endl;
+#endif
+
+  /* integrate */
+  integral_error_ += error;
+
+  /* clip integral error */
+  if (integral_error_ > integral_error_limit_) {
+    integral_error_ = integral_error_limit_;
+  }
+  if (integral_error_ < -integral_error_limit_) {
+    integral_error_ = -integral_error_limit_;
+  }
+#ifdef DEBUG
+  std::cerr << 'int_error ' << integral_error_ << std::endl;
+#endif
+
+  /* P I D terms */
+  float p = error * kp_;
+  float i = integral_error_ * ki_;
+  float d = (delta_time_ms / 1000) * kd_;
+
+#ifdef DEBUG
+  std::cerr << 'p ' << p << std::endl;
+  std::cerr << 'i ' << i << std::endl;
+  std::cerr << 'd ' << d << std::endl;
+#endif
+
+  /* compute output */
+  float output = p + i + d;
+
+  /* clip output */
+  if (output > pos_max_output_) {
+    output = pos_max_output_;
+  }
+  if (output < neg_max_output_) {
+    output = neg_max_output_;
+  }
+
+#ifdef DEBUG
+  std::cerr << 'output ' << output << std::endl;
+#endif
+
+return output;
+
+}
 
 }  // namespace Control
