@@ -1,5 +1,6 @@
 #include "protocol_pro_2.hpp"
 
+#include <bitset>
 namespace RoverRobotics {
 Pro2ProtocolObject::Pro2ProtocolObject(const char *device,
                                        std::string new_comm_type,
@@ -164,8 +165,25 @@ void Pro2ProtocolObject::set_robot_velocity(double *controlarray) {
 void Pro2ProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
   static std::vector<uint32_t> msgqueue;
   robotstatus_mutex_.lock();
-  for (int i = 0; i < 8; i++){
-    std::cerr << robotmsg[i];
+  if (comm_type_ == "can") {
+    // std::cerr << std::bitset<32>(robotmsg[0]) << " ";
+    //  std::cerr << test << " " << std::hex << robotmsg[0];
+    // for (int i = 0; i < sizeof(robotmsg); i++) {
+    //   std::cerr << std::hex << robotmsg[i] << " ";
+    // }
+    // std::cerr << std::endl;
+    if ((robotmsg[0] & 0x900) == 0x900) {
+      // for (int i = 1; i < sizeof(robotmsg); i++) {
+      //   std::cerr << std::hex << robotmsg[i] << " ";
+      // }
+      std::cerr << std::endl;
+      int vesc_id = robotmsg[0] & 0xFF;
+      uint32_t rpm = robotmsg[2] & robotmsg[3] & robotmsg[4] & robotmsg[5];
+      uint16_t current = robotmsg[6] & robotmsg[7];
+      uint16_t duty = robotmsg[8] & robotmsg[9];
+      std::cerr << "Vesc ID " << vesc_id << "RPM " << rpm << " Current "
+                << current << " Duty " << duty << std::endl;
+    }
   }
   //   msgqueue.insert(msgqueue.end(), robotmsg.begin(),
   //                   robotmsg.end());  // insert robotmsg to msg list

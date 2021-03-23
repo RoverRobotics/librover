@@ -5,7 +5,7 @@ CommCan::CommCan(const char *device,
                  std::function<void(std::vector<uint32_t>)> parsefunction,
                  std::vector<uint32_t> setting) {
   if ((fd = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0) {
-    //failed to create socket
+    // failed to create socket
     throw(-1);
   }
   strcpy(ifr.ifr_name, device);
@@ -56,15 +56,10 @@ void CommCan::read_device_loop(
     is_connected_ = true;
     time_last = time_now;
     std::vector<uint32_t> msg;
-    std::cerr << "test" ;
-    for (int x = 0; x < sizeof(robot_frame); x++) {
-      msg.push_back(robot_frame.can_dlc);
-      msg.push_back(robot_frame.can_id);
-      msg.push_back(robot_frame.data[0]);
-      msg.push_back(robot_frame.data[1]);
-      msg.push_back(robot_frame.data[2]);
-      msg.push_back(robot_frame.data[3]);
-      msg.push_back(robot_frame.data[4]);
+    msg.push_back(robot_frame.can_id);
+    msg.push_back(robot_frame.can_dlc);
+    for (int i = 0; i < sizeof(robot_frame); i++) {
+      msg.push_back(robot_frame.data[i]);
     }
     parsefunction(msg);
     msg.clear();
