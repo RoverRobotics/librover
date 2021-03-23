@@ -62,20 +62,20 @@ void PidController::setIntegralErrorLimit(float error_limit) {
 
 float PidController::getIntegralErrorLimit() { return integral_error_limit_; }
 
-float PidController::runControl(float target, float measured) {
+pid_outputs PidController::runControl(float target, float measured) {
   /* current time */
   std::chrono::milliseconds time_now =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
 
-  /* delta time (mS) */
-  float delta_time_ms = (time_now - time_last_).count();
+  /* delta time (S) */
+  float delta_time = (time_now - time_last_).count() / 1000;
 
   /* update time bookkeeping */
   time_last_ = time_now;
 
 #ifdef DEBUG
-  std::cerr << 'dt ' << delta_time_ms << std::endl;
+  std::cerr << 'dt ' << delta_time << std::endl;
 #endif
 
   /* error */
@@ -101,7 +101,7 @@ float PidController::runControl(float target, float measured) {
   /* P I D terms */
   float p = error * kp_;
   float i = integral_error_ * ki_;
-  float d = (delta_time_ms / 1000) * kd_;
+  float d = delta_time * kd_;
 
 #ifdef DEBUG
   std::cerr << 'p ' << p << std::endl;
@@ -124,7 +124,18 @@ float PidController::runControl(float target, float measured) {
   std::cerr << 'output ' << output << std::endl;
 #endif
 
-  return output;
+  pid_outputs returnstruct;
+  returnstruct.pid_output = output;
+  returnstruct.dt = delta_time;
+  returnstruct.error = error;
+  returnstruct.integral_error = integral_error_;
+  returnstruct.target_value = target;
+  returnstruct.measured_value = measured; 
+  returnstruct.kp = kp_;
+  returnstruct.ki = ki_;
+  returnstruct.kd = kd_;
+  
+  return returnstruct;
 }
 
 }  // namespace Control

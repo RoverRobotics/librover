@@ -41,6 +41,18 @@ struct pid_gains {
   float kd;
 };
 
+struct pid_outputs {
+    float pid_output;
+    float dt;
+    float error;
+    float integral_error;
+    float target_value;
+    float measured_value;
+    float kp;
+    float ki;
+    float kd;
+};
+
 struct pid_output_limits {
   float posmax;
   float negmax;
@@ -79,7 +91,7 @@ class Control::PidController {
   void setIntegralErrorLimit(float error_limit);
   float getIntegralErrorLimit();
 
-  float runControl(float target, float measured);
+  pid_outputs runControl(float target, float measured);
 
  private:
   float kp_;
