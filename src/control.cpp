@@ -124,8 +124,7 @@ float PidController::runControl(float target, float measured) {
   std::cerr << 'output ' << output << std::endl;
 #endif
 
-return output;
-
+  return output;
 }
 
 }  // namespace Control
