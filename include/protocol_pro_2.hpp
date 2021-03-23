@@ -112,7 +112,7 @@ class RoverRobotics::Pro2ProtocolObject
   const int RECEIVE_MSG_LEN_ = 8;
 
   enum robot_motors {
-    FRONT_LEFT_MOTOR ,
+    FRONT_LEFT_MOTOR,
     FRONT_RIGHT_MOTOR,
     BACK_LEFT_MOTOR,
     BACK_RIGHT_MOTOR

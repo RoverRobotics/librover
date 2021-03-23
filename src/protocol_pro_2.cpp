@@ -1,7 +1,6 @@
 #include "protocol_pro_2.hpp"
 
 namespace RoverRobotics {
-
 Pro2ProtocolObject::Pro2ProtocolObject(const char *device,
                                        std::string new_comm_type,
                                        bool closed_loop, PidGains pid) {
@@ -24,17 +23,17 @@ Pro2ProtocolObject::Pro2ProtocolObject(const char *device,
   // std::vector<uint32_t> fast_data = {REG_MOTOR_FB_RPM_LEFT,
   //                                    REG_MOTOR_FB_RPM_RIGHT,
   //                                    EncoderInterval_0, EncoderInterval_1};
-  // std::vector<uint32_t> slow_data = {
-  //     REG_MOTOR_FB_CURRENT_LEFT, REG_MOTOR_FB_CURRENT_RIGHT,
-  //     REG_MOTOR_TEMP_LEFT, REG_MOTOR_TEMP_RIGHT,
-  //     REG_MOTOR_CHARGER_STATE, BuildNO,
-  //     BATTERY_VOLTAGE_A};
+  std::vector<uint32_t> slow_data = {
+      REG_MOTOR_FB_CURRENT_LEFT, REG_MOTOR_FB_CURRENT_RIGHT,
+      REG_MOTOR_TEMP_LEFT,       REG_MOTOR_TEMP_RIGHT,
+      REG_MOTOR_CHARGER_STATE,   BuildNO,
+      BATTERY_VOLTAGE_A};
   // Create a New Thread with 30 mili seconds sleep timer
   // fast_data_write_thread_ =
   //     std::thread([this, fast_data]() { this->sendCommand(30, fast_data); });
   // // Create a new Thread with 50 mili seconds sleep timer
-  // slow_data_write_thread_ =
-  //     std::thread([this, slow_data]() { this->sendCommand(50, slow_data); });
+  slow_data_write_thread_ =
+      std::thread([this, slow_data]() { this->sendCommand(30, slow_data); });
   // Create a motor update thread with 30 mili second sleep timer
   motor_commands_update_thread_ =
       std::thread([this]() { this->motors_control_loop(30); });
@@ -165,6 +164,9 @@ void Pro2ProtocolObject::set_robot_velocity(double *controlarray) {
 void Pro2ProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
   static std::vector<uint32_t> msgqueue;
   robotstatus_mutex_.lock();
+  for (int i = 0; i < 8; i++){
+    std::cerr << robotmsg[i];
+  }
   //   msgqueue.insert(msgqueue.end(), robotmsg.begin(),
   //                   robotmsg.end());  // insert robotmsg to msg list
   //   // ! Delete bytes until valid start byte is found
@@ -399,20 +401,8 @@ void Pro2ProtocolObject::sendCommand(int sleeptime,
         // writemutex.unlock();
       } else if (comm_type_ == "can") {
         robotstatus_mutex_.lock();
-        for (int i = 0; x < 4; x++) {
+        for (int i = 0; i < 4; i++) {
           int32_t v = static_cast<int32_t>(motors_speeds_[i] * 100000.0);
-          //   frame.can_id = i | 0x80000000U
-          //   frame.can_dlc = 4;
-          //   frame.data[0] =
-          //       static_cast<uint8_t>((static_cast<uint32_t>(v) >> 24) &
-          //       0xFF);
-          //   frame.data[1] =
-          //       static_cast<uint8_t>((static_cast<uint32_t>(v) >> 16) &
-          //       0xFF);
-          //   frame.data[2] =
-          //       static_cast<uint8_t>((static_cast<uint32_t>(v) >> 8) & 0xFF);
-          //   frame.data[3] = static_cast<uint8_t>(static_cast<uint32_t>(v) &
-          //   0xFF);
           std::vector<uint32_t> write_buffer = {
               i | 0x80000000U,
               4,
@@ -424,7 +414,8 @@ void Pro2ProtocolObject::sendCommand(int sleeptime,
         }
         robotstatus_mutex_.unlock();
         // nbytes = write(s, &frame, sizeof(struct can_frame));
-      } else {   //! How did you get here?
+      } else {  //! How did you get here?
+        throw(-3);
         return;  // TODO: Return error ?
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));
