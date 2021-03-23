@@ -9,7 +9,7 @@ src/comm_serial.cpp
 src/utils.cpp
 src/comm_can.cpp
 src/protocol_pro_2.cpp
-src/debug.cpp)
+src/debug.cpp
 src/control.cpp)
 
 
