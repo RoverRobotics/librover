@@ -42,15 +42,15 @@ struct pid_gains {
 };
 
 struct pid_outputs {
-    float pid_output;
-    float dt;
-    float error;
-    float integral_error;
-    float target_value;
-    float measured_value;
-    float kp;
-    float ki;
-    float kd;
+  float pid_output;
+  float dt;
+  float error;
+  float integral_error;
+  float target_value;
+  float measured_value;
+  float kp;
+  float ki;
+  float kd;
 };
 
 struct pid_output_limits {
@@ -110,39 +110,49 @@ class Control::SkidRobotMotionController {
   SkidRobotMotionController();
   SkidRobotMotionController(robot_motion_mode_t operating_mode,
                             robot_geometry robot_geometry, pid_gains pid_gains,
-                            pid_output_limits pid_limits);
+                            float max_motor_duty);
 
-  void enableVelocityChangeLimiting(robot_velocities limits);
+  void setAccelerationLimits(robot_velocities limits);
+  robot_velocities getAccelerationLimits();
 
-  void changeOperatingMode(robot_motion_mode_t operating_mode);
+  void setOperatingMode(robot_motion_mode_t operating_mode);
+  robot_motion_mode_t getOperatingMode();
 
   void setRobotGeometry(robot_geometry robot_geometry);
+  robot_geometry getRobotGeometry();
 
   void setPidGains(pid_gains pid_gains);
+  pid_gains getPidGains();
 
   void setTractionGain(float traction_control_gain);
+  float getTractionGain();
 
   void setMotorMaxDuty(float max_motor_duty);
+  float getMotorMaxDuty();
 
   void setFilterAlpha(float alpha);
+  float getFilterAlpha();
 
   motor_data runMotionControl(robot_velocities velocity_targets,
                               motor_data current_duty_cycles,
                               motor_data current_motor_speeds);
 
  private:
-  PidController pid_controller_left_;
-  PidController pid_controller_right_;
+  robot_motion_mode_t operating_mode_;
+  robot_geometry robot_geometry_;
 
-  pid_gains pid_gains_left_;
-  pid_gains pid_gains_right_;
+  PidController* pid_controller_left_;
+  PidController* pid_controller_right_;
+  pid_gains pid_gains_;
 
   float traction_control_gain_;
-
   float max_motor_duty_;
-  
+  float max_linear_acceleration_;
+  float max_angular_acceleration_;
+  float lpf_alpha_;
 };
 
+// #TODO: implement if needed
 class Control::AlphaBetaFilter {
  public:
   /* constructors */
@@ -152,9 +162,4 @@ class Control::AlphaBetaFilter {
 
  private:
   float running_sum_;
-  
 };
-
-
-
-

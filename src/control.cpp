@@ -130,12 +130,88 @@ pid_outputs PidController::runControl(float target, float measured) {
   returnstruct.error = error;
   returnstruct.integral_error = integral_error_;
   returnstruct.target_value = target;
-  returnstruct.measured_value = measured; 
+  returnstruct.measured_value = measured;
   returnstruct.kp = kp_;
   returnstruct.ki = ki_;
   returnstruct.kd = kd_;
-  
+
   return returnstruct;
 }
 
+SkidRobotMotionController::SkidRobotMotionController()
+    : operating_mode_(OPEN_LOOP),
+      traction_control_gain_(1),
+      max_motor_duty_(100) {}
+
+SkidRobotMotionController::SkidRobotMotionController(
+    robot_motion_mode_t operating_mode, robot_geometry robot_geometry,
+    pid_gains pid_gains, float max_motor_duty)
+    : traction_control_gain_(1),
+      lpf_alpha_(1),
+      max_linear_acceleration_(std::numeric_limits<float>::max()),
+      max_angular_acceleration_(std::numeric_limits<float>::max()) {
+  operating_mode_ = operating_mode;
+  robot_geometry_ = robot_geometry;
+  pid_gains_ = pid_gains;
+  max_motor_duty_ = max_motor_duty;
+}
+
+void SkidRobotMotionController::setAccelerationLimits(robot_velocities limits) {
+  max_linear_acceleration_ = limits.linear_velocity;
+  max_angular_acceleration_ = limits.angular_velocity;
+}
+
+robot_velocities SkidRobotMotionController::getAccelerationLimits() {
+  robot_velocities returnstruct;
+  returnstruct.angular_velocity = max_angular_acceleration_;
+  returnstruct.linear_velocity = max_linear_acceleration_;
+  return returnstruct;
+}
+
+void SkidRobotMotionController::setOperatingMode(
+    robot_motion_mode_t operating_mode) {
+  operating_mode_ = operating_mode;
+}
+
+robot_motion_mode_t SkidRobotMotionController::getOperatingMode() {
+  return operating_mode_;
+}
+
+void SkidRobotMotionController::setRobotGeometry(
+    robot_geometry robot_geometry) {
+  robot_geometry_ = robot_geometry;
+}
+
+robot_geometry SkidRobotMotionController::getRobotGeometry() {
+  return robot_geometry_;
+}
+
+void SkidRobotMotionController::setPidGains(pid_gains pid_gains) {
+  pid_gains_ = pid_gains;
+}
+
+pid_gains SkidRobotMotionController::getPidGains() { return pid_gains_; }
+
+void SkidRobotMotionController::setTractionGain(float traction_control_gain) {
+  traction_control_gain_ = traction_control_gain;
+}
+float SkidRobotMotionController::getTractionGain() {
+  return traction_control_gain_;
+}
+
+void SkidRobotMotionController::setMotorMaxDuty(float max_motor_duty) {
+  max_motor_duty_ = max_motor_duty;
+}
+float SkidRobotMotionController::getMotorMaxDuty() { return max_motor_duty_; }
+
+void SkidRobotMotionController::setFilterAlpha(float alpha) {
+  lpf_alpha_ = alpha;
+}
+float SkidRobotMotionController::getFilterAlpha() { return lpf_alpha_; }
+
+motor_data SkidRobotMotionController::runMotionControl(
+    robot_velocities velocity_targets, motor_data current_duty_cycles,
+    motor_data current_motor_speeds) {
+
+    }
 }  // namespace Control
