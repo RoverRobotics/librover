@@ -1,7 +1,9 @@
 #include <chrono>
 #include <vector>
+#define RPM_TO_RADS_SEC 0.10472
 
 namespace Control {
+
 
 /* classes */
 class PidController;
@@ -73,6 +75,9 @@ robot_velocities limitVelocityChange(robot_velocities target_velocities,
 
 same_side_wheel_data tractionScalePower(same_side_wheel_data motor_speeds,
                                         float gain);
+
+robot_velocities computeVelocitiesFromWheelspeeds(
+    motor_data wheel_speeds, robot_geometry robot_geometry);
 
 }  // namespace Control
 

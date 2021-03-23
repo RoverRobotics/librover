@@ -1,8 +1,41 @@
 #include "control.hpp"
 
+#include <math.h>
+
 #include <limits>
 
 namespace Control {
+/* functions */
+robot_velocities computeVelocitiesFromWheelspeeds(
+    motor_data wheel_speeds, robot_geometry robot_geometry) {
+  /* see documentation for math */
+  /* radius of robot's stance */
+  float rs = sqrt(pow(0.5 * robot_geometry.wheel_base, 2) +
+                  pow(0.5 * robot_geometry.intra_axle_distance, 2));
+
+  /* circumference of robot's stance (meters) */
+  float cs = 2 * M_PI * rs;
+
+  /* translate wheelspeed (rpm) into travel rate(m/s) */
+  float left_travel_rate = std::min(wheel_speeds.fl, wheel_speeds.rl) *
+                           RPM_TO_RADS_SEC * robot_geometry.wheel_radius;
+  float right_travel_rate = std::min(wheel_speeds.fr, wheel_speeds.rr) *
+                            RPM_TO_RADS_SEC * robot_geometry.wheel_radius;
+
+  /* difference between left and right travel rates */
+  float travel_differential = right_travel_rate - left_travel_rate;
+
+  /* compute velocities */
+  float linear_velocity = std::min(left_travel_rate, right_travel_rate);
+  float angular_velocity = travel_differential / cs; //possibly add traction factor here
+
+  robot_velocities returnstruct;
+  returnstruct.linear_velocity = linear_velocity;
+  returnstruct.angular_velocity = angular_velocity;
+  return returnstruct;
+}
+
+/* classes */
 PidController::PidController(struct pid_gains pid_gains)
     : /* defaults */
       integral_error_(0),
@@ -212,6 +245,12 @@ float SkidRobotMotionController::getFilterAlpha() { return lpf_alpha_; }
 motor_data SkidRobotMotionController::runMotionControl(
     robot_velocities velocity_targets, motor_data current_duty_cycles,
     motor_data current_motor_speeds) {
+  /* estimate robot velocities from wheel speeds */
+  robot_velocities measured_velocities =
+      computeVelocitiesFromWheelspeeds(current_motor_speeds, robot_geometry_);
 
-    }
+#ifdef DEBUG
+
+#endif
+}
 }  // namespace Control
