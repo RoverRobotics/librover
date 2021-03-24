@@ -1,5 +1,18 @@
+#include <algorithm>
 #include <chrono>
+#include <cstdint>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <memory>
+#include <string>
 #include <vector>
+
+#ifdef DEBUG
+#include <ctime>
+#include <sstream>
+#endif
+
 #define RPM_TO_RADS_SEC 0.10472
 
 namespace Control {
@@ -43,8 +56,10 @@ struct pid_gains {
 };
 
 struct pid_outputs {
-  float pid_output;
+  std::string name;
+  float time;
   float dt;
+  float pid_output;
   float error;
   float integral_error;
   float target_value;
@@ -83,8 +98,9 @@ robot_velocities computeVelocitiesFromWheelspeeds(
 class Control::PidController {
  public:
   /* constructors */
-  PidController(pid_gains pid_gains);
-  PidController(pid_gains pid_gains, pid_output_limits pid_output_limits);
+  PidController(pid_gains pid_gains, std::string name);
+  PidController(pid_gains pid_gains, pid_output_limits pid_output_limits,
+                std::string name);
 
   void setGains(pid_gains pid_gains);
   pid_gains getGains();
@@ -97,7 +113,10 @@ class Control::PidController {
 
   pid_outputs runControl(float target, float measured);
 
+  void writePidDataToCsv(std::ofstream log_file, pid_outputs data);
+
  private:
+  std::string name_;
   float kp_;
   float ki_;
   float kd_;
@@ -142,11 +161,20 @@ class Control::SkidRobotMotionController {
                               motor_data current_motor_speeds);
 
  private:
+  std::string log_folder_path_;
+#ifdef DEBUG
+  std::ofstream log_file_;
+#endif
+
   robot_motion_mode_t operating_mode_;
   robot_geometry robot_geometry_;
 
-  PidController* pid_controller_left_;
-  PidController* pid_controller_right_;
+  std::unique_ptr<PidController> pid_controller_left_;
+  std::unique_ptr<PidController> pid_controller_right_;
+  std::unique_ptr<PidController> pid_controller_fl_;
+  std::unique_ptr<PidController> pid_controller_fr_;
+  std::unique_ptr<PidController> pid_controller_rl_;
+  std::unique_ptr<PidController> pid_controller_rr_;
   pid_gains pid_gains_;
 
   float traction_control_gain_;
@@ -154,6 +182,12 @@ class Control::SkidRobotMotionController {
   float max_linear_acceleration_;
   float max_angular_acceleration_;
   float lpf_alpha_;
+  std::chrono::milliseconds time_last_;
+
+  motor_data computeMotorCommandsTc_(motor_data target_wheel_speeds,
+                                     motor_data current_motor_speeds);
+
+  motor_data clipDutyCycles_(motor_data proposed_duties);
 };
 
 // #TODO: implement if needed
