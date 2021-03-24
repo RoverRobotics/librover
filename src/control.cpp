@@ -276,6 +276,19 @@ SkidRobotMotionController::SkidRobotMotionController(
       max_angular_acceleration_(std::numeric_limits<float>::max()),
       time_last_(std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch())) {
+
+#ifdef DEBUG
+  /*open a log file to store control data*/
+  auto t = std::time(nullptr);
+  auto tm = *std::localtime(&t);
+
+  std::ostringstream oss;
+  oss << std::put_time(&tm, "%d-%m-%Y-%H-%M-%S");
+  auto filename = oss.str();
+
+  log_file_.open(log_folder_path_ + filename + ".csv")
+#endif
+
   operating_mode_ = operating_mode;
   robot_geometry_ = robot_geometry;
   pid_gains_ = pid_gains;
