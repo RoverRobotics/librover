@@ -9,7 +9,9 @@ src/comm_serial.cpp
 src/utils.cpp
 src/comm_can.cpp
 src/protocol_pro_2.cpp
+src/debug.cpp
 src/control.cpp)
+
 
 set(CMAKE_INSTALL_LIBDIR "/usr/lib")
 set(CMAKE_INSTALL_INCLUDEDIR "/usr/include")

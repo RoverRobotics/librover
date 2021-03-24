@@ -5,7 +5,7 @@ CommCan::CommCan(const char *device,
                  std::function<void(std::vector<uint32_t>)> parsefunction,
                  std::vector<uint32_t> setting) {
   if ((fd = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0) {
-    //failed to create socket
+    // failed to create socket
     throw(-1);
   }
   strcpy(ifr.ifr_name, device);
@@ -43,10 +43,6 @@ void CommCan::read_device_loop(
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
   while (true) {
-    //remove this when release
-    is_connected_ = true;
-    return;
-    //
     int num_bytes = read(fd, &robot_frame, sizeof(robot_frame));
     std::chrono::milliseconds time_now =
         std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -60,14 +56,10 @@ void CommCan::read_device_loop(
     is_connected_ = true;
     time_last = time_now;
     std::vector<uint32_t> msg;
-    for (int x = 0; x < sizeof(robot_frame); x++) {
-      msg.push_back(robot_frame.can_dlc);
-      msg.push_back(robot_frame.can_id);
-      msg.push_back(robot_frame.data[0]);
-      msg.push_back(robot_frame.data[1]);
-      msg.push_back(robot_frame.data[2]);
-      msg.push_back(robot_frame.data[3]);
-      msg.push_back(robot_frame.data[4]);
+    msg.push_back(robot_frame.can_id);
+    msg.push_back(robot_frame.can_dlc);
+    for (int i = 0; i < sizeof(robot_frame); i++) {
+      msg.push_back(robot_frame.data[i]);
     }
     parsefunction(msg);
     msg.clear();
