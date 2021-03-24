@@ -73,7 +73,7 @@ class RoverRobotics::Pro2ProtocolObject
    * @param sleeptime sleep time between each cycle
    * @param datalist list of data to request
    */
-  void sendCommand(int sleeptime, std::vector<uint32_t> datalist);
+  void send_command(int sleeptime);
   /*
    * @brief Thread Driven function update the robot motors using pid
    * @param sleeptime sleep time between each cycle

@@ -4,22 +4,22 @@
 struct robotData {
   // Motor Infos
   signed short int motor1_id;
-  signed short int motor1_rpm;
+  float motor1_rpm;
   signed short int motor1_current;
   signed short int motor1_temp;
   signed short int motor1_mos_temp;
   signed short int motor2_id;
-  signed short int motor2_rpm;
+  float motor2_rpm;
   signed short int motor2_current;
   signed short int motor2_temp;
   signed short int motor2_mos_temp;
   signed short int motor3_id;
-  signed short int motor3_rpm;
+  float motor3_rpm;
   signed short int motor3_current;
   signed short int motor3_temp;
   signed short int motor3_mos_temp;
   signed short int motor4_id;
-  signed short int motor4_rpm;
+  float motor4_rpm;
   signed short int motor4_current;
   signed short int motor4_temp;
   signed short int motor4_mos_temp;

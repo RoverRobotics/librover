@@ -13,3 +13,4 @@ src/protocol_pro_2.cpp
 .vscode/tasks.json
 src/workspace.code-workspace
 .vscode/settings.json
+src/debug

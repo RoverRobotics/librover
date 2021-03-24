@@ -12,4 +12,7 @@ int Rover() {
       std::make_unique<Pro2ProtocolObject>("can0", "can", false, pidGains_);
 }
 }  // namespace RoverRobotics
-int main() { int rover = RoverRobotics::Rover(); }
+int main() { int rover = RoverRobotics::Rover(); 
+while (true){
+  continue;
+}}

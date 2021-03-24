@@ -1,6 +1,7 @@
 #include "protocol_pro_2.hpp"
 
-#include <bitset>
+#include <iomanip>
+#include <iostream>
 namespace RoverRobotics {
 Pro2ProtocolObject::Pro2ProtocolObject(const char *device,
                                        std::string new_comm_type,
@@ -24,17 +25,12 @@ Pro2ProtocolObject::Pro2ProtocolObject(const char *device,
   // std::vector<uint32_t> fast_data = {REG_MOTOR_FB_RPM_LEFT,
   //                                    REG_MOTOR_FB_RPM_RIGHT,
   //                                    EncoderInterval_0, EncoderInterval_1};
-  std::vector<uint32_t> slow_data = {
-      REG_MOTOR_FB_CURRENT_LEFT, REG_MOTOR_FB_CURRENT_RIGHT,
-      REG_MOTOR_TEMP_LEFT,       REG_MOTOR_TEMP_RIGHT,
-      REG_MOTOR_CHARGER_STATE,   BuildNO,
-      BATTERY_VOLTAGE_A};
   // Create a New Thread with 30 mili seconds sleep timer
   // fast_data_write_thread_ =
-  //     std::thread([this, fast_data]() { this->sendCommand(30, fast_data); });
+  //     std::thread([this, fast_data]() { this->send_command(30, fast_data);
+  //     });
   // // Create a new Thread with 50 mili seconds sleep timer
-  slow_data_write_thread_ =
-      std::thread([this, slow_data]() { this->sendCommand(30, slow_data); });
+  slow_data_write_thread_ = std::thread([this]() { this->send_command(30); });
   // Create a motor update thread with 30 mili second sleep timer
   motor_commands_update_thread_ =
       std::thread([this]() { this->motors_control_loop(30); });
@@ -172,194 +168,56 @@ void Pro2ProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
     //   std::cerr << std::hex << robotmsg[i] << " ";
     // }
     // std::cerr << std::endl;
-    if ((robotmsg[0] & 0x900) == 0x900) {
-      // for (int i = 1; i < sizeof(robotmsg); i++) {
-      //   std::cerr << std::hex << robotmsg[i] << " ";
+    if ((robotmsg[0] == 0x001B)) {
+    }
+    // if ((robotmsg[0] & 0x900) == 0x900) {
+    if ((robotmsg[0] & 0xFFFFFF00) == 0x80000900) {
+      // for (auto a : robotmsg) {
+      //   std::cerr << std::hex << a << " ";
       // }
-      std::cerr << std::endl;
+      // std::cerr << std::endl;
       int vesc_id = robotmsg[0] & 0xFF;
-      uint32_t rpm = robotmsg[2] & robotmsg[3] & robotmsg[4] & robotmsg[5];
-      uint16_t current = robotmsg[6] & robotmsg[7];
-      uint16_t duty = robotmsg[8] & robotmsg[9];
-      std::cerr << "Vesc ID " << vesc_id << "RPM " << rpm << " Current "
-                << current << " Duty " << duty << std::endl;
+      int32_t rpm_scaled = ((uint8_t)robotmsg[2] << 24) |
+                           ((uint8_t)robotmsg[3] << 16) |
+                           ((uint8_t)robotmsg[4] << 8) | ((uint8_t)robotmsg[5]);
+      int16_t current_scaled =
+          ((uint8_t)robotmsg[6] << 8) | ((uint8_t)robotmsg[7]);
+      int16_t duty_scaled =
+          (((uint8_t)robotmsg[8] << 8) | ((uint8_t)robotmsg[9]));
+
+      float rpm = (float)rpm_scaled / 1000 * 60;
+      float current = (float)current_scaled / 10;
+      float duty = (float)duty_scaled / 10;
+      // std::cerr << "Vesc ID " << vesc_id << "RPM " << rpm << " Current "
+      //           << current << " Duty " << duty << std::endl;
+      // if (vesc_id == 0) {
+      //   robotstatus_.motor1_rpm = rpm;
+      //   robotstatus_.motor1_id = vesc_id;
+      //   robotstatus_.motor1_current = current;
+      //   robotstatus_.motor1_duty = duty;
+      // } else if (vesc_id == 1) {
+      //   robotstatus_.motor2_rpm = rpm;
+      //   robotstatus_.motor2_id = vesc_id;
+      //   robotstatus_.motor2_current = current;
+      //   robotstatus_.motor2_duty = duty;
+      // } else if (vesc_id == 2) {
+      //   robotstatus_.motor3_rpm = rpm;
+      //   robotstatus_.motor3_id = vesc_id;
+      //   robotstatus_.motor3_current = current;
+      //   robotstatus_.motor3_duty = duty;
+      // } else if (vesc_id == 3) {
+      //   robotstatus_.motor4_rpm = rpm;
+      //   robotstatus_.motor4_id = vesc_id;
+      //   robotstatus_.motor4_current = current;
+      //   robotstatus_.motor4_duty = duty;
+      // } else {
+      //   return;
+      // }
+      std::cerr << std::dec << "rpm: " << rpm << std::endl;
+      std::cerr << std::dec << "current: " << current << std::endl;
+      std::cerr << std::dec << "duty: " << duty << std::endl;
     }
   }
-  //   msgqueue.insert(msgqueue.end(), robotmsg.begin(),
-  //                   robotmsg.end());  // insert robotmsg to msg list
-  //   // ! Delete bytes until valid start byte is found
-
-  //   if ((unsigned char)msgqueue[0] != startbyte_ &&
-  //       msgqueue.size() > RECEIVE_MSG_LEN_) {
-  //     int startbyte_index = 0;
-  //     // !Did not find valid start byte in buffer
-  //     while (msgqueue[startbyte_index] != startbyte_ &&
-  //            startbyte_index < msgqueue.size())
-  //       startbyte_index++;
-  //     if (startbyte_index > msgqueue.size()) {
-  //       msgqueue.clear();
-  //       return;
-  //     } else {
-  //       // !Reconstruct the vector so that the start byte is at the 0
-  //       position std::vector<uint32_t> temp; for (int x = startbyte_index; x
-  //       < msgqueue.size(); x++) {
-  //         temp.push_back(msgqueue[x]);
-  //       }
-  //       msgqueue.clear();
-  //       msgqueue.resize(0);
-  //       msgqueue = temp;
-  //       temp.clear();
-  //     }
-  //   }
-  //   if ((unsigned char)msgqueue[0] == startbyte_ &&
-  //       msgqueue.size() >= RECEIVE_MSG_LEN_) {  // if valid start byte
-  //     unsigned char start_byte_read, data1, data2, dataNO, checksum,
-  //         read_checksum;
-  //     start_byte_read = (unsigned char)msgqueue[0];
-  //     dataNO = (unsigned char)msgqueue[1];
-  //     data1 = (unsigned char)msgqueue[2];
-  //     data2 = (unsigned char)msgqueue[3];
-  //     checksum = 255 - (dataNO + data1 + data2) % 255;
-  //     read_checksum = (unsigned char)msgqueue[4];
-  //     if (checksum == read_checksum) {  // verify checksum
-  //       int b = (data1 << 8) + data2;
-  //       switch (int(dataNO)) {
-  //         case REG_PWR_TOTAL_CURRENT:
-  //           break;
-  //         case REG_MOTOR_FB_RPM_LEFT:
-  //           robotstatus_.motor1_rpm = b;
-  //           break;
-  //         case REG_MOTOR_FB_RPM_RIGHT:  // motor2_rpm;
-  //           robotstatus_.motor2_rpm = b;
-  //           break;
-  //         case REG_FLIPPER_FB_POSITION_POT1:
-  //           robotstatus_.motor3_sensor1 = b;
-  //           break;
-  //         case REG_FLIPPER_FB_POSITION_POT2:
-  //           robotstatus_.motor3_sensor2 = b;
-  //           break;
-  //         case REG_MOTOR_FB_CURRENT_LEFT:
-  //           robotstatus_.motor1_current = b;
-  //           break;
-  //         case REG_MOTOR_FB_CURRENT_RIGHT:
-  //           robotstatus_.motor2_current = b;
-  //           break;
-  //         case REG_MOTOR_ENCODER_COUNT_LEFT:
-
-  //         case REG_MOTOR_ENCODER_COUNT_RIGHT:
-  //         case REG_MOTOR_FAULT_FLAG_LEFT:
-  //           robotstatus_.robot_fault_flag = b;
-  //           break;
-  //         case REG_MOTOR_TEMP_LEFT:
-  //           robotstatus_.motor1_temp = b;
-  //           break;
-  //         case REG_MOTOR_TEMP_RIGHT:
-  //           robotstatus_.motor2_temp = b;
-  //           break;
-  //         case REG_PWR_BAT_VOLTAGE_A:
-
-  //         case REG_PWR_BAT_VOLTAGE_B:
-  //         case EncoderInterval_0:
-  //         case EncoderInterval_1:
-  //         case EncoderInterval_2:
-  //         case REG_ROBOT_REL_SOC_A:
-  //         case REG_ROBOT_REL_SOC_B:
-  //         case REG_MOTOR_CHARGER_STATE:
-  //           robotstatus_.battery1_SOC = b;
-  //           break;
-  //         case BuildNO:
-  //           robotstatus_.robot_firmware = b;
-  //           break;
-  //         case REG_PWR_A_CURRENT:
-  //         case REG_PWR_B_CURRENT:
-  //         case REG_MOTOR_FLIPPER_ANGLE:
-  //           robotstatus_.motor3_angle = b;
-  //           break;
-  //         case to_computer_REG_MOTOR_SIDE_FAN_SPEED:
-  //           robotstatus_.robot_fan_speed = b;
-  //           break;
-  //         case to_computer_REG_MOTOR_SLOW_SPEED:
-  //         case BATTERY_STATUS_A:
-  //         case BATTERY_STATUS_B:
-  //         case BATTERY_MODE_A:
-  //           robotstatus_.battery1_fault_flag = b;
-  //           break;
-  //         case BATTERY_MODE_B:
-  //           robotstatus_.battery2_fault_flag = b;
-  //           break;
-  //         case BATTERY_TEMP_A:
-  //           robotstatus_.battery1_temp = b;
-  //           break;
-  //         case BATTERY_TEMP_B:
-  //           robotstatus_.battery2_temp = b;
-  //           break;
-  //         case BATTERY_VOLTAGE_A:
-  //           robotstatus_.battery1_voltage = b;
-  //           break;
-  //         case BATTERY_VOLTAGE_B:
-  //           robotstatus_.battery2_voltage = b;
-  //           break;
-  //         case BATTERY_CURRENT_A:
-  //           robotstatus_.battery1_current = b;
-  //           break;
-  //         case BATTERY_CURRENT_B:
-  //           robotstatus_.battery2_current = b;
-  //           break;
-  //       }
-  //       // !Same battery system for both A and B on this robot
-  //       robotstatus_.battery2_SOC = robotstatus_.battery1_SOC;
-  //       // !THESE VALUES ARE NOT AVAILABLE ON ROVER PRO
-  //       robotstatus_.motor1_id = 0;
-  //       robotstatus_.motor1_mos_temp = 0;
-  //       robotstatus_.motor2_id = 0;
-  //       robotstatus_.motor2_mos_temp = 0;
-  //       robotstatus_.motor3_id = 0;
-  //       robotstatus_.motor3_rpm = 0;
-  //       robotstatus_.motor3_current = 0;
-  //       robotstatus_.motor3_temp = 0;
-  //       robotstatus_.motor3_mos_temp = 0;
-  //       robotstatus_.motor4_id = 0;
-  //       robotstatus_.motor4_rpm = 0;
-  //       robotstatus_.motor4_current = 0;
-  //       robotstatus_.motor4_temp = 0;
-  //       robotstatus_.motor4_mos_temp = 0;
-  //       robotstatus_.robot_guid = 0;
-  //       robotstatus_.robot_speed_limit = 0;
-
-  //       robotstatus_.linear_vel =
-  //           0.5 * (robotstatus_.motor1_rpm / MOTOR_RPM_TO_MPS_RATIO_ +
-  //                  robotstatus_.motor2_rpm / MOTOR_RPM_TO_MPS_RATIO_);
-
-  //       robotstatus_.angular_vel =
-  //           ((robotstatus_.motor1_rpm / MOTOR_RPM_TO_MPS_RATIO_) -
-  //            (robotstatus_.motor2_rpm / MOTOR_RPM_TO_MPS_RATIO_)) *
-  //           odom_angular_coef_ * odom_traction_factor_;
-
-  //       std::vector<uint32_t> temp;
-  //       // !Remove processed msg from queue
-  //       for (int x = RECEIVE_MSG_LEN_; x < msgqueue.size(); x++) {
-  //         temp.push_back(msgqueue[x]);
-  //       }
-  //       msgqueue.clear();
-  //       msgqueue.resize(0);
-  //       msgqueue = temp;
-  //       temp.clear();
-  //     } else {  // !Found start byte but the msg contents were invalid, throw
-  //     away
-  //               // broken message
-  //       std::vector<uint32_t> temp;
-  //       for (int x = 1; x < msgqueue.size(); x++) {
-  //         temp.push_back(msgqueue[x]);
-  //       }
-  //       msgqueue.clear();
-  //       msgqueue.resize(0);
-  //       msgqueue = temp;
-  //       temp.clear();
-  //     }
-
-  //   } else {
-  //     // !ran out of data; waiting for more
-  //   }
   robotstatus_mutex_.unlock();
 }
 
@@ -389,55 +247,52 @@ void Pro2ProtocolObject::register_comm_base(const char *device) {
   }
 }
 
-void Pro2ProtocolObject::sendCommand(int sleeptime,
-                                     std::vector<uint32_t> datalist) {
+void Pro2ProtocolObject::send_command(int sleeptime) {
   while (true) {
-    for (int x : datalist) {
-      if (comm_type_ == "serial") {
-        // TODO
+    if (comm_type_ == "serial") {
+      // TODO
 
-        // writemutex.lock();
-        // write_buffer[0] = (unsigned char)253;
-        // write_buffer[1] = (unsigned char)motors_speeds_[0];  // left motor
-        // write_buffer[2] = (unsigned char)motors_speeds_[1];  // right motor
-        // write_buffer[3] = (unsigned char)motors_speeds_[2];  // flipper
-        // write_buffer[4] = (unsigned char)10;
-        // write_buffer[5] = (unsigned char)x;  // Param 2:
-        // // Calculate Checksum
-        // write_buffer[6] =
-        //     (char)255 - (write_buffer[1] + write_buffer[2] + write_buffer[3]
-        //     +
-        //                  write_buffer[4] + write_buffer[5]) %
-        //                     255;
-        // comm_base->writetodevice(write_buffer);
-        // // std::cerr << "To Robot: ";
-        // // for (int i = 0; i < sizeof(write_buffer); i++) {
-        // //   std::cerr << int(write_buffer[i]) << " ";
-        // //   // std::cerr <<  std::dec <<int(write_buffer[i]) << " ";
-        // // }
-        // // std::cout << std::endl;
-        // writemutex.unlock();
-      } else if (comm_type_ == "can") {
-        robotstatus_mutex_.lock();
-        for (int i = 0; i < 4; i++) {
-          int32_t v = static_cast<int32_t>(motors_speeds_[i] * 100000.0);
-          std::vector<uint32_t> write_buffer = {
-              i | 0x80000000U,
-              4,
-              static_cast<uint8_t>((static_cast<uint32_t>(v) >> 24) & 0xFF),
-              static_cast<uint8_t>((static_cast<uint32_t>(v) >> 16) & 0xFF),
-              static_cast<uint8_t>((static_cast<uint32_t>(v) >> 8) & 0xFF),
-              static_cast<uint8_t>(static_cast<uint32_t>(v) & 0xFF)};
-          comm_base_->write_to_device(write_buffer);
-        }
-        robotstatus_mutex_.unlock();
-        // nbytes = write(s, &frame, sizeof(struct can_frame));
-      } else {  //! How did you get here?
-        throw(-3);
-        return;  // TODO: Return error ?
+      // writemutex.lock();
+      // write_buffer[0] = (unsigned char)253;
+      // write_buffer[1] = (unsigned char)motors_speeds_[0];  // left motor
+      // write_buffer[2] = (unsigned char)motors_speeds_[1];  // right motor
+      // write_buffer[3] = (unsigned char)motors_speeds_[2];  // flipper
+      // write_buffer[4] = (unsigned char)10;
+      // write_buffer[5] = (unsigned char)x;  // Param 2:
+      // // Calculate Checksum
+      // write_buffer[6] =
+      //     (char)255 - (write_buffer[1] + write_buffer[2] + write_buffer[3]
+      //     +
+      //                  write_buffer[4] + write_buffer[5]) %
+      //                     255;
+      // comm_base->writetodevice(write_buffer);
+      // // std::cerr << "To Robot: ";
+      // // for (int i = 0; i < sizeof(write_buffer); i++) {
+      // //   std::cerr << int(write_buffer[i]) << " ";
+      // //   // std::cerr <<  std::dec <<int(write_buffer[i]) << " ";
+      // // }
+      // // std::cout << std::endl;
+      // writemutex.unlock();
+    } else if (comm_type_ == "can") {
+      robotstatus_mutex_.lock();
+      for (int i = 0; i < 4; i++) {
+        int32_t v = static_cast<int32_t>(motors_speeds_[i] * 100000.0);
+        std::vector<uint32_t> write_buffer = {
+            i | 0x80000000U,
+            4,
+            static_cast<uint8_t>((static_cast<uint32_t>(v) >> 24) & 0xFF),
+            static_cast<uint8_t>((static_cast<uint32_t>(v) >> 16) & 0xFF),
+            static_cast<uint8_t>((static_cast<uint32_t>(v) >> 8) & 0xFF),
+            static_cast<uint8_t>(static_cast<uint32_t>(v) & 0xFF)};
+        comm_base_->write_to_device(write_buffer);
       }
-      std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));
+      robotstatus_mutex_.unlock();
+      // nbytes = write(s, &frame, sizeof(struct can_frame));
+    } else {  //! How did you get here?
+      throw(-3);
+      return;  // TODO: Return error ?
     }
+    std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));
   }
 }
 
@@ -538,6 +393,7 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
     //     motors_speeds_[BACK_LEFT_MOTOR], MOTOR_MAX_, MOTOR_MIN_);
     // motors_speeds_[BACK_RIGHT_MOTOR] = motor4_control_.boundMotorSpeed(
     //     motors_speeds_[BACK_RIGHT_MOTOR], MOTOR_MAX_, MOTOR_MIN_);
+
     robotstatus_mutex_.unlock();
     time_last = time_now;
   }

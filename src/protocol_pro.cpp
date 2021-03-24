@@ -28,10 +28,10 @@ ProProtocolObject::ProProtocolObject(const char *device,
 
   // Create a New Thread with 30 mili seconds sleep timer
   fast_data_write_thread_ =
-      std::thread([this, fast_data]() { this->sendCommand(30, fast_data); });
+      std::thread([this, fast_data]() { this->send_command(30, fast_data); });
   // Create a new Thread with 50 mili seconds sleep timer
   slow_data_write_thread_ =
-      std::thread([this, slow_data]() { this->sendCommand(50, slow_data); });
+      std::thread([this, slow_data]() { this->send_command(50, slow_data); });
   // Create a motor update thread with 30 mili second sleep timer 
   motor_commands_update_thread_ =
       std::thread([this]() { this->motors_control_loop(30); });
@@ -334,7 +334,7 @@ void ProProtocolObject::register_comm_base(const char *device) {
   }
 }
 
-void ProProtocolObject::sendCommand(int sleeptime,
+void ProProtocolObject::send_command(int sleeptime,
                                     std::vector<uint32_t> datalist) {
   while (true) {
     for (int x : datalist) {
