@@ -276,7 +276,6 @@ SkidRobotMotionController::SkidRobotMotionController(
       max_angular_acceleration_(std::numeric_limits<float>::max()),
       time_last_(std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch())) {
-
 #ifdef DEBUG
   /*open a log file to store control data*/
   auto t = std::time(nullptr);
@@ -289,7 +288,7 @@ SkidRobotMotionController::SkidRobotMotionController(
   log_file_.open(log_folder_path_ + filename + ".csv")
 #endif
 
-  operating_mode_ = operating_mode;
+      operating_mode_ = operating_mode;
   robot_geometry_ = robot_geometry;
   pid_gains_ = pid_gains;
   max_motor_duty_ = max_motor_duty;
@@ -462,14 +461,20 @@ motor_data SkidRobotMotionController::runMotionControl(
   motor_data motor_duties;
   switch (operating_mode_) {
     case OPEN_LOOP:
-      break;
+      std::cerr << "control type not yet implemented.. commanding 0 motion"
+                << std::endl;
+      return {0, 0, 0, 0};
     case INDEPENDENT_WHEEL:
-      break;
+      std::cerr << "control type not yet implemented.. commanding 0 motion"
+                << std::endl;
+      return {0, 0, 0, 0};
     case TRACTION_CONTROL:
       return clipDutyCycles_(
           computeMotorCommandsTc_(target_wheel_speeds, current_motor_speeds));
 
     default:
+      std::cerr << "invalid motion control type.. commanding 0 motion"
+                << std::endl;
       return {0, 0, 0, 0};
   }
 }
