@@ -27,12 +27,47 @@ robot_velocities computeVelocitiesFromWheelspeeds(
 
   /* compute velocities */
   float linear_velocity = std::min(left_travel_rate, right_travel_rate);
-  float angular_velocity = travel_differential / cs; //possibly add traction factor here
+  float angular_velocity =
+      travel_differential / cs;  // possibly add traction factor here
 
   robot_velocities returnstruct;
   returnstruct.linear_velocity = linear_velocity;
   returnstruct.angular_velocity = angular_velocity;
   return returnstruct;
+}
+
+robot_velocities limitAcceleration(robot_velocities target_velocities,
+                                   robot_velocities measured_velocities,
+                                   robot_velocities delta_v_limits, float dt) {
+  /* compute proposed acceleration */
+  float linear_acceleration = (target_velocities.linear_velocity -
+                               measured_velocities.linear_velocity) /
+                              dt;
+  float angular_acceleration = (target_velocities.angular_velocity -
+                                measured_velocities.angular_velocity) /
+                               dt;
+
+  /* clip the proposed acceleration into an acceptable acceleration */
+  if (linear_acceleration > delta_v_limits.linear_velocity) {
+    linear_acceleration = delta_v_limits.linear_velocity;
+  }
+  if (linear_acceleration < -delta_v_limits.linear_velocity) {
+    linear_acceleration = -delta_v_limits.linear_velocity;
+  }
+  if (angular_acceleration > delta_v_limits.angular_velocity) {
+    angular_acceleration = delta_v_limits.angular_velocity;
+  }
+  if (angular_acceleration < -delta_v_limits.angular_velocity) {
+    angular_acceleration = -delta_v_limits.angular_velocity;
+  }
+
+  /* calculate new velocities */
+  robot_velocities return_velocities;
+  return_velocities.linear_velocity =
+      measured_velocities.linear_velocity + linear_acceleration * dt;
+  return_velocities.angular_velocity =
+      measured_velocities.angular_velocity + angular_acceleration * dt;
+  return return_velocities;
 }
 
 /* classes */
@@ -245,12 +280,17 @@ float SkidRobotMotionController::getFilterAlpha() { return lpf_alpha_; }
 motor_data SkidRobotMotionController::runMotionControl(
     robot_velocities velocity_targets, motor_data current_duty_cycles,
     motor_data current_motor_speeds) {
-  /* estimate robot velocities from wheel speeds */
+  /* get estimated robot velocities */
   robot_velocities measured_velocities =
       computeVelocitiesFromWheelspeeds(current_motor_speeds, robot_geometry_);
 
 #ifdef DEBUG
-
+  std::cerr << 'est robot lin vel:  ' << robot_velocities.linear_velocity
+            << std::endl;
+  std::cerr << 'est robot ang vel:  ' << robot_velocities.angular_velocity
+            << std::endl;
 #endif
+
+  /* limit acceleration */
 }
 }  // namespace Control

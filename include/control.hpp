@@ -4,7 +4,6 @@
 
 namespace Control {
 
-
 /* classes */
 class PidController;
 class SkidRobotMotionController;
@@ -69,9 +68,9 @@ struct same_side_wheel_data {
 motor_data computeSkidSteerWheelSpeeds(robot_velocities target_velocities,
                                        robot_geometry robot_geometry);
 
-robot_velocities limitVelocityChange(robot_velocities target_velocities,
-                                     robot_velocities measured_velocities,
-                                     robot_velocities delta_v_limits);
+robot_velocities limitAcceleration(robot_velocities target_velocities,
+                                   robot_velocities measured_velocities,
+                                   robot_velocities delta_v_limits, float dt);
 
 same_side_wheel_data tractionScalePower(same_side_wheel_data motor_speeds,
                                         float gain);
