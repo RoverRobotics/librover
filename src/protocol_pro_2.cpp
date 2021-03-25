@@ -48,16 +48,22 @@ robotData Pro2ProtocolObject::status_request() { return robotstatus_; }
 
 robotData Pro2ProtocolObject::info_request() { return robotstatus_; }
 
-void Pro2ProtocolObject::set_robot_velocity(double *controlarray) {
+void Pro2ProtocolObject::set_robot_velocity(double *control_array) {
   robotstatus_mutex_.lock();
-  robotstatus_.cmd_linear_vel = controlarray[0];
-  robotstatus_.cmd_angular_vel = controlarray[1];
-  robotstatus_.cmd_ts = std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::system_clock::now().time_since_epoch());
+  robotstatus_.cmd_linear_vel = control_array[0];
+  robotstatus_.cmd_angular_vel = control_array[1];
+  std::cerr << "Control Array ";
+  for (int i = 0 ; i < sizeof(control_array) ; i++) {
+    std::cerr << control_array[i] << " ";
+  }
+  std::cerr << std::endl;
+  // robotstatus_.cmd_ts =
+  // std::chrono::duration_cast<std::chrono::milliseconds>(
+  //     std::chrono::system_clock::now().time_since_epoch());
   robotstatus_mutex_.unlock();
 }
 // REMOVE?
-// void Pro2ProtocolObject::send_speed(double *controlarray) {
+// void Pro2ProtocolObject::send_speed(double *control_array) {
 //     // prevent constant lock
 //     writemutex.lock();
 //     std::chrono::steady_clock::time_point motor1_prev_temp;
@@ -74,9 +80,9 @@ void Pro2ProtocolObject::set_robot_velocity(double *controlarray) {
 
 //     writemutex.lock();
 //     if (!estop_) {
-//         double linear_rate = controlarray[0];
-//         double turn_rate = controlarray[1];
-//         double flipper_rate = controlarray[2];
+//         double linear_rate = control_array[0];
+//         double turn_rate = control_array[1];
+//         double flipper_rate = control_array[2];
 //         std::cerr << linear_rate << " " << turn_rate << " " << flipper_rate;
 //         // apply trim value
 
@@ -213,9 +219,11 @@ void Pro2ProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
       } else {
         return;
       }
+#ifdef DEBUG
       std::cerr << std::dec << "rpm: " << rpm << std::endl;
       std::cerr << std::dec << "current: " << current << std::endl;
       std::cerr << std::dec << "duty: " << duty << std::endl;
+#endif
     }
   }
   robotstatus_mutex_.unlock();
@@ -322,7 +330,7 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
     rpm_FR = robotstatus_.motor2_rpm;
     rpm_BL = robotstatus_.motor3_rpm;
     rpm_BR = robotstatus_.motor4_rpm;
-    time_from_msg = robotstatus_.cmd_ts;
+    // time_from_msg = robotstatus_.cmd_ts;
     robotstatus_mutex_.unlock();
     // generate new duty for robot
     // if robot havn't reach timeout
