@@ -469,28 +469,42 @@ motor_data SkidRobotMotionController::computeMotorCommandsTc_(
   /* right side */
   if (current_motor_speeds.fr >= current_motor_speeds.rr) {
     /* scale down FRONT RIGHT power */
-    power_proposals.fr *= current_motor_speeds.rr / current_motor_speeds.fr;
+    power_proposals.fr *=
+        std::abs(current_motor_speeds.rr / current_motor_speeds.fr);
   } else {
     /* scale down REAR RIGHT power */
-    power_proposals.rr *= current_motor_speeds.fr / current_motor_speeds.rr;
+    power_proposals.rr *=
+        std::abs(current_motor_speeds.fr / current_motor_speeds.rr);
   }
   /* left side */
   if (current_motor_speeds.fl >= current_motor_speeds.rl) {
     /* scale down FRONT LEFT power */
-    power_proposals.fl *= current_motor_speeds.rl / current_motor_speeds.fl;
+    power_proposals.fl *=
+        std::abs(current_motor_speeds.rl / current_motor_speeds.fl);
   } else {
     /* scale down REAR LEFT power */
-    power_proposals.rl *= current_motor_speeds.fl / current_motor_speeds.rl;
+    power_proposals.rl *=
+        std::abs(current_motor_speeds.fl / current_motor_speeds.rl);
   }
 
-  // isnan(power_proposals.fr) ? power_proposals.fr = 0 : power_proposals.fr =
-  // power_proposals.fr; isnan(power_proposals.fl) ? power_proposals.fl = 0 :
-  // power_proposals.fl = power_proposals.fl; isnan(power_proposals.rr) ?
-  // power_proposals.rr = 0 : power_proposals.rr = power_proposals.rr;
-  // isnan(power_proposals.rl) ? power_proposals.rl = 0 : power_proposals.rl =
-  // power_proposals.rl;
+  isnan(power_proposals.fr) ? power_proposals.fr = 0
+                            : power_proposals.fr = power_proposals.fr;
+  isnan(power_proposals.fl) ? power_proposals.fl = 0
+                            : power_proposals.fl = power_proposals.fl;
+  isnan(power_proposals.rr) ? power_proposals.rr = 0
+                            : power_proposals.rr = power_proposals.rr;
+  isnan(power_proposals.rl) ? power_proposals.rl = 0
+                            : power_proposals.rl = power_proposals.rl;
 
-  return power_proposals;
+#ifdef DEBUG
+  log_file_ << "power_proposal"
+            << "," << power_proposals.fr << "," << power_proposals.fl << ","
+            << power_proposals.rr << "," << power_proposals.rl << ","
+            << std::endl;
+  log_file_.flush();
+#endif
+
+      return power_proposals;
 }
 
 motor_data SkidRobotMotionController::clipDutyCycles_(
