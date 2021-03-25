@@ -570,7 +570,7 @@ motor_data SkidRobotMotionController::runMotionControl(
 #ifdef DEBUG
   log_file_ << "motion,"
             << "skid,"
-            << time_now << ","
+            << accumulated_time << ","
             << velocity_commands.linear_velocity << ","
             << velocity_commands.angular_velocity << ","
             << measured_velocities.linear_velocity << ","
