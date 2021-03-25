@@ -44,50 +44,51 @@ robot_velocities computeVelocitiesFromWheelspeeds(
   /* circumference of robot's stance (meters) */
   float cs = 2 * M_PI * rs;
 
-  /* translate wheelspeed (rpm) into travel rate(m/s) */
-  float left_magnitude =
-      std::min(std::abs(wheel_speeds.fl), std::abs(wheel_speeds.rl));
-  float right_magnitude =
-      std::min(std::abs(wheel_speeds.fr), std::abs(wheel_speeds.rr));
+  // /* translate wheelspeed (rpm) into travel rate(m/s) */
+  // float left_magnitude =
+  //     std::mean(std::abs(wheel_speeds.fl), std::abs(wheel_speeds.rl));
+  // float right_magnitude =
+  //     std::min(std::abs(wheel_speeds.fr), std::abs(wheel_speeds.rr));
 
-  int left_direction, right_direction;
+  // int left_direction, right_direction;
 
-  /* left side */
-  if (std::signbit(wheel_speeds.fl) == std::signbit(wheel_speeds.rl)) {
-    /* wheels are moving same direction (common) */
-    left_direction = (std::signbit(wheel_speeds.fl) == 0 ? -1 : 1);
-  } else {
-    /* wheels are moving different direction (uncommon) */
-    if (std::abs(wheel_speeds.fl) <= std::abs(wheel_speeds.rl)) {
-      left_direction = (std::signbit(wheel_speeds.fl) == 0 ? -1 : 1);
-    } else {
-      left_direction = (std::signbit(wheel_speeds.rl) == 0 ? -1 : 1);
-    }
-  }
+  // /* left side */
+  // if (std::signbit(wheel_speeds.fl) == std::signbit(wheel_speeds.rl)) {
+  //   /* wheels are moving same direction (common) */
+  //   left_direction = (std::signbit(wheel_speeds.fl) == 0 ? -1 : 1);
+  // } else {
+  //   /* wheels are moving different direction (uncommon) */
+  //   if (std::abs(wheel_speeds.fl) <= std::abs(wheel_speeds.rl)) {
+  //     left_direction = (std::signbit(wheel_speeds.fl) == 0 ? -1 : 1);
+  //   } else {
+  //     left_direction = (std::signbit(wheel_speeds.rl) == 0 ? -1 : 1);
+  //   }
+  // }
 
-  /* left side */
-  if (std::signbit(wheel_speeds.fr) == std::signbit(wheel_speeds.rr)) {
-    /* wheels are moving same direction (common) */
-    right_direction = (std::signbit(wheel_speeds.fr) == 0 ? -1 : 1);
-  } else {
-    /* wheels are moving different direction (uncommon) */
-    if (std::abs(wheel_speeds.fr) <= std::abs(wheel_speeds.rr)) {
-      right_direction = (std::signbit(wheel_speeds.fr) == 0 ? -1 : 1);
-    } else {
-      right_direction = (std::signbit(wheel_speeds.rr) == 0 ? -1 : 1);
-    }
-  }
+  // /* left side */
+  // if (std::signbit(wheel_speeds.fr) == std::signbit(wheel_speeds.rr)) {
+  //   /* wheels are moving same direction (common) */
+  //   right_direction = (std::signbit(wheel_speeds.fr) == 0 ? -1 : 1);
+  // } else {
+  //   /* wheels are moving different direction (uncommon) */
+  //   if (std::abs(wheel_speeds.fr) <= std::abs(wheel_speeds.rr)) {
+  //     right_direction = (std::signbit(wheel_speeds.fr) == 0 ? -1 : 1);
+  //   } else {
+  //     right_direction = (std::signbit(wheel_speeds.rr) == 0 ? -1 : 1);
+  //   }
+  // }
+  float left_magnitude = (wheel_speeds.fl + wheel_speeds.rl) / 2;
+  float right_magnitude = (wheel_speeds.fr + wheel_speeds.rr) / 2;
 
 #ifdef DEBUG
-  std::cerr << "left travel " << left_magnitude * left_direction << std::endl;
-  std::cerr << "right travel " << right_magnitude * right_direction
-            << std::endl;
+  std::cerr << "left travel " << left_magnitude << std::endl;
+  std::cerr << "right travel " << right_magnitude << std::endl;
 #endif
 
-  float left_travel_rate = left_magnitude * left_direction * RPM_TO_RADS_SEC *
-                           robot_geometry.wheel_radius;
-  float right_travel_rate = right_magnitude * right_direction *
-                            RPM_TO_RADS_SEC * robot_geometry.wheel_radius;
+  float left_travel_rate =
+      left_magnitude * RPM_TO_RADS_SEC * robot_geometry.wheel_radius;
+  float right_travel_rate =
+      right_magnitude * RPM_TO_RADS_SEC * robot_geometry.wheel_radius;
 
   /* difference between left and right travel rates */
   float travel_differential = right_travel_rate - left_travel_rate;
@@ -286,28 +287,28 @@ SkidRobotMotionController::SkidRobotMotionController()
 
   log_file_.open("/home/rover/Documents/" + filename + ".csv");
   log_file_ << "pid,"
-           << "data.name"
-           << ","
-           << "data.time"
-           << ","
-           << "data.dt"
-           << ","
-           << "data.pid_output"
-           << ","
-           << "data.error"
-           << ","
-           << "data.integral_error"
-           << ","
-           << " data.target_value"
-           << ","
-           << " data.measured_value"
-           << ","
-           << "data.kp"
-           << ","
-           << "data.ki"
-           << ","
-           << "data.kd"
-           << "," << std::endl;
+            << "data.name"
+            << ","
+            << "data.time"
+            << ","
+            << "data.dt"
+            << ","
+            << "data.pid_output"
+            << ","
+            << "data.error"
+            << ","
+            << "data.integral_error"
+            << ","
+            << " data.target_value"
+            << ","
+            << " data.measured_value"
+            << ","
+            << "data.kp"
+            << ","
+            << "data.ki"
+            << ","
+            << "data.kd"
+            << "," << std::endl;
   log_file_.flush();
 #endif
 }
@@ -333,28 +334,28 @@ SkidRobotMotionController::SkidRobotMotionController(
   std::cerr << "log file name " << filename + ".csv" << std::endl;
   log_file_.open("/home/rover/Documents/" + filename + ".csv");
   log_file_ << "pid,"
-           << "data.name"
-           << ","
-           << "data.time"
-           << ","
-           << "data.dt"
-           << ","
-           << "data.pid_output"
-           << ","
-           << "data.error"
-           << ","
-           << "data.integral_error"
-           << ","
-           << " data.target_value"
-           << ","
-           << " data.measured_value"
-           << ","
-           << "data.kp"
-           << ","
-           << "data.ki"
-           << ","
-           << "data.kd"
-           << "," << std::endl;
+            << "data.name"
+            << ","
+            << "data.time"
+            << ","
+            << "data.dt"
+            << ","
+            << "data.pid_output"
+            << ","
+            << "data.error"
+            << ","
+            << "data.integral_error"
+            << ","
+            << " data.target_value"
+            << ","
+            << " data.measured_value"
+            << ","
+            << "data.kp"
+            << ","
+            << "data.ki"
+            << ","
+            << "data.kd"
+            << "," << std::endl;
   log_file_.flush();
   // log_file_.open(filename + ".csv");
 
@@ -529,7 +530,8 @@ motor_data SkidRobotMotionController::runMotionControl(
   robot_velocities velocity_commands;
   robot_velocities acceleration_limits = {max_linear_acceleration_,
                                           max_angular_acceleration_};
-  // velocity_commands = limitAcceleration(velocity_targets, measured_velocities,
+  // velocity_commands = limitAcceleration(velocity_targets,
+  // measured_velocities,
   //                                       acceleration_limits, delta_time);
   velocity_commands = velocity_targets;
   /* get target wheelspeeds from velocities */
