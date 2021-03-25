@@ -62,6 +62,7 @@ struct pid_outputs {
   float pid_output;
   float error;
   float integral_error;
+  float delta_error;
   float target_value;
   float measured_value;
   float kp;
@@ -122,6 +123,7 @@ class Control::PidController {
   float kd_;
   float integral_error_;
   float integral_error_limit_;
+  float previous_error_;
   float pos_max_output_;
   float neg_max_output_;
   std::chrono::steady_clock::time_point time_last_;
@@ -183,7 +185,8 @@ class Control::SkidRobotMotionController {
   float max_linear_acceleration_;
   float max_angular_acceleration_;
   float lpf_alpha_;
-  std::chrono::milliseconds time_last_;
+  std::chrono::steady_clock::time_point time_last_;
+  std::chrono::steady_clock::time_point time_origin_;
 
   motor_data computeMotorCommandsTc_(motor_data target_wheel_speeds,
                                      motor_data current_motor_speeds);

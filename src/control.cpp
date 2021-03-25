@@ -142,6 +142,7 @@ robot_velocities limitAcceleration(robot_velocities target_velocities,
 PidController::PidController(struct pid_gains pid_gains, std::string name)
     : /* defaults */
       integral_error_(0),
+      previous_error_(0),
       integral_error_limit_(std::numeric_limits<float>::max()),
       pos_max_output_(std::numeric_limits<float>::max()),
       neg_max_output_(std::numeric_limits<float>::lowest()),
@@ -158,6 +159,7 @@ PidController::PidController(struct pid_gains pid_gains,
                              std::string name)
     : /* defaults */
       integral_error_(0),
+      previous_error_(0),
       integral_error_limit_(std::numeric_limits<float>::max()),
       time_last_(std::chrono::steady_clock::now()),
       time_origin_(std::chrono::steady_clock::now()) {
@@ -203,10 +205,19 @@ float PidController::getIntegralErrorLimit() { return integral_error_limit_; }
 
 void PidController::writePidDataToCsv(std::ofstream& log_file,
                                       pid_outputs data) {
-  log_file << "pid," << data.name << "," << data.time << "," << data.dt << ","
-           << data.pid_output << "," << data.error << "," << data.integral_error
-           << "," << data.target_value << "," << data.measured_value << ","
-           << data.kp << "," << data.ki << "," << data.kd << "," << std::endl;
+  log_file  << "pid," 
+            << data.name << "," 
+            << data.time << "," 
+            << data.target_value << ","
+            << data.measured_value << ","
+            << data.pid_output << "," 
+            << data.error << "," 
+            << data.integral_error << "," 
+            << data.delta_error << "," 
+            << data.kp << "," 
+            << data.ki << "," 
+            << data.kd << "," 
+            << std::endl;
   log_file.flush();
 }
 
@@ -228,6 +239,9 @@ pid_outputs PidController::runControl(float target, float measured) {
   /* integrate */
   integral_error_ += error * delta_time;
 
+  /* differentiate */
+  float delta_error = error - previous_error_;
+
   /* clip integral error */
   if (integral_error_ > integral_error_limit_) {
     integral_error_ = integral_error_limit_;
@@ -239,7 +253,7 @@ pid_outputs PidController::runControl(float target, float measured) {
   /* P I D terms */
   float p = error * kp_;
   float i = integral_error_ * ki_;
-  float d = delta_time * kd_;
+  float d = delta_error * delta_time * kd_;
 
   /* compute output */
   float output = p + i + d;
@@ -260,12 +274,14 @@ pid_outputs PidController::runControl(float target, float measured) {
       std::chrono::duration<double>(time_now - time_origin_).count();
   returnstruct.error = error;
   returnstruct.integral_error = integral_error_;
+  returnstruct.delta_error = delta_error;
   returnstruct.target_value = target;
   returnstruct.measured_value = measured;
   returnstruct.kp = kp_;
   returnstruct.ki = ki_;
   returnstruct.kd = kd_;
 
+  previous_error_ = error;
   return returnstruct;
 }
 
@@ -274,8 +290,8 @@ SkidRobotMotionController::SkidRobotMotionController()
       operating_mode_(OPEN_LOOP),
       traction_control_gain_(1),
       max_motor_duty_(100),
-      time_last_(std::chrono::duration_cast<std::chrono::milliseconds>(
-          std::chrono::system_clock::now().time_since_epoch())) {
+      time_last_(std::chrono::steady_clock::now()),
+      time_origin_(std::chrono::steady_clock::now()) {
 #ifdef DEBUG
   /*open a log file to store control data*/
   auto t = std::time(nullptr);
@@ -286,29 +302,21 @@ SkidRobotMotionController::SkidRobotMotionController()
   auto filename = oss.str();
 
   log_file_.open("/home/rover/Documents/" + filename + ".csv");
-  log_file_ << "pid,"
-            << "data.name"
-            << ","
-            << "data.time"
-            << ","
-            << "data.dt"
-            << ","
-            << "data.pid_output"
-            << ","
-            << "data.error"
-            << ","
-            << "data.integral_error"
-            << ","
-            << " data.target_value"
-            << ","
-            << " data.measured_value"
-            << ","
-            << "data.kp"
-            << ","
-            << "data.ki"
-            << ","
-            << "data.kd"
-            << "," << std::endl;
+  log_file_ << "type,"
+            << "name,"
+            << "time,"
+            << "col0,"
+            << "col1,"
+            << "col2,"
+            << "col3,"
+            << "col4,"
+            << "col5,"
+            << "col6,"
+            << "col7,"
+            << "col8,"
+            << "col9,"
+            << "col10,"
+            << "col11," << std::endl;
   log_file_.flush();
 #endif
 }
@@ -321,8 +329,8 @@ SkidRobotMotionController::SkidRobotMotionController(
       lpf_alpha_(1),
       max_linear_acceleration_(std::numeric_limits<float>::max()),
       max_angular_acceleration_(std::numeric_limits<float>::max()),
-      time_last_(std::chrono::duration_cast<std::chrono::milliseconds>(
-          std::chrono::system_clock::now().time_since_epoch())) {
+      time_last_(std::chrono::steady_clock::now()),
+      time_origin_(std::chrono::steady_clock::now()) {
 #ifdef DEBUG
   /*open a log file to store control data*/
   auto t = std::time(nullptr);
@@ -333,32 +341,22 @@ SkidRobotMotionController::SkidRobotMotionController(
   auto filename = oss.str();
   std::cerr << "log file name " << filename + ".csv" << std::endl;
   log_file_.open("/home/rover/Documents/" + filename + ".csv");
-  log_file_ << "pid,"
-            << "data.name"
-            << ","
-            << "data.time"
-            << ","
-            << "data.dt"
-            << ","
-            << "data.pid_output"
-            << ","
-            << "data.error"
-            << ","
-            << "data.integral_error"
-            << ","
-            << " data.target_value"
-            << ","
-            << " data.measured_value"
-            << ","
-            << "data.kp"
-            << ","
-            << "data.ki"
-            << ","
-            << "data.kd"
-            << "," << std::endl;
+  log_file_ << "type,"
+            << "name,"
+            << "time,"
+            << "col0,"
+            << "col1,"
+            << "col2,"
+            << "col3,"
+            << "col4,"
+            << "col5,"
+            << "col6,"
+            << "col7,"
+            << "col8,"
+            << "col9,"
+            << "col10,"
+            << "col11," << std::endl;
   log_file_.flush();
-  // log_file_.open(filename + ".csv");
-
 #endif
 
   operating_mode_ = operating_mode;
@@ -496,15 +494,7 @@ motor_data SkidRobotMotionController::computeMotorCommandsTc_(
   isnan(power_proposals.rl) ? power_proposals.rl = 0
                             : power_proposals.rl = power_proposals.rl;
 
-#ifdef DEBUG
-  log_file_ << "power_proposal"
-            << "," << power_proposals.fr << "," << power_proposals.fl << ","
-            << power_proposals.rr << "," << power_proposals.rl << ","
-            << std::endl;
-  log_file_.flush();
-#endif
-
-      return power_proposals;
+  return power_proposals;
 }
 
 motor_data SkidRobotMotionController::clipDutyCycles_(
@@ -524,21 +514,21 @@ motor_data SkidRobotMotionController::runMotionControl(
     robot_velocities velocity_targets, motor_data current_duty_cycles,
     motor_data current_motor_speeds) {
   /* take the time*/
-  std::chrono::milliseconds time_now =
-      std::chrono::duration_cast<std::chrono::milliseconds>(
-          std::chrono::system_clock::now().time_since_epoch());
-  float delta_time = (time_now - time_last_).count() / 1000;
+  std::chrono::steady_clock::time_point time_now =
+      std::chrono::steady_clock::now();
+
+  /* delta time (S) */
+  float delta_time =
+      std::chrono::duration<float>(time_now - time_last_).count();
+
+  float accumulated_time =
+      std::chrono::duration<float>(time_now - time_origin_).count();
+
+  time_last_ = time_now;
 
   /* get estimated robot velocities */
   robot_velocities measured_velocities =
       computeVelocitiesFromWheelspeeds(current_motor_speeds, robot_geometry_);
-
-#ifdef DEBUG
-  std::cerr << "est robot lin vel:  " << measured_velocities.linear_velocity
-            << std::endl;
-  std::cerr << "est robot ang vel:  " << measured_velocities.angular_velocity
-            << std::endl;
-#endif
 
   /* limit acceleration */
   robot_velocities velocity_commands;
@@ -558,34 +548,44 @@ motor_data SkidRobotMotionController::runMotionControl(
     case OPEN_LOOP:
       std::cerr << "control type not yet implemented.. commanding 0 motion"
                 << std::endl;
-      return {0, 0, 0, 0};
+      motor_duties = {0, 0, 0, 0};
       break;
     case INDEPENDENT_WHEEL:
       std::cerr << "control type not yet implemented.. commanding 0 motion"
                 << std::endl;
-      return {0, 0, 0, 0};
+      motor_duties = {0, 0, 0, 0};
       break;
 
     case TRACTION_CONTROL:
       motor_duties = clipDutyCycles_(
           computeMotorCommandsTc_(target_wheel_speeds, current_motor_speeds));
-#ifdef DEBUG
-      std::cerr << "target_wheel_speeds " << target_wheel_speeds.fr << " "
-                << target_wheel_speeds.rr << " " << target_wheel_speeds.fl
-                << " " << target_wheel_speeds.rl << std::endl;
-      std::cerr << "Velocities Command " << velocity_commands.linear_velocity
-                << " " << velocity_commands.angular_velocity << std::endl;
-      std::cerr << "duties: " << motor_duties.fr << " " << motor_duties.fl
-                << " " << motor_duties.rr << " " << motor_duties.rl
-                << std::endl;
-#endif
-      return motor_duties;
       break;
     default:
       std::cerr << "invalid motion control type.. commanding 0 motion"
                 << std::endl;
-      return {0, 0, 0, 0};
+      motor_duties = {0, 0, 0, 0};
       break;
   }
+
+#ifdef DEBUG
+  log_file_ << "motion,"
+            << "skid,"
+            << velocity_commands.linear_velocity << ","
+            << velocity_commands.angular_velocity << ","
+            << measured_velocities.linear_velocity << ","
+            << measured_velocities.angular_velocity << ","
+            << current_motor_speeds.fl << ","
+            << current_motor_speeds.rl << ","
+            << current_motor_speeds.fr << ","
+            << current_motor_speeds.rr << ","
+            << motor_duties.fl << ","
+            << motor_duties.rl << ","
+            << motor_duties.fr << ","
+            << motor_duties.rr << ","
+            << std::endl;
+  log_file_.flush();
+#endif
+
+return motor_duties;
 }
 }  // namespace Control
