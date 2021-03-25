@@ -160,7 +160,7 @@ void PidController::setIntegralErrorLimit(float error_limit) {
 
 float PidController::getIntegralErrorLimit() { return integral_error_limit_; }
 
-void PidController::writePidDataToCsv(std::ofstream & log_file,
+void PidController::writePidDataToCsv(std::ofstream& log_file,
                                       pid_outputs data) {
   log_file << "pid," << data.name << "," << data.time << "," << data.dt << ","
            << data.pid_output << "," << data.error << "," << data.integral_error
@@ -171,23 +171,18 @@ void PidController::writePidDataToCsv(std::ofstream & log_file,
 
 pid_outputs PidController::runControl(float target, float measured) {
   /* current time */
-  std::chrono::steady_clock::time_point time_now = std::chrono::steady_clock::now();
+  std::chrono::steady_clock::time_point time_now =
+      std::chrono::steady_clock::now();
 
   /* delta time (S) */
-  float delta_time = std::chrono::duration<float>(time_now - time_last_).count();
+  float delta_time =
+      std::chrono::duration<float>(time_now - time_last_).count();
 
   /* update time bookkeeping */
   time_last_ = time_now;
 
-#ifdef DEBUG
-  std::cerr << "dt " << delta_time << std::endl;
-#endif
-
   /* error */
   float error = target - measured;
-#ifdef DEBUG
-  std::cerr << "error " << error << std::endl;
-#endif
 
   /* integrate */
   integral_error_ += error;
@@ -199,20 +194,11 @@ pid_outputs PidController::runControl(float target, float measured) {
   if (integral_error_ < -integral_error_limit_) {
     integral_error_ = -integral_error_limit_;
   }
-#ifdef DEBUG
-  std::cerr << "int_error " << integral_error_ << std::endl;
-#endif
 
   /* P I D terms */
   float p = error * kp_;
   float i = integral_error_ * ki_;
   float d = delta_time * kd_;
-
-#ifdef DEBUG
-  std::cerr << "p " << p << std::endl;
-  std::cerr << "i " << i << std::endl;
-  std::cerr << "d " << d << std::endl;
-#endif
 
   /* compute output */
   float output = p + i + d;
@@ -225,15 +211,12 @@ pid_outputs PidController::runControl(float target, float measured) {
     output = neg_max_output_;
   }
 
-#ifdef DEBUG
-  std::cerr << "output " << output << std::endl;
-#endif
-
   pid_outputs returnstruct;
   returnstruct.pid_output = output;
   returnstruct.name = name_;
   returnstruct.dt = delta_time;
-  returnstruct.time = std::chrono::duration<double>(time_now - time_origin_).count();
+  returnstruct.time =
+      std::chrono::duration<double>(time_now - time_origin_).count();
   returnstruct.error = error;
   returnstruct.integral_error = integral_error_;
   returnstruct.target_value = target;
@@ -283,13 +266,13 @@ SkidRobotMotionController::SkidRobotMotionController(
   std::ostringstream oss;
   oss << std::put_time(&tm, "%d-%m-%Y-%H-%M-%S");
   auto filename = oss.str();
-  std::cerr << "log file name " <<filename + ".csv" << std::endl;
+  std::cerr << "log file name " << filename + ".csv" << std::endl;
 
   log_file_.open(filename + ".csv");
-  
+
 #endif
 
-      operating_mode_ = operating_mode;
+  operating_mode_ = operating_mode;
   robot_geometry_ = robot_geometry;
   pid_gains_ = pid_gains;
   max_motor_duty_ = max_motor_duty;
@@ -411,10 +394,12 @@ motor_data SkidRobotMotionController::computeMotorCommandsTc_(
     power_proposals.rl *= current_motor_speeds.fl / current_motor_speeds.rl;
   }
 
-  // isnan(power_proposals.fr) ? power_proposals.fr = 0 : power_proposals.fr = power_proposals.fr;
-  // isnan(power_proposals.fl) ? power_proposals.fl = 0 : power_proposals.fl = power_proposals.fl;
-  // isnan(power_proposals.rr) ? power_proposals.rr = 0 : power_proposals.rr = power_proposals.rr;
-  // isnan(power_proposals.rl) ? power_proposals.rl = 0 : power_proposals.rl = power_proposals.rl;
+  // isnan(power_proposals.fr) ? power_proposals.fr = 0 : power_proposals.fr =
+  // power_proposals.fr; isnan(power_proposals.fl) ? power_proposals.fl = 0 :
+  // power_proposals.fl = power_proposals.fl; isnan(power_proposals.rr) ?
+  // power_proposals.rr = 0 : power_proposals.rr = power_proposals.rr;
+  // isnan(power_proposals.rl) ? power_proposals.rl = 0 : power_proposals.rl =
+  // power_proposals.rl;
 
   return power_proposals;
 }
@@ -475,8 +460,13 @@ motor_data SkidRobotMotionController::runMotionControl(
                 << std::endl;
       return {0, 0, 0, 0};
     case TRACTION_CONTROL:
-      return clipDutyCycles_(
+      motor_duties = clipDutyCycles_(
           computeMotorCommandsTc_(target_wheel_speeds, current_motor_speeds));
+#ifdef DEBUG
+      std::cerr << "duties: " << motor_duties.fr << " " << motor_duties.fl
+                << " " << motor_duties.rr << " " << motor_duties.rl
+                << std::endl;
+#endif
 
     default:
       std::cerr << "invalid motion control type.. commanding 0 motion"
