@@ -38,5 +38,5 @@ left_pid_data = data[data["data.name"] == "pid_left"]
 # right pid
 right_pid_data = data[data["data.name"] == "pid_right"]
 
-plot_pid_data(left_pid_data, left_pid_data["data.name"].iloc[0])
-plot_pid_data(right_pid_data, right_pid_data["data.name"].iloc[0])
+plot_pid_data(left_pid_data, left_pid_data["data.name"].iloc[0] + args.filename - ".csv")
+plot_pid_data(right_pid_data, right_pid_data["data.name"].iloc[0] + args.filename - ".csv")
