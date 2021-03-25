@@ -57,7 +57,7 @@ struct pid_gains {
 
 struct pid_outputs {
   std::string name;
-  float time;
+  double time;
   float dt;
   float pid_output;
   float error;
@@ -113,7 +113,7 @@ class Control::PidController {
 
   pid_outputs runControl(float target, float measured);
 
-  void writePidDataToCsv(std::ofstream log_file, pid_outputs data);
+  void writePidDataToCsv(std::ofstream &log_file, pid_outputs data);
 
  private:
   std::string name_;
@@ -124,7 +124,8 @@ class Control::PidController {
   float integral_error_limit_;
   float pos_max_output_;
   float neg_max_output_;
-  std::chrono::milliseconds time_last_;
+  std::chrono::steady_clock::time_point time_last_;
+  std::chrono::steady_clock::time_point time_origin_;
 };
 
 class Control::SkidRobotMotionController {

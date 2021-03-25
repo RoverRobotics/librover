@@ -104,8 +104,8 @@ PidController::PidController(struct pid_gains pid_gains, std::string name)
       integral_error_limit_(std::numeric_limits<float>::max()),
       pos_max_output_(std::numeric_limits<float>::max()),
       neg_max_output_(std::numeric_limits<float>::lowest()),
-      time_last_(std::chrono::duration_cast<std::chrono::milliseconds>(
-          std::chrono::system_clock::now().time_since_epoch())) {
+      time_last_(std::chrono::steady_clock::now()),
+      time_origin_(std::chrono::steady_clock::now()) {
   name_ = name;
   kp_ = pid_gains.kp;
   kd_ = pid_gains.kd;
@@ -118,8 +118,8 @@ PidController::PidController(struct pid_gains pid_gains,
     : /* defaults */
       integral_error_(0),
       integral_error_limit_(std::numeric_limits<float>::max()),
-      time_last_(std::chrono::duration_cast<std::chrono::milliseconds>(
-          std::chrono::system_clock::now().time_since_epoch())) {
+      time_last_(std::chrono::steady_clock::now()),
+      time_origin_(std::chrono::steady_clock::now()) {
   name_ = name;
   kp_ = pid_gains.kp;
   kd_ = pid_gains.kd;
@@ -160,34 +160,33 @@ void PidController::setIntegralErrorLimit(float error_limit) {
 
 float PidController::getIntegralErrorLimit() { return integral_error_limit_; }
 
-void PidController::writePidDataToCsv(std::ofstream log_file,
+void PidController::writePidDataToCsv(std::ofstream & log_file,
                                       pid_outputs data) {
   log_file << "pid," << data.name << "," << data.time << "," << data.dt << ","
            << data.pid_output << "," << data.error << "," << data.integral_error
            << "," << data.target_value << "," << data.measured_value << ","
            << data.kp << "," << data.ki << "," << data.kd << "," << std::endl;
+  log_file.flush();
 }
 
 pid_outputs PidController::runControl(float target, float measured) {
   /* current time */
-  std::chrono::milliseconds time_now =
-      std::chrono::duration_cast<std::chrono::milliseconds>(
-          std::chrono::system_clock::now().time_since_epoch());
+  std::chrono::steady_clock::time_point time_now = std::chrono::steady_clock::now();
 
   /* delta time (S) */
-  float delta_time = (time_now - time_last_).count() / 1000;
+  float delta_time = std::chrono::duration<float>(time_now - time_last_).count();
 
   /* update time bookkeeping */
   time_last_ = time_now;
 
 #ifdef DEBUG
-  std::cerr << 'dt ' << delta_time << std::endl;
+  std::cerr << "dt " << delta_time << std::endl;
 #endif
 
   /* error */
   float error = target - measured;
 #ifdef DEBUG
-  std::cerr << 'error ' << error << std::endl;
+  std::cerr << "error " << error << std::endl;
 #endif
 
   /* integrate */
@@ -201,7 +200,7 @@ pid_outputs PidController::runControl(float target, float measured) {
     integral_error_ = -integral_error_limit_;
   }
 #ifdef DEBUG
-  std::cerr << 'int_error ' << integral_error_ << std::endl;
+  std::cerr << "int_error " << integral_error_ << std::endl;
 #endif
 
   /* P I D terms */
@@ -210,9 +209,9 @@ pid_outputs PidController::runControl(float target, float measured) {
   float d = delta_time * kd_;
 
 #ifdef DEBUG
-  std::cerr << 'p ' << p << std::endl;
-  std::cerr << 'i ' << i << std::endl;
-  std::cerr << 'd ' << d << std::endl;
+  std::cerr << "p " << p << std::endl;
+  std::cerr << "i " << i << std::endl;
+  std::cerr << "d " << d << std::endl;
 #endif
 
   /* compute output */
@@ -227,14 +226,14 @@ pid_outputs PidController::runControl(float target, float measured) {
   }
 
 #ifdef DEBUG
-  std::cerr << 'output ' << output << std::endl;
+  std::cerr << "output " << output << std::endl;
 #endif
 
   pid_outputs returnstruct;
   returnstruct.pid_output = output;
   returnstruct.name = name_;
   returnstruct.dt = delta_time;
-  returnstruct.time = time_now.count();
+  returnstruct.time = std::chrono::duration<double>(time_now - time_origin_).count();
   returnstruct.error = error;
   returnstruct.integral_error = integral_error_;
   returnstruct.target_value = target;
@@ -247,7 +246,7 @@ pid_outputs PidController::runControl(float target, float measured) {
 }
 
 SkidRobotMotionController::SkidRobotMotionController()
-    : log_folder_path_("~/Documents/rover/logs/"),
+    : log_folder_path_("~/Documents/"),
       operating_mode_(OPEN_LOOP),
       traction_control_gain_(1),
       max_motor_duty_(100),
@@ -262,14 +261,14 @@ SkidRobotMotionController::SkidRobotMotionController()
   oss << std::put_time(&tm, "%d-%m-%Y-%H-%M-%S");
   auto filename = oss.str();
 
-  log_file_.open(log_folder_path_ + filename + ".csv")
+  log_file_.open(filename + ".csv");
 #endif
 }
 
 SkidRobotMotionController::SkidRobotMotionController(
     robot_motion_mode_t operating_mode, robot_geometry robot_geometry,
     pid_gains pid_gains, float max_motor_duty)
-    : log_folder_path_("~/Documents/rover/logs/"),
+    : log_folder_path_("~/Documents/"),
       traction_control_gain_(1),
       lpf_alpha_(1),
       max_linear_acceleration_(std::numeric_limits<float>::max()),
@@ -284,8 +283,10 @@ SkidRobotMotionController::SkidRobotMotionController(
   std::ostringstream oss;
   oss << std::put_time(&tm, "%d-%m-%Y-%H-%M-%S");
   auto filename = oss.str();
+  std::cerr << "log file name " <<filename + ".csv" << std::endl;
 
-  log_file_.open(log_folder_path_ + filename + ".csv")
+  log_file_.open(filename + ".csv");
+  
 #endif
 
       operating_mode_ = operating_mode;
@@ -384,8 +385,8 @@ motor_data SkidRobotMotionController::computeMotorCommandsTc_(
       std::min(current_motor_speeds.fr, current_motor_speeds.rr));
 
 #ifdef DEBUG
-  PidController::writePidDataToCsv(log_file_, l_pid_output);
-  PidController::writePidDataToCsv(log_file_, r_pid_output);
+  pid_controller_left_->writePidDataToCsv(log_file_, l_pid_output);
+  pid_controller_right_->writePidDataToCsv(log_file_, r_pid_output);
 #endif
 
   /* math to split the torque distribution */
@@ -409,6 +410,11 @@ motor_data SkidRobotMotionController::computeMotorCommandsTc_(
     /* scale down REAR LEFT power */
     power_proposals.rl *= current_motor_speeds.fl / current_motor_speeds.rl;
   }
+
+  // isnan(power_proposals.fr) ? power_proposals.fr = 0 : power_proposals.fr = power_proposals.fr;
+  // isnan(power_proposals.fl) ? power_proposals.fl = 0 : power_proposals.fl = power_proposals.fl;
+  // isnan(power_proposals.rr) ? power_proposals.rr = 0 : power_proposals.rr = power_proposals.rr;
+  // isnan(power_proposals.rl) ? power_proposals.rl = 0 : power_proposals.rl = power_proposals.rl;
 
   return power_proposals;
 }
@@ -440,9 +446,9 @@ motor_data SkidRobotMotionController::runMotionControl(
       computeVelocitiesFromWheelspeeds(current_motor_speeds, robot_geometry_);
 
 #ifdef DEBUG
-  std::cerr << 'est robot lin vel:  ' << robot_velocities.linear_velocity
+  std::cerr << "est robot lin vel:  " << measured_velocities.linear_velocity
             << std::endl;
-  std::cerr << 'est robot ang vel:  ' << robot_velocities.angular_velocity
+  std::cerr << "est robot ang vel:  " << measured_velocities.angular_velocity
             << std::endl;
 #endif
 

@@ -190,29 +190,29 @@ void Pro2ProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
       float duty = (float)duty_scaled / 10;
       // std::cerr << "Vesc ID " << vesc_id << "RPM " << rpm << " Current "
       //           << current << " Duty " << duty << std::endl;
-      // if (vesc_id == 0) {
-      //   robotstatus_.motor1_rpm = rpm;
-      //   robotstatus_.motor1_id = vesc_id;
-      //   robotstatus_.motor1_current = current;
-      //   robotstatus_.motor1_duty = duty;
-      // } else if (vesc_id == 1) {
-      //   robotstatus_.motor2_rpm = rpm;
-      //   robotstatus_.motor2_id = vesc_id;
-      //   robotstatus_.motor2_current = current;
-      //   robotstatus_.motor2_duty = duty;
-      // } else if (vesc_id == 2) {
-      //   robotstatus_.motor3_rpm = rpm;
-      //   robotstatus_.motor3_id = vesc_id;
-      //   robotstatus_.motor3_current = current;
-      //   robotstatus_.motor3_duty = duty;
-      // } else if (vesc_id == 3) {
-      //   robotstatus_.motor4_rpm = rpm;
-      //   robotstatus_.motor4_id = vesc_id;
-      //   robotstatus_.motor4_current = current;
-      //   robotstatus_.motor4_duty = duty;
-      // } else {
-      //   return;
-      // }
+      if (vesc_id == 0) {
+        robotstatus_.motor1_rpm = rpm;
+        robotstatus_.motor1_id = vesc_id;
+        robotstatus_.motor1_current = current;
+        // robotstatus_.motor1_duty = duty;
+      } else if (vesc_id == 1) {
+        robotstatus_.motor2_rpm = rpm;
+        robotstatus_.motor2_id = vesc_id;
+        robotstatus_.motor2_current = current;
+        // robotstatus_.motor2_duty = duty;
+      } else if (vesc_id == 2) {
+        robotstatus_.motor3_rpm = rpm;
+        robotstatus_.motor3_id = vesc_id;
+        robotstatus_.motor3_current = current;
+        // robotstatus_.motor3_duty = duty;
+      } else if (vesc_id == 3) {
+        robotstatus_.motor4_rpm = rpm;
+        robotstatus_.motor4_id = vesc_id;
+        robotstatus_.motor4_current = current;
+        // robotstatus_.motor4_duty = duty;
+      } else {
+        return;
+      }
       std::cerr << std::dec << "rpm: " << rpm << std::endl;
       std::cerr << std::dec << "current: " << current << std::endl;
       std::cerr << std::dec << "duty: " << duty << std::endl;
@@ -297,13 +297,13 @@ void Pro2ProtocolObject::send_command(int sleeptime) {
 }
 
 void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
-  double linear_vel;
-  double angular_vel;
-  double rpm1;
-  double rpm2;
-  double rpm3;
-  double rpm4;
-
+  float linear_vel, angular_vel, rpm_FL, rpm_FR, rpm_BL, rpm_BR;
+  Control::robot_geometry robot_geometry = {0.205, 0.265, .01651, 0, 0};
+  Control::pid_gains pid_gains = {0.1, 0.01, 0};
+  float motor_max_duty = .95;
+  Control::SkidRobotMotionController skid_control =
+      Control::SkidRobotMotionController(
+          Control::TRACTION_CONTROL, robot_geometry, pid_gains, motor_max_duty);
   std::chrono::milliseconds time_last =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
@@ -315,86 +315,31 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch());
     robotstatus_mutex_.lock();
+    // get data from robot
     linear_vel = robotstatus_.cmd_linear_vel;
     angular_vel = robotstatus_.cmd_angular_vel;
-    rpm1 = robotstatus_.motor1_rpm;
-    rpm2 = robotstatus_.motor2_rpm;
-    rpm3 = robotstatus_.motor3_rpm;
-    rpm4 = robotstatus_.motor4_rpm;
+    rpm_FL = robotstatus_.motor1_rpm;
+    rpm_FR = robotstatus_.motor2_rpm;
+    rpm_BL = robotstatus_.motor3_rpm;
+    rpm_BR = robotstatus_.motor4_rpm;
     time_from_msg = robotstatus_.cmd_ts;
     robotstatus_mutex_.unlock();
-    // float ctrl_update_elapsedtime = (time_now - time_from_msg).count();
-    // float pid_update_elapsedtime = (time_now - time_last).count();
-
-    // if (ctrl_update_elapsedtime > CONTROL_LOOP_TIMEOUT_MS_ || estop_) {
-    //   robotstatus_mutex_.lock();
-    //   motors_speeds_[FRONT_LEFT_MOTOR] = MOTOR_NEUTRAL_;
-    //   motors_speeds_[FRONT_RIGHT_MOTOR] = MOTOR_NEUTRAL_;
-    //   motors_speeds_[BACK_LEFT_MOTOR] = MOTOR_NEUTRAL_;
-    //   motors_speeds_[BACK_RIGHT_MOTOR] = MOTOR_NEUTRAL_;
-    //   motor1_control_.reset();
-    //   motor2_control_.reset();
-    //   motor3_control_.reset();
-    //   motor4_control_.reset();
-    //   robotstatus_mutex_.unlock();
-    //   time_last = time_now;
-    //   continue;
-    // }
-
-    if (angular_vel == 0) {
-      if (linear_vel > 0) {
-        angular_vel = trimvalue_;
-      } else if (linear_vel < 0) {
-        angular_vel = -trimvalue_;
-      }
-    }
-    // !Applying some Skid-steer math
-    double left_motors_speed = linear_vel - 0.5 * angular_vel;
-    double right_motors_speed = linear_vel + 0.5 * angular_vel;
-    // if (left_motors_speed == 0) {
-    //   motor1_control_.reset();
-    //   motor3_control_.reset();
-    // }
-    // if (right_motors_speed == 0) {
-    //   motor2_control_.reset();
-    //   motor4_control_.reset();
-    // }
-    double motor1_measured_vel = rpm1 / MOTOR_RPM_TO_MPS_RATIO_;
-    double motor2_measured_vel = rpm2 / MOTOR_RPM_TO_MPS_RATIO_;
-    double motor3_measured_vel = rpm3 / MOTOR_RPM_TO_MPS_RATIO_;
-    double motor4_measured_vel = rpm3 / MOTOR_RPM_TO_MPS_RATIO_;
+    // generate new duty for robot
+    // if robot havn't reach timeout
+    // Skid steer math to generate motor speeds
+    // double left_motors_speed = linear_vel - 0.5 * angular_vel;
+    // double right_motors_speed = linear_vel + 0.5 * angular_vel;
+    auto duty_cycles =
+        skid_control.runMotionControl({linear_vel, angular_vel}, {0, 0, 0, 0},
+                                      {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
     robotstatus_mutex_.lock();
-    // motor speeds in m/s
-    // TODO REMOVE
-    motors_speeds_[FRONT_LEFT_MOTOR] = left_motors_speed;
-    motors_speeds_[BACK_LEFT_MOTOR] = left_motors_speed;
-    motors_speeds_[FRONT_RIGHT_MOTOR] = right_motors_speed;
-    motors_speeds_[BACK_RIGHT_MOTOR] = right_motors_speed;
-
-    // motors_speeds_[FRONT_LEFT_MOTOR] =
-    //     motor1_control_.run(left_motors_speed, motor1_measured_vel,
-    //                         pid_update_elapsedtime / 1000, firmware);
-    // motors_speeds_[BACK_LEFT_MOTOR] =
-    //     motor3_control_.run(left_motors_speed, motor3_measured_vel,
-    //                         pid_update_elapsedtime / 1000, firmware);
-    // motors_speeds_[FRONT_RIGHT_MOTOR] =
-    //     motor2_control_.run(right_motors_speed, motor2_measured_vel,
-    //                         pid_update_elapsedtime / 1000, firmware);
-    // motors_speeds_[BACK_RIGHT_MOTOR] =
-    //     motor4_control_.run(right_motors_speed, motor4_measured_vel,
-    //                         pid_update_elapsedtime / 1000, firmware);
-
-    // // Bounding speeds
-    // motors_speeds_[FRONT_LEFT_MOTOR] = motor1_control_.boundMotorSpeed(
-    //     motors_speeds_[FRONT_LEFT_MOTOR], MOTOR_MAX_, MOTOR_MIN_);
-    // motors_speeds_[FRONT_RIGHT_MOTOR] = motor2_control_.boundMotorSpeed(
-    //     motors_speeds_[FRONT_RIGHT_MOTOR], MOTOR_MAX_, MOTOR_MIN_);
-    // motors_speeds_[BACK_LEFT_MOTOR] = motor3_control_.boundMotorSpeed(
-    //     motors_speeds_[BACK_LEFT_MOTOR], MOTOR_MAX_, MOTOR_MIN_);
-    // motors_speeds_[BACK_RIGHT_MOTOR] = motor4_control_.boundMotorSpeed(
-    //     motors_speeds_[BACK_RIGHT_MOTOR], MOTOR_MAX_, MOTOR_MIN_);
-
+    motors_speeds_[FRONT_LEFT_MOTOR] = duty_cycles.fl;
+    motors_speeds_[FRONT_RIGHT_MOTOR] = duty_cycles.fr;
+    motors_speeds_[BACK_LEFT_MOTOR] = duty_cycles.rl;
+    motors_speeds_[BACK_RIGHT_MOTOR] = duty_cycles.rr;
     robotstatus_mutex_.unlock();
+
+    // end timeout
     time_last = time_now;
   }
 }
