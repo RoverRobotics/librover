@@ -33,6 +33,7 @@ motor_data computeSkidSteerWheelSpeeds(robot_velocities target_velocities,
                              left_wheel_speed, right_wheel_speed};
   return returnstruct;
 }
+
 robot_velocities computeVelocitiesFromWheelspeeds(
     motor_data wheel_speeds, robot_geometry robot_geometry) {
   /* see documentation for math */
@@ -44,16 +45,55 @@ robot_velocities computeVelocitiesFromWheelspeeds(
   float cs = 2 * M_PI * rs;
 
   /* translate wheelspeed (rpm) into travel rate(m/s) */
-  float left_travel_rate = std::min(wheel_speeds.fl, wheel_speeds.rl) *
-                           RPM_TO_RADS_SEC * robot_geometry.wheel_radius;
-  float right_travel_rate = std::min(wheel_speeds.fr, wheel_speeds.rr) *
+  float left_magnitude =
+      std::min(std::abs(wheel_speeds.fl), std::abs(wheel_speeds.rl));
+  float right_magnitude =
+      std::min(std::abs(wheel_speeds.fr), std::abs(wheel_speeds.rr));
+
+  int left_direction, right_direction;
+
+  /* left side */
+  if (std::signbit(wheel_speeds.fl) == std::signbit(wheel_speeds.rl)) {
+    /* wheels are moving same direction (common) */
+    left_direction = (std::signbit(wheel_speeds.fl) == 0 ? -1 : 1);
+  } else {
+    /* wheels are moving different direction (uncommon) */
+    if (std::abs(wheel_speeds.fl) <= std::abs(wheel_speeds.rl)) {
+      left_direction = (std::signbit(wheel_speeds.fl) == 0 ? -1 : 1);
+    } else {
+      left_direction = (std::signbit(wheel_speeds.rl) == 0 ? -1 : 1);
+    }
+  }
+
+  /* left side */
+  if (std::signbit(wheel_speeds.fr) == std::signbit(wheel_speeds.rr)) {
+    /* wheels are moving same direction (common) */
+    right_direction = (std::signbit(wheel_speeds.fr) == 0 ? -1 : 1);
+  } else {
+    /* wheels are moving different direction (uncommon) */
+    if (std::abs(wheel_speeds.fr) <= std::abs(wheel_speeds.rr)) {
+      right_direction = (std::signbit(wheel_speeds.fr) == 0 ? -1 : 1);
+    } else {
+      right_direction = (std::signbit(wheel_speeds.rr) == 0 ? -1 : 1);
+    }
+  }
+
+#ifdef DEBUG
+  std::cerr << "left travel " << left_magnitude * left_direction << std::endl;
+  std::cerr << "right travel " << right_magnitude * right_direction
+            << std::endl;
+#endif
+
+  float left_travel_rate = left_magnitude * left_direction * RPM_TO_RADS_SEC *
+                           robot_geometry.wheel_radius;
+  float right_travel_rate = right_magnitude * right_direction *
                             RPM_TO_RADS_SEC * robot_geometry.wheel_radius;
 
   /* difference between left and right travel rates */
   float travel_differential = right_travel_rate - left_travel_rate;
 
   /* compute velocities */
-  float linear_velocity = std::min(left_travel_rate, right_travel_rate);
+  float linear_velocity = (right_travel_rate + left_travel_rate) / 2;
   float angular_velocity =
       travel_differential / cs;  // possibly add traction factor here
 
@@ -185,7 +225,7 @@ pid_outputs PidController::runControl(float target, float measured) {
   float error = target - measured;
 
   /* integrate */
-  integral_error_ += error;
+  integral_error_ += error * delta_time;
 
   /* clip integral error */
   if (integral_error_ > integral_error_limit_) {
@@ -244,7 +284,31 @@ SkidRobotMotionController::SkidRobotMotionController()
   oss << std::put_time(&tm, "%d-%m-%Y-%H-%M-%S");
   auto filename = oss.str();
 
-  log_file_.open(filename + ".csv");
+  log_file_.open("/home/rover/Documents/" + filename + ".csv");
+  log_file_ << "pid,"
+           << "data.name"
+           << ","
+           << "data.time"
+           << ","
+           << "data.dt"
+           << ","
+           << "data.pid_output"
+           << ","
+           << "data.error"
+           << ","
+           << "data.integral_error"
+           << ","
+           << " data.target_value"
+           << ","
+           << " data.measured_value"
+           << ","
+           << "data.kp"
+           << ","
+           << "data.ki"
+           << ","
+           << "data.kd"
+           << "," << std::endl;
+  log_file_.flush();
 #endif
 }
 
@@ -267,8 +331,32 @@ SkidRobotMotionController::SkidRobotMotionController(
   oss << std::put_time(&tm, "%d-%m-%Y-%H-%M-%S");
   auto filename = oss.str();
   std::cerr << "log file name " << filename + ".csv" << std::endl;
-
-  log_file_.open(filename + ".csv");
+  log_file_.open("/home/rover/Documents/" + filename + ".csv");
+  log_file_ << "pid,"
+           << "data.name"
+           << ","
+           << "data.time"
+           << ","
+           << "data.dt"
+           << ","
+           << "data.pid_output"
+           << ","
+           << "data.error"
+           << ","
+           << "data.integral_error"
+           << ","
+           << " data.target_value"
+           << ","
+           << " data.measured_value"
+           << ","
+           << "data.kp"
+           << ","
+           << "data.ki"
+           << ","
+           << "data.kd"
+           << "," << std::endl;
+  log_file_.flush();
+  // log_file_.open(filename + ".csv");
 
 #endif
 
@@ -441,9 +529,9 @@ motor_data SkidRobotMotionController::runMotionControl(
   robot_velocities velocity_commands;
   robot_velocities acceleration_limits = {max_linear_acceleration_,
                                           max_angular_acceleration_};
-  velocity_commands = limitAcceleration(velocity_targets, measured_velocities,
-                                        acceleration_limits, delta_time);
-
+  // velocity_commands = limitAcceleration(velocity_targets, measured_velocities,
+  //                                       acceleration_limits, delta_time);
+  velocity_commands = velocity_targets;
   /* get target wheelspeeds from velocities */
   motor_data target_wheel_speeds =
       computeSkidSteerWheelSpeeds(velocity_commands, robot_geometry_);
@@ -455,23 +543,33 @@ motor_data SkidRobotMotionController::runMotionControl(
       std::cerr << "control type not yet implemented.. commanding 0 motion"
                 << std::endl;
       return {0, 0, 0, 0};
+      break;
     case INDEPENDENT_WHEEL:
       std::cerr << "control type not yet implemented.. commanding 0 motion"
                 << std::endl;
       return {0, 0, 0, 0};
+      break;
+
     case TRACTION_CONTROL:
       motor_duties = clipDutyCycles_(
           computeMotorCommandsTc_(target_wheel_speeds, current_motor_speeds));
 #ifdef DEBUG
+      std::cerr << "target_wheel_speeds " << target_wheel_speeds.fr << " "
+                << target_wheel_speeds.rr << " " << target_wheel_speeds.fl
+                << " " << target_wheel_speeds.rl << std::endl;
+      std::cerr << "Velocities Command " << velocity_commands.linear_velocity
+                << " " << velocity_commands.angular_velocity << std::endl;
       std::cerr << "duties: " << motor_duties.fr << " " << motor_duties.fl
                 << " " << motor_duties.rr << " " << motor_duties.rl
                 << std::endl;
 #endif
-
+      return motor_duties;
+      break;
     default:
       std::cerr << "invalid motion control type.. commanding 0 motion"
                 << std::endl;
       return {0, 0, 0, 0};
+      break;
   }
 }
 }  // namespace Control

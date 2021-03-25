@@ -14,11 +14,6 @@ Pro2ProtocolObject::Pro2ProtocolObject(const char *device,
   motors_speeds_[FRONT_RIGHT_MOTOR] = MOTOR_NEUTRAL_;
   motors_speeds_[BACK_LEFT_MOTOR] = MOTOR_NEUTRAL_;
   motors_speeds_[BACK_RIGHT_MOTOR] = MOTOR_NEUTRAL_;
-  motor1_control_ = OdomControl(closed_loop_, pid_, 5, -5);
-  motor2_control_ = OdomControl(closed_loop_, pid_, 5, -5);
-  motor3_control_ = OdomControl(closed_loop_, pid_, 5, -5);
-  motor4_control_ = OdomControl(closed_loop_, pid_, 5, -5);
-
   pid_ = pid;
   register_comm_base(device);
   // TODO
@@ -52,11 +47,6 @@ void Pro2ProtocolObject::set_robot_velocity(double *control_array) {
   robotstatus_mutex_.lock();
   robotstatus_.cmd_linear_vel = control_array[0];
   robotstatus_.cmd_angular_vel = control_array[1];
-  std::cerr << "Control Array ";
-  for (int i = 0 ; i < sizeof(control_array) ; i++) {
-    std::cerr << control_array[i] << " ";
-  }
-  std::cerr << std::endl;
   // robotstatus_.cmd_ts =
   // std::chrono::duration_cast<std::chrono::milliseconds>(
   //     std::chrono::system_clock::now().time_since_epoch());
@@ -219,11 +209,6 @@ void Pro2ProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
       } else {
         return;
       }
-#ifdef DEBUG
-      std::cerr << std::dec << "rpm: " << rpm << std::endl;
-      std::cerr << std::dec << "current: " << current << std::endl;
-      std::cerr << std::dec << "duty: " << duty << std::endl;
-#endif
     }
   }
   robotstatus_mutex_.unlock();
@@ -307,7 +292,7 @@ void Pro2ProtocolObject::send_command(int sleeptime) {
 void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
   float linear_vel, angular_vel, rpm_FL, rpm_FR, rpm_BL, rpm_BR;
   Control::robot_geometry robot_geometry = {0.205, 0.265, .01651, 0, 0};
-  Control::pid_gains pid_gains = {0.1, 0.01, 0};
+  Control::pid_gains pid_gains = {0.003, 0.00, 0.0005};
   float motor_max_duty = .95;
   Control::SkidRobotMotionController skid_control =
       Control::SkidRobotMotionController(
