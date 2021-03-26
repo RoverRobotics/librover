@@ -3,25 +3,46 @@ import argparse
 import matplotlib.pyplot as plt
 
 
-def plot_pid_data(data, name):
-    fig, axs = plt.subplots(3, sharex=True)
-    axs[0].plot(data["data.time"], data[" data.target_value"],
+def plot_pid_data(data, name, motion_data):
+    fig, axs = plt.subplots(4, sharex=True)
+    # target value and measured value
+    axs[0].plot(data["time"], data["col0"],
                 color='b', label="target")
-    axs[0].plot(data["data.time"], data[" data.measured_value"],
+
+    axs[0].plot(data["time"], data["col1"],
                 color='r', label="measured")
     axs[0].legend(loc="upper right")
-    axs[1].plot(data["data.time"], data["data.error"],
+
+    # errors
+    axs[1].plot(data["time"], data["col3"],
                 color='orange', label="error")
-    axs[1].plot(data["data.time"], data["data.integral_error"],
+    axs[1].plot(data["time"], data["col4"],
                 color='gray', label="integral_error")
+    axs[1].plot(data["time"], data["col5"],
+                color='tan', label="delta_error")
     axs[1].legend(loc="upper right")
-    axs[2].plot(data["data.time"], data["data.pid_output"],
+
+    # output
+    axs[2].plot(data["time"], data["col2"],
                 color='green', label="pid_output")
     axs[2].legend(loc="upper right")
-    fig.suptitle(name + " kd=%f ki=%f kd=%f" % 
-                 (data["data.kp"].iloc[0], data["data.ki"].iloc[0], data["data.kd"].iloc[0]))
-    plt.savefig(name + '.png')
-    #plt.show()
+
+    fig.suptitle(name + " kp=%f ki=%f kd=%f" %
+                 (data["col6"].iloc[0], data["col7"].iloc[0], data["col8"].iloc[0]))
+
+    # motion (motor rpms)
+    axs[3].plot(motion_data["time"], motion_data["col2"],
+                color='lime', label="motor0 rpm")
+    axs[3].plot(motion_data["time"], motion_data["col3"],
+                color='royalblue', label="motor1 rpm")
+    axs[3].plot(motion_data["time"], motion_data["col4"],
+                color='darkgreen', label="motor2 rpm")
+    axs[3].plot(motion_data["time"], motion_data["col5"],
+                color='darkviolet', label="motor3 rpm")
+    axs[3].legend(loc="upper right")
+
+    plt.savefig(name + '.png', dpi=1000)
+    # plt.show()
     plt.clf()
 
 
@@ -33,10 +54,22 @@ print("reading file: ", args.filename)
 data = pd.read_csv(args.filename)
 
 # left pid
-left_pid_data = data[data["data.name"] == "pid_left"]
+left_pid_data = data[data["name"] == "pid_left"]
 
 # right pid
-right_pid_data = data[data["data.name"] == "pid_right"]
+right_pid_data = data[data["name"] == "pid_right"]
 
-plot_pid_data(left_pid_data, left_pid_data["data.name"].iloc[0] + args.filename )
-plot_pid_data(right_pid_data, right_pid_data["data.name"].iloc[0] + args.filename )
+# motion data
+motion_data = data[data["type"] == "motion"]
+
+plot_pid_data(
+    left_pid_data, 
+    left_pid_data["name"].iloc[0] + args.filename.split("/")[-1],
+    motion_data
+)
+
+plot_pid_data(
+    right_pid_data,
+    right_pid_data["name"].iloc[0] + args.filename.split("/")[-1],
+    motion_data
+)

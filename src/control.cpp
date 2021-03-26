@@ -205,19 +205,11 @@ float PidController::getIntegralErrorLimit() { return integral_error_limit_; }
 
 void PidController::writePidDataToCsv(std::ofstream& log_file,
                                       pid_outputs data) {
-  log_file  << "pid," 
-            << data.name << "," 
-            << data.time << "," 
-            << data.target_value << ","
-            << data.measured_value << ","
-            << data.pid_output << "," 
-            << data.error << "," 
-            << data.integral_error << "," 
-            << data.delta_error << "," 
-            << data.kp << "," 
-            << data.ki << "," 
-            << data.kd << "," 
-            << std::endl;
+  log_file << "pid," << data.name << "," << data.time << ","
+           << data.target_value << "," << data.measured_value << ","
+           << data.pid_output << "," << data.error << "," << data.integral_error
+           << "," << data.delta_error << "," << data.kp << "," << data.ki << ","
+           << data.kd << "," << std::endl;
   log_file.flush();
 }
 
@@ -251,9 +243,9 @@ pid_outputs PidController::runControl(float target, float measured) {
   }
 
   /* P I D terms */
-  float p = error * kp_;
-  float i = integral_error_ * ki_;
-  float d = delta_error * delta_time * kd_;
+  float p = kp_ * error;
+  float i = ki_ * integral_error_;
+  float d = kd_ * (delta_error / delta_time);
 
   /* compute output */
   float output = p + i + d;
@@ -274,7 +266,7 @@ pid_outputs PidController::runControl(float target, float measured) {
       std::chrono::duration<double>(time_now - time_origin_).count();
   returnstruct.error = error;
   returnstruct.integral_error = integral_error_;
-  returnstruct.delta_error = delta_error;
+  returnstruct.delta_error = (delta_error / delta_time);
   returnstruct.target_value = target;
   returnstruct.measured_value = measured;
   returnstruct.kp = kp_;
@@ -569,24 +561,18 @@ motor_data SkidRobotMotionController::runMotionControl(
 
 #ifdef DEBUG
   log_file_ << "motion,"
-            << "skid,"
-            << accumulated_time << ","
+            << "skid," << accumulated_time << ","
             << velocity_commands.linear_velocity << ","
             << velocity_commands.angular_velocity << ","
             << measured_velocities.linear_velocity << ","
             << measured_velocities.angular_velocity << ","
-            << current_motor_speeds.fl << ","
-            << current_motor_speeds.rl << ","
-            << current_motor_speeds.fr << ","
-            << current_motor_speeds.rr << ","
-            << motor_duties.fl << ","
-            << motor_duties.rl << ","
-            << motor_duties.fr << ","
-            << motor_duties.rr << ","
-            << std::endl;
+            << current_motor_speeds.fl << "," << current_motor_speeds.rl << ","
+            << current_motor_speeds.fr << "," << current_motor_speeds.rr << ","
+            << motor_duties.fl << "," << motor_duties.rl << ","
+            << motor_duties.fr << "," << motor_duties.rr << "," << std::endl;
   log_file_.flush();
 #endif
 
-return motor_duties;
+  return motor_duties;
 }
 }  // namespace Control
