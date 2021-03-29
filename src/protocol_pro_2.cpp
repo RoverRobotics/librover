@@ -292,7 +292,7 @@ void Pro2ProtocolObject::send_command(int sleeptime) {
 void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
   float linear_vel, angular_vel, rpm_FL, rpm_FR, rpm_BL, rpm_BR;
   Control::robot_geometry robot_geometry = {0.205, 0.265, .09, 0, 0};
-  Control::pid_gains pid_gains = {0.0005, 0.0, 0.00002};
+  Control::pid_gains pid_gains = {0.0005, 0.0000, 0.00002};
   // Control::pid_gains pid_gains = pid_;
   float motor_max_duty = .95;
   Control::SkidRobotMotionController skid_control =

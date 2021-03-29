@@ -559,6 +559,7 @@ motor_data SkidRobotMotionController::runMotionControl(
 
   /* do control */
   motor_data motor_duties_add;
+  motor_data modified_duties;
   switch (operating_mode_) {
     case OPEN_LOOP:
       std::cerr << "control type not yet implemented.. commanding 0 motion"
@@ -578,9 +579,9 @@ motor_data SkidRobotMotionController::runMotionControl(
       duty_cycles_.fr += motor_duties_add.fr;
       duty_cycles_.rr += motor_duties_add.rr;
       duty_cycles_.rl += motor_duties_add.rl;
-      duty_cycles_ =
+       modified_duties = 
           computeTorqueDistribution_(current_motor_speeds, duty_cycles_);
-      duty_cycles_ = clipDutyCycles_(duty_cycles_);
+      modified_duties = clipDutyCycles_(modified_duties);
       break;
     default:
       std::cerr << "invalid motion control type.. commanding 0 motion"
@@ -603,6 +604,6 @@ motor_data SkidRobotMotionController::runMotionControl(
   log_file_.flush();
 #endif
 
-  return duty_cycles_;
+  return modified_duties;
 }
 }  // namespace Control
