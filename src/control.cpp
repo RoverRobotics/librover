@@ -282,6 +282,7 @@ SkidRobotMotionController::SkidRobotMotionController()
       operating_mode_(OPEN_LOOP),
       traction_control_gain_(1),
       max_motor_duty_(100),
+      duty_cycles_({0}),
       time_last_(std::chrono::steady_clock::now()),
       time_origin_(std::chrono::steady_clock::now()) {
 #ifdef DEBUG
@@ -319,6 +320,7 @@ SkidRobotMotionController::SkidRobotMotionController(
     : log_folder_path_("~/Documents/"),
       traction_control_gain_(1),
       lpf_alpha_(1),
+      duty_cycles_({0}),
       max_linear_acceleration_(std::numeric_limits<float>::max()),
       max_angular_acceleration_(std::numeric_limits<float>::max()),
       time_last_(std::chrono::steady_clock::now()),
@@ -573,27 +575,31 @@ motor_data SkidRobotMotionController::runMotionControl(
       computeSkidSteerWheelSpeeds(velocity_commands, robot_geometry_);
 
   /* do control */
-  motor_data motor_duties;
+  motor_data motor_duties_add;
   switch (operating_mode_) {
     case OPEN_LOOP:
       std::cerr << "control type not yet implemented.. commanding 0 motion"
                 << std::endl;
-      motor_duties = {0, 0, 0, 0};
+      duty_cycles_ = {0, 0, 0, 0};
       break;
     case INDEPENDENT_WHEEL:
       std::cerr << "control type not yet implemented.. commanding 0 motion"
                 << std::endl;
-      motor_duties = {0, 0, 0, 0};
+      duty_cycles_ = {0, 0, 0, 0};
       break;
 
     case TRACTION_CONTROL:
-      motor_duties = clipDutyCycles_(
-          computeMotorCommandsTc_(target_wheel_speeds, current_motor_speeds));
+      motor_duties_add = computeMotorCommandsTc_(target_wheel_speeds, current_motor_speeds);
+      duty_cycles_.fl += motor_duties_add.fl;
+      duty_cycles_.fr += motor_duties_add.fr;
+      duty_cycles_.rr += motor_duties_add.rr;
+      duty_cycles_.rl += motor_duties_add.rl;
+      duty_cycles_ = clipDutyCycles_(duty_cycles_);
       break;
     default:
       std::cerr << "invalid motion control type.. commanding 0 motion"
                 << std::endl;
-      motor_duties = {0, 0, 0, 0};
+      duty_cycles_ = {0, 0, 0, 0};
       break;
   }
 
@@ -606,11 +612,11 @@ motor_data SkidRobotMotionController::runMotionControl(
             << measured_velocities.angular_velocity << ","
             << current_motor_speeds.fl << "," << current_motor_speeds.fr << ","
             << current_motor_speeds.rl << "," << current_motor_speeds.rr << ","
-            << motor_duties.fl << "," << motor_duties.fr << ","
-            << motor_duties.rr << "," << motor_duties.rl << "," << std::endl;
+            << duty_cycles_.fl << "," << duty_cycles_.fr << ","
+            << duty_cycles_.rr << "," << duty_cycles_.rl << "," << std::endl;
   log_file_.flush();
 #endif
 
-  return motor_duties;
+  return duty_cycles_;
 }
 }  // namespace Control

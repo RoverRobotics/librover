@@ -188,6 +188,8 @@ class Control::SkidRobotMotionController {
   std::chrono::steady_clock::time_point time_last_;
   std::chrono::steady_clock::time_point time_origin_;
 
+  motor_data duty_cycles_;
+
   motor_data computeMotorCommandsTc_(motor_data target_wheel_speeds,
                                      motor_data current_motor_speeds);
 
