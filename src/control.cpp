@@ -439,45 +439,9 @@ float SkidRobotMotionController::getFilterAlpha() { return lpf_alpha_; }
 
 motor_data SkidRobotMotionController::computeMotorCommandsTc_(
     motor_data target_wheel_speeds, motor_data current_motor_speeds) {
-  // float left_magnitude = std::min(std::abs(current_motor_speeds.fl),
-  //                                 std::abs(current_motor_speeds.rl));
-  // float right_magnitude = std::min(std::abs(current_motor_speeds.fr),
-  //                                  std::abs(current_motor_speeds.rr));
-
+  
   float left_magnitude = (current_motor_speeds.fl + current_motor_speeds.rl) / 2;
   float right_magnitude = (current_motor_speeds.fr + current_motor_speeds.rr) / 2;
-
-  // int left_direction, right_direction;
-
-  // /* left side */
-  // if (std::signbit(current_motor_speeds.fl) ==
-  //     std::signbit(current_motor_speeds.rl)) {
-  //   /* wheels are moving same direction (common) */
-  //   left_direction = (std::signbit(current_motor_speeds.fl) ? -1 : 1);
-  // } else {
-  //   /* wheels are moving different direction (uncommon) */
-  //   if (std::abs(current_motor_speeds.fl) <=
-  //       std::abs(current_motor_speeds.rl)) {
-  //     left_direction = (std::signbit(current_motor_speeds.fl) ? -1 : 1);
-  //   } else {
-  //     left_direction = (std::signbit(current_motor_speeds.rl) ? -1 : 1);
-  //   }
-  // }
-
-  // /* left side */
-  // if (std::signbit(current_motor_speeds.fr) ==
-  //     std::signbit(current_motor_speeds.rr)) {
-  //   /* wheels are moving same direction (common) */
-  //   right_direction = (std::signbit(current_motor_speeds.fr) ? -1 : 1);
-  // } else {
-  //   /* wheels are moving different direction (uncommon) */
-  //   if (std::abs(current_motor_speeds.fr) <=
-  //       std::abs(current_motor_speeds.rr)) {
-  //     right_direction = (std::signbit(current_motor_speeds.fr) ? -1 : 1);
-  //   } else {
-  //     right_direction = (std::signbit(current_motor_speeds.rr) ? -1 : 1);
-  //   }
-  // }
 
   /* run pid, 1 per side */
   pid_outputs l_pid_output = pid_controller_left_->runControl(
@@ -495,27 +459,6 @@ motor_data SkidRobotMotionController::computeMotorCommandsTc_(
   motor_data power_proposals = {
       l_pid_output.pid_output, r_pid_output.pid_output, l_pid_output.pid_output,
       r_pid_output.pid_output};
-
-  /* right side */
-  if (std::abs(current_motor_speeds.fr) >= std::abs(current_motor_speeds.rr)) {
-    /* scale down FRONT RIGHT power */
-    power_proposals.fr *=
-        std::abs(current_motor_speeds.rr / current_motor_speeds.fr);
-  } else {
-    /* scale down REAR RIGHT power */
-    power_proposals.rr *=
-        std::abs(current_motor_speeds.fr / current_motor_speeds.rr);
-  }
-  /* left side */
-  if (std::abs(current_motor_speeds.fl) >= std::abs(current_motor_speeds.rl)) {
-    /* scale down FRONT LEFT power */
-    power_proposals.fl *=
-        std::abs(current_motor_speeds.rl / current_motor_speeds.fl);
-  } else {
-    /* scale down REAR LEFT power */
-    power_proposals.rl *=
-        std::abs(current_motor_speeds.fl / current_motor_speeds.rl);
-  }
 
   isnan(power_proposals.fr) ? power_proposals.fr = 0
                             : power_proposals.fr = power_proposals.fr;
@@ -542,6 +485,32 @@ motor_data SkidRobotMotionController::clipDutyCycles_(
   return proposed_duties;
 }
 
+motor_data SkidRobotMotionController::computeTorqueDistribution_(motor_data current_motor_speeds, motor_data power_proposals){
+  /* right side */
+  if (std::abs(current_motor_speeds.fr) >= std::abs(current_motor_speeds.rr)) {
+    /* scale down FRONT RIGHT power */
+    power_proposals.fr *=
+        std::abs(current_motor_speeds.rr / current_motor_speeds.fr);
+  } else {
+    /* scale down REAR RIGHT power */
+    power_proposals.rr *=
+        std::abs(current_motor_speeds.fr / current_motor_speeds.rr);
+  }
+  /* left side */
+  if (std::abs(current_motor_speeds.fl) >= std::abs(current_motor_speeds.rl)) {
+    /* scale down FRONT LEFT power */
+    power_proposals.fl *=
+        std::abs(current_motor_speeds.rl / current_motor_speeds.fl);
+  } else {
+    /* scale down REAR LEFT power */
+    power_proposals.rl *=
+        std::abs(current_motor_speeds.fl / current_motor_speeds.rl);
+  }
+
+  return power_proposals;
+}
+
+  
 motor_data SkidRobotMotionController::runMotionControl(
     robot_velocities velocity_targets, motor_data current_duty_cycles,
     motor_data current_motor_speeds) {
@@ -594,6 +563,7 @@ motor_data SkidRobotMotionController::runMotionControl(
       duty_cycles_.fr += motor_duties_add.fr;
       duty_cycles_.rr += motor_duties_add.rr;
       duty_cycles_.rl += motor_duties_add.rl;
+      duty_cycles_ = computeTorqueDistribution_(current_motor_speeds, duty_cycles_);
       duty_cycles_ = clipDutyCycles_(duty_cycles_);
       break;
     default:
