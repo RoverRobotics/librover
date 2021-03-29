@@ -292,7 +292,7 @@ void Pro2ProtocolObject::send_command(int sleeptime) {
 void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
   float linear_vel, angular_vel, rpm_FL, rpm_FR, rpm_BL, rpm_BR;
   Control::robot_geometry robot_geometry = {0.205, 0.265, .09, 0, 0};
-  Control::pid_gains pid_gains = {0.002, 0.0, 0.0};
+  Control::pid_gains pid_gains = {0.0005, 0.0, 0.00002};
   // Control::pid_gains pid_gains = pid_;
   float motor_max_duty = .95;
   Control::SkidRobotMotionController skid_control =
@@ -304,7 +304,6 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
   std::chrono::milliseconds time_from_msg;
 
   while (true) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));
     std::chrono::milliseconds time_now =
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch());
@@ -332,9 +331,9 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
     motors_speeds_[BACK_LEFT_MOTOR] = duty_cycles.rl;
     motors_speeds_[BACK_RIGHT_MOTOR] = duty_cycles.rr;
     robotstatus_mutex_.unlock();
-
     // end timeout
     time_last = time_now;
+    std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));
   }
 }
 
