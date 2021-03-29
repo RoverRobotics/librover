@@ -437,14 +437,49 @@ float SkidRobotMotionController::getFilterAlpha() { return lpf_alpha_; }
 
 motor_data SkidRobotMotionController::computeMotorCommandsTc_(
     motor_data target_wheel_speeds, motor_data current_motor_speeds) {
+  float left_magnitude = std::min(std::abs(current_motor_speeds.fl),
+                                  std::abs(current_motor_speeds.rl));
+  float right_magnitude = std::min(std::abs(current_motor_speeds.fr),
+                                   std::abs(current_motor_speeds.rr));
+
+  int left_direction, right_direction;
+
+  /* left side */
+  if (std::signbit(current_motor_speeds.fl) ==
+      std::signbit(current_motor_speeds.rl)) {
+    /* wheels are moving same direction (common) */
+    left_direction = (std::signbit(current_motor_speeds.fl) ? -1 : 1);
+  } else {
+    /* wheels are moving different direction (uncommon) */
+    if (std::abs(current_motor_speeds.fl) <=
+        std::abs(current_motor_speeds.rl)) {
+      left_direction = (std::signbit(current_motor_speeds.fl) ? -1 : 1);
+    } else {
+      left_direction = (std::signbit(current_motor_speeds.rl) ? -1 : 1);
+    }
+  }
+
+  /* left side */
+  if (std::signbit(current_motor_speeds.fr) ==
+      std::signbit(current_motor_speeds.rr)) {
+    /* wheels are moving same direction (common) */
+    right_direction = (std::signbit(current_motor_speeds.fr) ? -1 : 1);
+  } else {
+    /* wheels are moving different direction (uncommon) */
+    if (std::abs(current_motor_speeds.fr) <=
+        std::abs(current_motor_speeds.rr)) {
+      right_direction = (std::signbit(current_motor_speeds.fr) ? -1 : 1);
+    } else {
+      right_direction = (std::signbit(current_motor_speeds.rr) ? -1 : 1);
+    }
+  }
+
   /* run pid, 1 per side */
   pid_outputs l_pid_output = pid_controller_left_->runControl(
-      target_wheel_speeds.fl,
-      std::min(current_motor_speeds.fl, current_motor_speeds.rl));
+      target_wheel_speeds.fl, left_magnitude * left_direction);
 
   pid_outputs r_pid_output = pid_controller_right_->runControl(
-      target_wheel_speeds.fr,
-      std::min(current_motor_speeds.fr, current_motor_speeds.rr));
+      target_wheel_speeds.fr, right_magnitude * right_direction);
 
 #ifdef DEBUG
   pid_controller_left_->writePidDataToCsv(log_file_, l_pid_output);
@@ -457,7 +492,7 @@ motor_data SkidRobotMotionController::computeMotorCommandsTc_(
       r_pid_output.pid_output};
 
   /* right side */
-  if (current_motor_speeds.fr >= current_motor_speeds.rr) {
+  if (std::abs(current_motor_speeds.fr) >= std::abs(current_motor_speeds.rr)) {
     /* scale down FRONT RIGHT power */
     power_proposals.fr *=
         std::abs(current_motor_speeds.rr / current_motor_speeds.fr);
@@ -467,7 +502,7 @@ motor_data SkidRobotMotionController::computeMotorCommandsTc_(
         std::abs(current_motor_speeds.fr / current_motor_speeds.rr);
   }
   /* left side */
-  if (current_motor_speeds.fl >= current_motor_speeds.rl) {
+  if (std::abs(current_motor_speeds.fl) >= std::abs(current_motor_speeds.rl)) {
     /* scale down FRONT LEFT power */
     power_proposals.fl *=
         std::abs(current_motor_speeds.rl / current_motor_speeds.fl);
