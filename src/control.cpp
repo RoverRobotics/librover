@@ -439,13 +439,14 @@ float SkidRobotMotionController::getFilterAlpha() { return lpf_alpha_; }
 
 motor_data SkidRobotMotionController::computeMotorCommandsTc_(
     motor_data target_wheel_speeds, motor_data current_motor_speeds) {
-  
-  float left_magnitude = (current_motor_speeds.fl + current_motor_speeds.rl) / 2;
-  float right_magnitude = (current_motor_speeds.fr + current_motor_speeds.rr) / 2;
+  float left_magnitude =
+      (current_motor_speeds.fl + current_motor_speeds.rl) / 2;
+  float right_magnitude =
+      (current_motor_speeds.fr + current_motor_speeds.rr) / 2;
 
   /* run pid, 1 per side */
-  pid_outputs l_pid_output = pid_controller_left_->runControl(
-      target_wheel_speeds.fl, left_magnitude);
+  pid_outputs l_pid_output =
+      pid_controller_left_->runControl(target_wheel_speeds.fl, left_magnitude);
 
   pid_outputs r_pid_output = pid_controller_right_->runControl(
       target_wheel_speeds.fr, right_magnitude);
@@ -485,32 +486,44 @@ motor_data SkidRobotMotionController::clipDutyCycles_(
   return proposed_duties;
 }
 
-motor_data SkidRobotMotionController::computeTorqueDistribution_(motor_data current_motor_speeds, motor_data power_proposals){
+motor_data SkidRobotMotionController::computeTorqueDistribution_(
+    motor_data current_motor_speeds, motor_data power_proposals) {
   /* right side */
-  if (std::abs(current_motor_speeds.fr) >= std::abs(current_motor_speeds.rr)) {
-    /* scale down FRONT RIGHT power */
-    power_proposals.fr *=
-        std::abs(current_motor_speeds.rr / current_motor_speeds.fr);
-  } else {
-    /* scale down REAR RIGHT power */
-    power_proposals.rr *=
-        std::abs(current_motor_speeds.fr / current_motor_speeds.rr);
+  /* if both wheels are moving then ... */
+  if (std::abs(current_motor_speeds.fr) > 0 &&
+      std::abs(current_motor_speeds.rr) > 0) {
+    /* if front wheel is spinning faster ... */
+    if (std::abs(current_motor_speeds.fr) >=
+        std::abs(current_motor_speeds.rr)) {
+      /* scale down FRONT RIGHT power */
+      power_proposals.fr *=
+          std::abs(current_motor_speeds.rr / current_motor_speeds.fr);
+    } else {
+      /* scale down REAR RIGHT power */
+      power_proposals.rr *=
+          std::abs(current_motor_speeds.fr / current_motor_speeds.rr);
+    }
   }
+
   /* left side */
-  if (std::abs(current_motor_speeds.fl) >= std::abs(current_motor_speeds.rl)) {
-    /* scale down FRONT LEFT power */
-    power_proposals.fl *=
-        std::abs(current_motor_speeds.rl / current_motor_speeds.fl);
-  } else {
-    /* scale down REAR LEFT power */
-    power_proposals.rl *=
-        std::abs(current_motor_speeds.fl / current_motor_speeds.rl);
+  /* if both wheels are moving then ... */
+  if (std::abs(current_motor_speeds.fl) > 0 &&
+      std::abs(current_motor_speeds.rl) > 0) {
+    if (std::abs(current_motor_speeds.fl) >=
+        std::abs(current_motor_speeds.rl)) {
+      /* scale down FRONT LEFT power */
+      power_proposals.fl *=
+          std::abs(current_motor_speeds.rl / current_motor_speeds.fl);
+    } else {
+      /* scale down REAR LEFT power */
+      power_proposals.rl *=
+          std::abs(current_motor_speeds.fl / current_motor_speeds.rl);
+    }
   }
 
   return power_proposals;
 }
 
-  
 motor_data SkidRobotMotionController::runMotionControl(
     robot_velocities velocity_targets, motor_data current_duty_cycles,
     motor_data current_motor_speeds) {
@@ -558,12 +571,14 @@ motor_data SkidRobotMotionController::runMotionControl(
       break;
 
     case TRACTION_CONTROL:
-      motor_duties_add = computeMotorCommandsTc_(target_wheel_speeds, current_motor_speeds);
+      motor_duties_add =
+          computeMotorCommandsTc_(target_wheel_speeds, current_motor_speeds);
       duty_cycles_.fl += motor_duties_add.fl;
       duty_cycles_.fr += motor_duties_add.fr;
       duty_cycles_.rr += motor_duties_add.rr;
       duty_cycles_.rl += motor_duties_add.rl;
-      duty_cycles_ = computeTorqueDistribution_(current_motor_speeds, duty_cycles_);
+      duty_cycles_ =
+          computeTorqueDistribution_(current_motor_speeds, duty_cycles_);
       duty_cycles_ = clipDutyCycles_(duty_cycles_);
       break;
     default:
