@@ -496,26 +496,26 @@ motor_data SkidRobotMotionController::computeMotorCommandsTc_(
       l_pid_output.pid_output, r_pid_output.pid_output, l_pid_output.pid_output,
       r_pid_output.pid_output};
 
-  // /* right side */
-  // if (std::abs(current_motor_speeds.fr) >= std::abs(current_motor_speeds.rr)) {
-  //   /* scale down FRONT RIGHT power */
-  //   power_proposals.fr *=
-  //       std::abs(current_motor_speeds.rr / current_motor_speeds.fr);
-  // } else {
-  //   /* scale down REAR RIGHT power */
-  //   power_proposals.rr *=
-  //       std::abs(current_motor_speeds.fr / current_motor_speeds.rr);
-  // }
-  // /* left side */
-  // if (std::abs(current_motor_speeds.fl) >= std::abs(current_motor_speeds.rl)) {
-  //   /* scale down FRONT LEFT power */
-  //   power_proposals.fl *=
-  //       std::abs(current_motor_speeds.rl / current_motor_speeds.fl);
-  // } else {
-  //   /* scale down REAR LEFT power */
-  //   power_proposals.rl *=
-  //       std::abs(current_motor_speeds.fl / current_motor_speeds.rl);
-  // }
+  /* right side */
+  if (std::abs(current_motor_speeds.fr) >= std::abs(current_motor_speeds.rr)) {
+    /* scale down FRONT RIGHT power */
+    power_proposals.fr *=
+        std::abs(current_motor_speeds.rr / current_motor_speeds.fr);
+  } else {
+    /* scale down REAR RIGHT power */
+    power_proposals.rr *=
+        std::abs(current_motor_speeds.fr / current_motor_speeds.rr);
+  }
+  /* left side */
+  if (std::abs(current_motor_speeds.fl) >= std::abs(current_motor_speeds.rl)) {
+    /* scale down FRONT LEFT power */
+    power_proposals.fl *=
+        std::abs(current_motor_speeds.rl / current_motor_speeds.fl);
+  } else {
+    /* scale down REAR LEFT power */
+    power_proposals.rl *=
+        std::abs(current_motor_speeds.fl / current_motor_speeds.rl);
+  }
 
   isnan(power_proposals.fr) ? power_proposals.fr = 0
                             : power_proposals.fr = power_proposals.fr;
