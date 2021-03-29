@@ -490,35 +490,36 @@ motor_data SkidRobotMotionController::computeTorqueDistribution_(
     motor_data current_motor_speeds, motor_data power_proposals) {
   /* right side */
   /* if both wheels are moving then ... */
-  if (std::abs(current_motor_speeds.fr) > 0 &&
-      std::abs(current_motor_speeds.rr) > 0) {
-    /* if front wheel is spinning faster ... */
-    if (std::abs(current_motor_speeds.fr) >=
-        std::abs(current_motor_speeds.rr)) {
-      /* scale down FRONT RIGHT power */
-      power_proposals.fr *=
-          std::abs(current_motor_speeds.rr / current_motor_speeds.fr);
-    } else {
-      /* scale down REAR RIGHT power */
-      power_proposals.rr *=
-          std::abs(current_motor_speeds.fr / current_motor_speeds.rr);
-    }
+
+  /* if front wheel is spinning faster ... */
+  if (std::abs(current_motor_speeds.fr) >= std::abs(current_motor_speeds.rr)) {
+    /* scale down FRONT RIGHT power */
+    power_proposals.fr *=
+        (isnan(std::abs(current_motor_speeds.rr / current_motor_speeds.fr))
+             ? 0.5
+             : std::abs(current_motor_speeds.rr / current_motor_speeds.fr));
+  } else {
+    /* scale down REAR RIGHT power */
+    power_proposals.rr *=
+        (isnan(std::abs(current_motor_speeds.fr / current_motor_speeds.rr))
+             ? 0.5
+             : std::abs(current_motor_speeds.fr / current_motor_speeds.rr));
   }
 
   /* left side */
-  /* if both wheels are moving then ... */
-  if (std::abs(current_motor_speeds.fl) > 0 &&
-      std::abs(current_motor_speeds.rl) > 0) {
-    if (std::abs(current_motor_speeds.fl) >=
-        std::abs(current_motor_speeds.rl)) {
-      /* scale down FRONT LEFT power */
-      power_proposals.fl *=
-          std::abs(current_motor_speeds.rl / current_motor_speeds.fl);
-    } else {
-      /* scale down REAR LEFT power */
-      power_proposals.rl *=
-          std::abs(current_motor_speeds.fl / current_motor_speeds.rl);
-    }
+
+  if (std::abs(current_motor_speeds.fl) >= std::abs(current_motor_speeds.rl)) {
+    /* scale down FRONT LEFT power */
+    power_proposals.fl *=
+        (isnan(std::abs(current_motor_speeds.rl / current_motor_speeds.fl))
+             ? 0.5
+             : std::abs(current_motor_speeds.rl / current_motor_speeds.fl));
+  } else {
+    /* scale down REAR LEFT power */
+    power_proposals.rl *=
+        (isnan(std::abs(current_motor_speeds.fl / current_motor_speeds.rl))
+             ? 0.5
+             : std::abs(current_motor_speeds.fl / current_motor_speeds.rl));
   }
 
   return power_proposals;
