@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 
 def plot_pid_data(data, name, motion_data):
-    fig, axs = plt.subplots(4, sharex=True)
+    fig, axs = plt.subplots(6, sharex=True)
     # target value and measured value
     axs[0].plot(data["time"], data["col0"],
                 color='b', label="target")
@@ -31,15 +31,25 @@ def plot_pid_data(data, name, motion_data):
                  (data["col6"].iloc[0], data["col7"].iloc[0], data["col8"].iloc[0]))
 
     # motion (motor rpms)
-    axs[3].plot(motion_data["time"], motion_data["col2"],
-                color='lime', label="motor0 rpm")
-    axs[3].plot(motion_data["time"], motion_data["col3"],
-                color='royalblue', label="motor1 rpm")
     axs[3].plot(motion_data["time"], motion_data["col4"],
-                color='darkgreen', label="motor2 rpm")
-    axs[3].plot(motion_data["time"], motion_data["col5"],
-                color='darkviolet', label="motor3 rpm")
+                color='lime', label="front left rpm")
+    axs[3].plot(motion_data["time"], motion_data["col6"],
+                color='darkgreen', label="rear left rpm")
     axs[3].legend(loc="upper right")
+
+
+    axs[4].plot(motion_data["time"], motion_data["col5"],
+                color='royalblue', label="front right rpm")
+    axs[4].plot(motion_data["time"], motion_data["col7"],
+                color='darkviolet', label="rear right rpm")
+    axs[4].legend(loc="upper right")
+
+    axs[5].plot(motion_data["time"], motion_data["col2"],
+                color='sandybrown', label="est linear vel")
+    axs[5].plot(motion_data["time"], motion_data["col3"],
+                color='darkviolet', label="est angular vel")
+    axs[5].legend(loc="upper right")
+    
 
     plt.savefig(name + '.png', dpi=1000)
     # plt.show()

@@ -566,10 +566,10 @@ motor_data SkidRobotMotionController::runMotionControl(
             << velocity_commands.angular_velocity << ","
             << measured_velocities.linear_velocity << ","
             << measured_velocities.angular_velocity << ","
-            << current_motor_speeds.fl << "," << current_motor_speeds.rl << ","
-            << current_motor_speeds.fr << "," << current_motor_speeds.rr << ","
-            << motor_duties.fl << "," << motor_duties.rl << ","
-            << motor_duties.fr << "," << motor_duties.rr << "," << std::endl;
+            << current_motor_speeds.fl << "," << current_motor_speeds.fr << ","
+            << current_motor_speeds.rl << "," << current_motor_speeds.rr << ","
+            << motor_duties.fl << "," << motor_duties.fr << ","
+            << motor_duties.rr << "," << motor_duties.rl << "," << std::endl;
   log_file_.flush();
 #endif
 
