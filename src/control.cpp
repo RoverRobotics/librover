@@ -283,6 +283,7 @@ SkidRobotMotionController::SkidRobotMotionController()
       traction_control_gain_(1),
       max_motor_duty_(100),
       duty_cycles_({0}),
+      measured_velocities_({0}),
       time_last_(std::chrono::steady_clock::now()),
       time_origin_(std::chrono::steady_clock::now()) {
 #ifdef DEBUG
@@ -321,6 +322,7 @@ SkidRobotMotionController::SkidRobotMotionController(
       traction_control_gain_(1),
       lpf_alpha_(1),
       duty_cycles_({0}),
+      measured_velocities_({0}),
       max_linear_acceleration_(std::numeric_limits<float>::max()),
       max_angular_acceleration_(std::numeric_limits<float>::max()),
       time_last_(std::chrono::steady_clock::now()),
@@ -525,6 +527,10 @@ motor_data SkidRobotMotionController::computeTorqueDistribution_(
   return power_proposals;
 }
 
+robot_velocities SkidRobotMotionController::getMeasuredVelocities() {
+  return measured_velocities_;
+}
+
 motor_data SkidRobotMotionController::runMotionControl(
     robot_velocities velocity_targets, motor_data current_duty_cycles,
     motor_data current_motor_speeds) {
@@ -542,7 +548,7 @@ motor_data SkidRobotMotionController::runMotionControl(
   time_last_ = time_now;
 
   /* get estimated robot velocities */
-  robot_velocities measured_velocities =
+  measured_velocities_ =
       computeVelocitiesFromWheelspeeds(current_motor_speeds, robot_geometry_);
 
   /* limit acceleration */
@@ -579,7 +585,7 @@ motor_data SkidRobotMotionController::runMotionControl(
       duty_cycles_.fr += motor_duties_add.fr;
       duty_cycles_.rr += motor_duties_add.rr;
       duty_cycles_.rl += motor_duties_add.rl;
-       modified_duties = 
+      modified_duties =
           computeTorqueDistribution_(current_motor_speeds, duty_cycles_);
       modified_duties = clipDutyCycles_(modified_duties);
       break;
@@ -595,8 +601,8 @@ motor_data SkidRobotMotionController::runMotionControl(
             << "skid," << accumulated_time << ","
             << velocity_commands.linear_velocity << ","
             << velocity_commands.angular_velocity << ","
-            << measured_velocities.linear_velocity << ","
-            << measured_velocities.angular_velocity << ","
+            << measured_velocities_.linear_velocity << ","
+            << measured_velocities_.angular_velocity << ","
             << current_motor_speeds.fl << "," << current_motor_speeds.fr << ","
             << current_motor_speeds.rl << "," << current_motor_speeds.rr << ","
             << duty_cycles_.fl << "," << duty_cycles_.fr << ","

@@ -163,6 +163,8 @@ class Control::SkidRobotMotionController {
                               motor_data current_duty_cycles,
                               motor_data current_motor_speeds);
 
+  robot_velocities getMeasuredVelocities();
+
  private:
   std::string log_folder_path_;
 #ifdef DEBUG
@@ -179,6 +181,7 @@ class Control::SkidRobotMotionController {
   std::unique_ptr<PidController> pid_controller_rl_;
   std::unique_ptr<PidController> pid_controller_rr_;
   pid_gains pid_gains_;
+  robot_velocities measured_velocities_;
 
   float traction_control_gain_;
   float max_motor_duty_;
