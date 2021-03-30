@@ -16,9 +16,9 @@ motor_data computeSkidSteerWheelSpeeds(robot_velocities target_velocities,
 
   /* travel rate(m/s) */
   float left_travel_rate = target_velocities.linear_velocity -
-                           (0.5 * target_velocities.angular_velocity * rs);
+                           (target_velocities.angular_velocity * rs);
   float right_travel_rate = target_velocities.linear_velocity +
-                            (0.5 * target_velocities.angular_velocity * rs);
+                            (target_velocities.angular_velocity * rs);
 
   /* convert (m/s) -> rpm */
   float left_wheel_speed =
@@ -60,7 +60,7 @@ robot_velocities computeVelocitiesFromWheelspeeds(
   /* compute velocities */
   float linear_velocity = (right_travel_rate + left_travel_rate) / 2;
   float angular_velocity =
-      travel_differential / cs;  // possibly add traction factor here
+      travel_differential / (2 * rs) ;  // possibly add traction factor here
 
   robot_velocities returnstruct;
   returnstruct.linear_velocity = linear_velocity;

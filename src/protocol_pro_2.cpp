@@ -325,12 +325,16 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
     auto duty_cycles =
         skid_control.runMotionControl({linear_vel, angular_vel}, {0, 0, 0, 0},
                                       {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
+                                      auto velocities = skid_control.getMeasuredVelocities({rpm_FL, rpm_FR, rpm_BL, rpm_BR});
     robotstatus_mutex_.lock();
     motors_speeds_[FRONT_LEFT_MOTOR] = duty_cycles.fl;
     motors_speeds_[FRONT_RIGHT_MOTOR] = duty_cycles.fr;
     motors_speeds_[BACK_LEFT_MOTOR] = duty_cycles.rl;
     motors_speeds_[BACK_RIGHT_MOTOR] = duty_cycles.rr;
+    robotstatus_.linear_vel = velocities.linear_velocity;
+    robotstatus_.angular_vel = velocities.angular_velocity;
     robotstatus_mutex_.unlock();
+    std::cerr << "Angular Vel" << velocities.angular_velocity;
     // end timeout
     time_last = time_now;
     std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));
