@@ -80,17 +80,18 @@ robot_velocities limitAcceleration(robot_velocities target_velocities,
                                dt;
 
   /* clip the proposed acceleration into an acceptable acceleration */
-  if (linear_acceleration > delta_v_limits.linear_velocity) {
-    linear_acceleration = delta_v_limits.linear_velocity;
+  if (std::abs(linear_acceleration) >
+      std::abs(delta_v_limits.linear_velocity)) {
+    std::signbit(linear_acceleration)
+        ? linear_acceleration = -delta_v_limits.linear_velocity
+        : linear_acceleration = delta_v_limits.linear_velocity;
   }
-  if (linear_acceleration < -delta_v_limits.linear_velocity) {
-    linear_acceleration = -delta_v_limits.linear_velocity;
-  }
-  if (angular_acceleration > delta_v_limits.angular_velocity) {
-    angular_acceleration = delta_v_limits.angular_velocity;
-  }
-  if (angular_acceleration < -delta_v_limits.angular_velocity) {
-    angular_acceleration = -delta_v_limits.angular_velocity;
+
+  if (std::abs(angular_acceleration) >
+      std::abs(delta_v_limits.angular_velocity)) {
+    std::signbit(linear_acceleration)
+        ? angular_acceleration = -delta_v_limits.angular_velocity
+        : angular_acceleration = delta_v_limits.angular_velocity;
   }
 
   /* calculate new velocities */
@@ -491,8 +492,10 @@ motor_data SkidRobotMotionController::computeTorqueDistribution_(
   return power_proposals;
 }
 
-robot_velocities SkidRobotMotionController::getMeasuredVelocities(motor_data current_motor_speeds) {
-  return computeVelocitiesFromWheelspeeds(current_motor_speeds, robot_geometry_);
+robot_velocities SkidRobotMotionController::getMeasuredVelocities(
+    motor_data current_motor_speeds) {
+  return computeVelocitiesFromWheelspeeds(current_motor_speeds,
+                                          robot_geometry_);
 }
 
 motor_data SkidRobotMotionController::runMotionControl(
