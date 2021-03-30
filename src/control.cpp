@@ -527,8 +527,8 @@ motor_data SkidRobotMotionController::computeTorqueDistribution_(
   return power_proposals;
 }
 
-robot_velocities SkidRobotMotionController::getMeasuredVelocities() {
-  return measured_velocities_;
+robot_velocities SkidRobotMotionController::getMeasuredVelocities(motor_data current_motor_speeds) {
+  return computeVelocitiesFromWheelspeeds(current_motor_speeds, robot_geometry_);
 }
 
 motor_data SkidRobotMotionController::runMotionControl(

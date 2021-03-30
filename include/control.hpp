@@ -163,7 +163,7 @@ class Control::SkidRobotMotionController {
                               motor_data current_duty_cycles,
                               motor_data current_motor_speeds);
 
-  robot_velocities getMeasuredVelocities();
+  robot_velocities getMeasuredVelocities(motor_data current_motor_speeds);
 
  private:
   std::string log_folder_path_;
