@@ -200,12 +200,7 @@ pid_outputs PidController::runControl(float target, float measured) {
   float delta_error = error - previous_error_;
 
   /* clip integral error */
-  if (integral_error_ > integral_error_limit_) {
-    integral_error_ = integral_error_limit_;
-  }
-  if (integral_error_ < -integral_error_limit_) {
-    integral_error_ = -integral_error_limit_;
-  }
+  integral_error_ = std::clamp(integral_error_, -integral_error_limit_, integral_error_limit_);
 
   /* P I D terms */
   float p = kp_ * error;
@@ -216,12 +211,7 @@ pid_outputs PidController::runControl(float target, float measured) {
   float output = p + i + d;
 
   /* clip output */
-  if (output > pos_max_output_) {
-    output = pos_max_output_;
-  }
-  if (output < neg_max_output_) {
-    output = neg_max_output_;
-  }
+  output = std::clamp(output, neg_max_output_, pos_max_output_);
 
   pid_outputs returnstruct;
   returnstruct.pid_output = output;
