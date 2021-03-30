@@ -14,14 +14,11 @@ motor_data computeSkidSteerWheelSpeeds(robot_velocities target_velocities,
   float rs = sqrt(pow(0.5 * robot_geometry.wheel_base, 2) +
                   pow(0.5 * robot_geometry.intra_axle_distance, 2));
 
-  /* circumference of robot's stance (meters) */
-  float cs = 2 * M_PI * rs;
-
   /* travel rate(m/s) */
   float left_travel_rate = target_velocities.linear_velocity -
-                           0.5 * target_velocities.angular_velocity;
+                           (0.5 * target_velocities.angular_velocity * rs);
   float right_travel_rate = target_velocities.linear_velocity +
-                            0.5 * target_velocities.angular_velocity;
+                            (0.5 * target_velocities.angular_velocity * rs);
 
   /* convert (m/s) -> rpm */
   float left_wheel_speed =
@@ -44,39 +41,6 @@ robot_velocities computeVelocitiesFromWheelspeeds(
   /* circumference of robot's stance (meters) */
   float cs = 2 * M_PI * rs;
 
-  // /* translate wheelspeed (rpm) into travel rate(m/s) */
-  // float left_magnitude =
-  //     std::mean(std::abs(wheel_speeds.fl), std::abs(wheel_speeds.rl));
-  // float right_magnitude =
-  //     std::min(std::abs(wheel_speeds.fr), std::abs(wheel_speeds.rr));
-
-  // int left_direction, right_direction;
-
-  // /* left side */
-  // if (std::signbit(wheel_speeds.fl) == std::signbit(wheel_speeds.rl)) {
-  //   /* wheels are moving same direction (common) */
-  //   left_direction = (std::signbit(wheel_speeds.fl) == 0 ? -1 : 1);
-  // } else {
-  //   /* wheels are moving different direction (uncommon) */
-  //   if (std::abs(wheel_speeds.fl) <= std::abs(wheel_speeds.rl)) {
-  //     left_direction = (std::signbit(wheel_speeds.fl) == 0 ? -1 : 1);
-  //   } else {
-  //     left_direction = (std::signbit(wheel_speeds.rl) == 0 ? -1 : 1);
-  //   }
-  // }
-
-  // /* left side */
-  // if (std::signbit(wheel_speeds.fr) == std::signbit(wheel_speeds.rr)) {
-  //   /* wheels are moving same direction (common) */
-  //   right_direction = (std::signbit(wheel_speeds.fr) == 0 ? -1 : 1);
-  // } else {
-  //   /* wheels are moving different direction (uncommon) */
-  //   if (std::abs(wheel_speeds.fr) <= std::abs(wheel_speeds.rr)) {
-  //     right_direction = (std::signbit(wheel_speeds.fr) == 0 ? -1 : 1);
-  //   } else {
-  //     right_direction = (std::signbit(wheel_speeds.rr) == 0 ? -1 : 1);
-  //   }
-  // }
   float left_magnitude = (wheel_speeds.fl + wheel_speeds.rl) / 2;
   float right_magnitude = (wheel_speeds.fr + wheel_speeds.rr) / 2;
 
