@@ -295,9 +295,11 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
   Control::pid_gains pid_gains = {0.0005, 0.0000, 0.00007};
   // Control::pid_gains pid_gains = pid_;
   float motor_max_duty = .95;
+  float motor_min_duty = .005;
   Control::SkidRobotMotionController skid_control =
-      Control::SkidRobotMotionController(
-          Control::TRACTION_CONTROL, robot_geometry, pid_gains, motor_max_duty);
+      Control::SkidRobotMotionController(Control::TRACTION_CONTROL,
+                                         robot_geometry, pid_gains,
+                                         motor_max_duty, motor_min_duty);
   std::chrono::milliseconds time_last =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
@@ -325,7 +327,8 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
     auto duty_cycles =
         skid_control.runMotionControl({linear_vel, angular_vel}, {0, 0, 0, 0},
                                       {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
-                                      auto velocities = skid_control.getMeasuredVelocities({rpm_FL, rpm_FR, rpm_BL, rpm_BR});
+    auto velocities =
+        skid_control.getMeasuredVelocities({rpm_FL, rpm_FR, rpm_BL, rpm_BR});
     robotstatus_mutex_.lock();
     motors_speeds_[FRONT_LEFT_MOTOR] = duty_cycles.fl;
     motors_speeds_[FRONT_RIGHT_MOTOR] = duty_cycles.fr;

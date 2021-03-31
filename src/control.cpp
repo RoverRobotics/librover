@@ -60,7 +60,7 @@ robot_velocities computeVelocitiesFromWheelspeeds(
   /* compute velocities */
   float linear_velocity = (right_travel_rate + left_travel_rate) / 2;
   float angular_velocity =
-      travel_differential / (2 * rs) ;  // possibly add traction factor here
+      travel_differential / (2 * rs);  // possibly add traction factor here
 
   robot_velocities returnstruct;
   returnstruct.linear_velocity = linear_velocity;
@@ -200,7 +200,8 @@ pid_outputs PidController::runControl(float target, float measured) {
   float delta_error = error - previous_error_;
 
   /* clip integral error */
-  integral_error_ = std::clamp(integral_error_, -integral_error_limit_, integral_error_limit_);
+  integral_error_ = std::clamp(integral_error_, -integral_error_limit_,
+                               integral_error_limit_);
 
   /* P I D terms */
   float p = kp_ * error;
@@ -232,15 +233,19 @@ pid_outputs PidController::runControl(float target, float measured) {
   return returnstruct;
 }
 
-SkidRobotMotionController::SkidRobotMotionController()
+SkidRobotMotionController::SkidRobotMotionController(float left_trim,
+                                                     float right_trim)
     : log_folder_path_("~/Documents/"),
       operating_mode_(OPEN_LOOP),
       traction_control_gain_(1),
-      max_motor_duty_(100),
+      max_motor_duty_(0.95),
+      min_motor_duty_(0.005),
       duty_cycles_({0}),
       measured_velocities_({0}),
       time_last_(std::chrono::steady_clock::now()),
       time_origin_(std::chrono::steady_clock::now()) {
+  left_trim_value_ = left_trim;
+  right_trim_value_ = right_trim;
 #ifdef DEBUG
   /*open a log file to store control data*/
   auto t = std::time(nullptr);
@@ -272,7 +277,8 @@ SkidRobotMotionController::SkidRobotMotionController()
 
 SkidRobotMotionController::SkidRobotMotionController(
     robot_motion_mode_t operating_mode, robot_geometry robot_geometry,
-    pid_gains pid_gains, float max_motor_duty)
+    pid_gains pid_gains, float max_motor_duty, float min_motor_duty,
+    float left_trim, float right_trim)
     : log_folder_path_("~/Documents/"),
       traction_control_gain_(1),
       lpf_alpha_(1),
@@ -314,6 +320,9 @@ SkidRobotMotionController::SkidRobotMotionController(
   robot_geometry_ = robot_geometry;
   pid_gains_ = pid_gains;
   max_motor_duty_ = max_motor_duty;
+  min_motor_duty_ = min_motor_duty;
+  left_trim_value_ = left_trim;
+  right_trim_value_ = right_trim;
   switch (operating_mode) {
     case OPEN_LOOP:
       break;
@@ -512,13 +521,21 @@ motor_data SkidRobotMotionController::runMotionControl(
   robot_velocities velocity_commands;
   robot_velocities acceleration_limits = {max_linear_acceleration_,
                                           max_angular_acceleration_};
+
   // velocity_commands = limitAcceleration(velocity_targets,
   // measured_velocities,
   //                                       acceleration_limits, delta_time);
   velocity_commands = velocity_targets;
+
   /* get target wheelspeeds from velocities */
   motor_data target_wheel_speeds =
       computeSkidSteerWheelSpeeds(velocity_commands, robot_geometry_);
+
+  /* apply trim value to targets */
+  target_wheel_speeds.fl *= left_trim_value_;
+  target_wheel_speeds.rl *= left_trim_value_;
+  target_wheel_speeds.fr *= right_trim_value_;
+  target_wheel_speeds.rr *= right_trim_value_;
 
   /* do control */
   motor_data motor_duties_add;
@@ -536,15 +553,33 @@ motor_data SkidRobotMotionController::runMotionControl(
       break;
 
     case TRACTION_CONTROL:
+      /* determine how much change is needed to the duty cycles */
       motor_duties_add =
           computeMotorCommandsTc_(target_wheel_speeds, current_motor_speeds);
+
+      /* add the change to the duty cycles */
       duty_cycles_.fl += motor_duties_add.fl;
       duty_cycles_.fr += motor_duties_add.fr;
       duty_cycles_.rr += motor_duties_add.rr;
       duty_cycles_.rl += motor_duties_add.rl;
+
+      /* run traction control */
       modified_duties =
           computeTorqueDistribution_(current_motor_speeds, duty_cycles_);
+
+      /* don't allow duties higher than the limits */
       modified_duties = clipDutyCycles_(modified_duties);
+
+      /* enforce minimum duty cycles */
+      if (std::abs(modified_duties.fl) < min_motor_duty_)
+        modified_duties.fl = 0;
+      if (std::abs(modified_duties.fr) < min_motor_duty_)
+        modified_duties.fr = 0;
+      if (std::abs(modified_duties.rl) < min_motor_duty_)
+        modified_duties.rl = 0;
+      if (std::abs(modified_duties.rr) < min_motor_duty_)
+        modified_duties.rr = 0;
+
       break;
     default:
       std::cerr << "invalid motion control type.. commanding 0 motion"

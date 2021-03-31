@@ -133,10 +133,11 @@ class Control::PidController {
 class Control::SkidRobotMotionController {
  public:
   /* constructors */
-  SkidRobotMotionController();
+  SkidRobotMotionController(float left_trim = 1.0, float right_trim = 1.0);
   SkidRobotMotionController(robot_motion_mode_t operating_mode,
                             robot_geometry robot_geometry, pid_gains pid_gains,
-                            float max_motor_duty);
+                            float max_motor_duty = 0.95, float min_motor_duty = 0.005,
+                            float left_trim = 1.0, float right_trim = 1.0);
 
   void setAccelerationLimits(robot_velocities limits);
   robot_velocities getAccelerationLimits();
@@ -184,9 +185,16 @@ class Control::SkidRobotMotionController {
   robot_velocities measured_velocities_;
 
   float traction_control_gain_;
+
   float max_motor_duty_;
+  float min_motor_duty_;
+
+  float left_trim_value_;
+  float right_trim_value_;
+
   float max_linear_acceleration_;
   float max_angular_acceleration_;
+
   float lpf_alpha_;
   std::chrono::steady_clock::time_point time_last_;
   std::chrono::steady_clock::time_point time_origin_;
@@ -198,7 +206,8 @@ class Control::SkidRobotMotionController {
 
   motor_data clipDutyCycles_(motor_data proposed_duties);
 
-  motor_data computeTorqueDistribution_(motor_data current_motor_speeds, motor_data power_proposals);
+  motor_data computeTorqueDistribution_(motor_data current_motor_speeds,
+                                        motor_data power_proposals);
 };
 
 // #TODO: implement if needed
