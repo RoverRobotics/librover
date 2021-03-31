@@ -44,10 +44,7 @@ robot_velocities computeVelocitiesFromWheelspeeds(
   float left_magnitude = (wheel_speeds.fl + wheel_speeds.rl) / 2;
   float right_magnitude = (wheel_speeds.fr + wheel_speeds.rr) / 2;
 
-#ifdef DEBUG
-  std::cerr << "left travel " << left_magnitude << std::endl;
-  std::cerr << "right travel " << right_magnitude << std::endl;
-#endif
+
 
   float left_travel_rate =
       left_magnitude * RPM_TO_RADS_SEC * robot_geometry.wheel_radius;
