@@ -250,7 +250,7 @@ SkidRobotMotionController::SkidRobotMotionController()
   oss << std::put_time(&tm, "%d-%m-%Y-%H-%M-%S");
   auto filename = oss.str();
 
-  log_file_.open("/home/rover/Documents/" + filename + ".csv");
+  log_file_.open("/home/nvidia/Documents/" + filename + ".csv");
   log_file_ << "type,"
             << "name,"
             << "time,"
@@ -291,7 +291,7 @@ SkidRobotMotionController::SkidRobotMotionController(
   oss << std::put_time(&tm, "%d-%m-%Y-%H-%M-%S");
   auto filename = oss.str();
   std::cerr << "log file name " << filename + ".csv" << std::endl;
-  log_file_.open("/home/rover/Documents/" + filename + ".csv");
+  log_file_.open("/home/nvidia/Documents/" + filename + ".csv");
   log_file_ << "type,"
             << "name,"
             << "time,"
