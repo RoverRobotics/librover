@@ -351,6 +351,7 @@ namespace RoverRobotics
         Control::SkidRobotMotionController(Control::TRACTION_CONTROL,
                                            robot_geometry, pid_gains,
                                            motor_max_duty, motor_min_duty);
+    skid_control.setAccelerationLimits({5, 100000});
     std::chrono::milliseconds time_last =
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch());
@@ -381,14 +382,12 @@ namespace RoverRobotics
       motors_speeds_[FRONT_RIGHT_MOTOR] = duty_cycles.fr;
       motors_speeds_[BACK_LEFT_MOTOR] = duty_cycles.rl;
       motors_speeds_[BACK_RIGHT_MOTOR] = duty_cycles.rr;
+      std::cerr << "Duty: " << duty_cycles.fl << std::endl;
       robotstatus_.linear_vel = velocities.linear_velocity;
       robotstatus_.angular_vel = velocities.angular_velocity;
       robotstatus_mutex_.unlock();
 #ifdef DEBUG
-  std::cerr << "duty fl " << duty_cycles.fl << std::endl;
-  std::cerr << "duty fr " << duty_cycles.fr << std::endl;
-  std::cerr << "duty rl " << duty_cycles.rl << std::endl;
-  std::cerr << "duty rr " << duty_cycles.rr << std::endl;
+
 #endif
       // end timeout
       time_last = time_now;

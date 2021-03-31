@@ -87,20 +87,27 @@ namespace Control
           : linear_acceleration = delta_v_limits.linear_velocity;
     }
 
-    if (std::abs(angular_acceleration) >
-        std::abs(delta_v_limits.angular_velocity))
-    {
-      std::signbit(linear_acceleration)
-          ? angular_acceleration = -delta_v_limits.angular_velocity
-          : angular_acceleration = delta_v_limits.angular_velocity;
-    }
+    // if (std::abs(angular_acceleration) >
+    //     std::abs(delta_v_limits.angular_velocity))
+    // {
+    //   std::signbit(linear_acceleration)
+    //       ? angular_acceleration = -delta_v_limits.angular_velocity
+    //       : angular_acceleration = delta_v_limits.angular_velocity;
+    // }
 
     /* calculate new velocities */
     robot_velocities return_velocities;
     return_velocities.linear_velocity =
         measured_velocities.linear_velocity + linear_acceleration * dt;
-    return_velocities.angular_velocity =
-        measured_velocities.angular_velocity + angular_acceleration * dt;
+    // return_velocities.angular_velocity =
+    //     measured_velocities.angular_velocity + angular_acceleration * dt;
+    return_velocities.angular_velocity = target_velocities.angular_velocity;
+#ifdef DEBUG
+    std::cerr << "target " << target_velocities.linear_velocity << std::endl;
+    std::cerr << "measured " << measured_velocities.linear_velocity << std::endl;
+    std::cerr << "return " << return_velocities.linear_velocity << std::endl;
+    std::cerr << "linear acc " << linear_acceleration << std::endl;
+#endif
     return return_velocities;
   }
 
@@ -557,10 +564,10 @@ namespace Control
     robot_velocities acceleration_limits = {max_linear_acceleration_,
                                             max_angular_acceleration_};
 
-    // velocity_commands = limitAcceleration(velocity_targets,
-    // measured_velocities,
-    //                                       acceleration_limits, delta_time);
-    velocity_commands = velocity_targets;
+    velocity_commands = limitAcceleration(velocity_targets,
+                                          measured_velocities_,
+                                          acceleration_limits, delta_time);
+    // velocity_commands = velocity_targets;
 
     /* get target wheelspeeds from velocities */
     motor_data target_wheel_speeds =
@@ -599,10 +606,10 @@ namespace Control
       duty_cycles_.rr += motor_duties_add.rr;
       duty_cycles_.rl += motor_duties_add.rl;
       /* add a geometric decay to the duty cycles */
-      duty_cycles_.fl *= .97;
-      duty_cycles_.fr *= .97;
-      duty_cycles_.rr *= .97;
-      duty_cycles_.rl *= .97;
+      duty_cycles_.fl *= .99;
+      duty_cycles_.fr *= .99;
+      duty_cycles_.rr *= .99;
+      duty_cycles_.rl *= .99;
 
       /* run traction control */
       modified_duties =
