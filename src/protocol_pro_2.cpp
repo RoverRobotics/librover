@@ -346,7 +346,7 @@ namespace RoverRobotics
     Control::pid_gains pid_gains = {0.0005, 0.0000, 0.00007};
     // Control::pid_gains pid_gains = pid_;
     float motor_max_duty = .95;
-    float motor_min_duty = .05;
+    float motor_min_duty = .03;
     Control::SkidRobotMotionController skid_control =
         Control::SkidRobotMotionController(Control::TRACTION_CONTROL,
                                            robot_geometry, pid_gains,
