@@ -10,7 +10,7 @@ class RoverRobotics::Pro2ProtocolObject
     : public RoverRobotics::BaseProtocolObject {
  public:
   Pro2ProtocolObject(const char* device, std::string new_comm_type,
-                     Control::robot_operating_mode_t robot_mode, PidGains pid);
+                     Control::robot_motion_mode_t robot_mode, PidGains pid);
   /*
    * @brief Trim Robot Velocity
    * Modify robot velocity differential (between the left side/right side) with
