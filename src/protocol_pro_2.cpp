@@ -217,8 +217,8 @@ bool Pro2ProtocolObject::is_connected() { return comm_base_->is_connected(); }
 
 void Pro2ProtocolObject::register_comm_base(const char *device) {
   std::vector<uint32_t> setting;
-  setting.push_back(termios_baud_code_);
-  setting.push_back(RECEIVE_MSG_LEN_);
+  // setting.push_back(termios_baud_code_);
+  // setting.push_back(RECEIVE_MSG_LEN_);
   if (comm_type_ == "serial") {
     std::cerr << "making serial connection" << std::endl;
     try {
@@ -311,11 +311,12 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
   float left_trim = 1;
   float right_trim = .99;
   float geometric_decay = .99;
-  Control::SkidRobotMotionController skid_control =
-      Control::SkidRobotMotionController(
-          Control::TRACTION_CONTROL, robot_geometry, pid_gains, motor_max_duty,
-          motor_min_duty, left_trim, right_trim, geometric_decay);
-  skid_control.setAccelerationLimits({5, 100000});
+  // Control::SkidRobotMotionController skid_control =
+  //     Control::SkidRobotMotionController(
+  //         Control::TRACTION_CONTROL, robot_geometry, pid_gains, motor_max_duty,
+  //         motor_min_duty, left_trim, right_trim, geometric_decay);
+  // skid_control.setAccelerationLimits({5, 100000});
+  Control::SkidRobotMotionController skid_control = Control::SkidRobotMotionController(Control::OPEN_LOOP, robot_geometry);
   std::chrono::milliseconds time_last =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());

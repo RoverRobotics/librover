@@ -228,12 +228,14 @@ pid_outputs PidController::runControl(float target, float measured) {
 }
 
 SkidRobotMotionController::SkidRobotMotionController(
+    robot_motion_mode_t operating_mode, robot_geometry robot_geometry,
     float max_motor_duty, float min_motor_duty, float left_trim,
     float right_trim, float open_loop_max_motor_rpm)
     : log_folder_path_("~/Documents/"),
-      operating_mode_(OPEN_LOOP),
       duty_cycles_({0}),
       measured_velocities_({0}),
+      max_linear_acceleration_(std::numeric_limits<float>::max()),
+      max_angular_acceleration_(std::numeric_limits<float>::max()),
       time_last_(std::chrono::steady_clock::now()),
       time_origin_(std::chrono::steady_clock::now()) {
   open_loop_max_motor_rpm_ = open_loop_max_motor_rpm;
@@ -241,6 +243,8 @@ SkidRobotMotionController::SkidRobotMotionController(
   max_motor_duty_ = max_motor_duty;
   left_trim_value_ = left_trim;
   right_trim_value_ = right_trim;
+  operating_mode_ = operating_mode;
+  robot_geometry_ = robot_geometry;
 #ifdef DEBUG
   /*open a log file to store control data*/
   auto t = std::time(nullptr);
@@ -534,7 +538,7 @@ motor_data SkidRobotMotionController::runMotionControl(
 
       /* don't allow duties higher than the limits */
       modified_duties = clipDutyCycles_(modified_duties);
-
+      std::cerr << "target wheel speed" << target_wheel_speeds.fr << std::endl;
       break;
     case INDEPENDENT_WHEEL:
       std::cerr << "control type not yet implemented.. commanding 0 motion"
