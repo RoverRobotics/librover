@@ -65,9 +65,9 @@ struct pid_outputs {
   float delta_error;
   float target_value;
   float measured_value;
-  float kp;
-  float ki;
-  float kd;
+  double kp;
+  double ki;
+  double kd;
 };
 
 struct pid_output_limits {
@@ -110,9 +110,9 @@ class Control::PidController {
 
  private:
   std::string name_;
-  float kp_;
-  float ki_;
-  float kd_;
+  double kp_;
+  double ki_;
+  double kd_;
   float integral_error_;
   float integral_error_limit_;
   float previous_error_;
@@ -153,8 +153,14 @@ class Control::SkidRobotMotionController {
   void setMotorMaxDuty(float max_motor_duty);
   float getMotorMaxDuty();
 
+  void setMotorMinDuty(float max_min_duty);
+  float getMotorMinDuty();
+
   void setOutputDecay(float geometric_decay);
   float getOutputDecay();
+
+  void setOpenLoopMaxRpm(float open_loop_max_motor_rpm);
+  float getOpenLoopMaxRpm();
 
   motor_data runMotionControl(robot_velocities velocity_targets,
                               motor_data current_duty_cycles,
@@ -200,7 +206,9 @@ class Control::SkidRobotMotionController {
 
   motor_data duty_cycles_;
 
-  motor_data computeMotorCommandsTc_(motor_data target_wheel_speeds,
+  void initializePids();
+
+  motor_data computeMotorCommandsDual_(motor_data target_wheel_speeds,
                                      motor_data current_motor_speeds);
 
   motor_data clipDutyCycles_(motor_data proposed_duties);
