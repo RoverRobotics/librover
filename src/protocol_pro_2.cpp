@@ -47,8 +47,7 @@ void Pro2ProtocolObject::set_robot_velocity(double *control_array) {
   robotstatus_mutex_.lock();
   robotstatus_.cmd_linear_vel = control_array[0];
   robotstatus_.cmd_angular_vel = control_array[1];
-  robotstatus_.cmd_ts =
-  std::chrono::duration_cast<std::chrono::milliseconds>(
+  robotstatus_.cmd_ts = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::system_clock::now().time_since_epoch());
   robotstatus_mutex_.unlock();
 }
@@ -336,11 +335,11 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
     rpm_BR = robotstatus_.motor4_rpm;
     time_from_msg = robotstatus_.cmd_ts;
     robotstatus_mutex_.unlock();
+    auto duty_cycles =
+        skid_control.runMotionControl({linear_vel, angular_vel}, {0, 0, 0, 0},
+                                      {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
     if (!estop_ &&
         (time_now - time_from_msg).count() <= CONTROL_LOOP_TIMEOUT_MS_) {
-      auto duty_cycles =
-          skid_control.runMotionControl({linear_vel, angular_vel}, {0, 0, 0, 0},
-                                        {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
       auto velocities =
           skid_control.getMeasuredVelocities({rpm_FL, rpm_FR, rpm_BL, rpm_BR});
       robotstatus_mutex_.lock();
