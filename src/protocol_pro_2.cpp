@@ -5,7 +5,7 @@
 namespace RoverRobotics {
 Pro2ProtocolObject::Pro2ProtocolObject(const char *device,
                                        std::string new_comm_type,
-                                       Control::robot_operating_mode_t robot_mode,
+                                       Control::robot_motion_mode_t robot_mode,
                                        PidGains pid) {
   robotstatus_mutex_.lock();
   comm_type_ = new_comm_type;
@@ -16,14 +16,14 @@ Pro2ProtocolObject::Pro2ProtocolObject(const char *device,
   motors_speeds_[FRONT_RIGHT_MOTOR] = MOTOR_NEUTRAL_;
   motors_speeds_[BACK_LEFT_MOTOR] = MOTOR_NEUTRAL_;
   motors_speeds_[BACK_RIGHT_MOTOR] = MOTOR_NEUTRAL_;
+  pid_ = {pid.Kp, pid.Ki, pid.Kd};  // TODO Change this if Utils.hpp is gone
   skid_control_ =
       Control::SkidRobotMotionController(
-          Control::TRACTION_CONTROL, robot_geometry_, pid_gains,
+          Control::TRACTION_CONTROL, robot_geometry_, pid_,
           MOTOR_MAX_, MOTOR_MIN_, left_trim_, right_trim_,
           geometric_decay_);
   skid_control_.setAccelerationLimits({5, 100000});
-  
-  pid_ = {pid.Kp, pid.Ki, pid.Kd};  // TODO Change this if Utils.hpp is gone
+  skid_control_.setOperatingMode(robot_mode_);
   robotstatus_mutex_.unlock();
   register_comm_base(device);
   write_to_robot_thread_ = std::thread([this]() { this->send_command(30); });

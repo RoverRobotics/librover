@@ -107,7 +107,7 @@ class RoverRobotics::Pro2ProtocolObject
   std::thread motor_speed_update_thread_;
   bool estop_;
   // Motor PID variables
-  Control::robot_operating_mode_t robot_mode_;
+  Control::robot_motion_mode_t robot_mode_;
   Control::pid_gains pid_;
 
   enum robot_motors {
