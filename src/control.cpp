@@ -9,12 +9,13 @@ namespace Control {
 
 motor_data computeSkidSteerWheelSpeeds(robot_velocities target_velocities,
                                        robot_geometry robot_geometry) {
-
   /* travel rate(m/s) */
-  float left_travel_rate = target_velocities.linear_velocity -
-                           (0.5 * target_velocities.angular_velocity * robot_geometry.wheel_base);
-  float right_travel_rate = target_velocities.linear_velocity +
-                            (0.5 * target_velocities.angular_velocity * robot_geometry.wheel_base);
+  float left_travel_rate =
+      target_velocities.linear_velocity -
+      (0.5 * target_velocities.angular_velocity * robot_geometry.wheel_base);
+  float right_travel_rate =
+      target_velocities.linear_velocity +
+      (0.5 * target_velocities.angular_velocity * robot_geometry.wheel_base);
 
   /* convert (m/s) -> rpm */
   float left_wheel_speed =
@@ -29,7 +30,6 @@ motor_data computeSkidSteerWheelSpeeds(robot_velocities target_velocities,
 
 robot_velocities computeVelocitiesFromWheelspeeds(
     motor_data wheel_speeds, robot_geometry robot_geometry) {
-
   float left_magnitude = (wheel_speeds.fl + wheel_speeds.rl) / 2;
   float right_magnitude = (wheel_speeds.fr + wheel_speeds.rr) / 2;
 
@@ -44,7 +44,8 @@ robot_velocities computeVelocitiesFromWheelspeeds(
   /* compute velocities */
   float linear_velocity = (right_travel_rate + left_travel_rate) / 2;
   float angular_velocity =
-      travel_differential / robot_geometry.wheel_base;  // possibly add traction factor here
+      travel_differential /
+      robot_geometry.wheel_base;  // possibly add traction factor here
 
   robot_velocities returnstruct;
   returnstruct.linear_velocity = linear_velocity;
@@ -226,16 +227,18 @@ pid_outputs PidController::runControl(float target, float measured) {
   return returnstruct;
 }
 
-SkidRobotMotionController::SkidRobotMotionController(float max_motor_duty,
-                                                     float min_motor_duty,
-                                                     float left_trim,
-                                                     float right_trim)
+SkidRobotMotionController::SkidRobotMotionController(
+    float max_motor_duty, float min_motor_duty, float left_trim,
+    float right_trim, float open_loop_max_linear_vel,
+    float open_loop_max_angular_vel)
     : log_folder_path_("~/Documents/"),
       operating_mode_(OPEN_LOOP),
       duty_cycles_({0}),
       measured_velocities_({0}),
       time_last_(std::chrono::steady_clock::now()),
       time_origin_(std::chrono::steady_clock::now()) {
+  open_loop_max_angular_vel_ = open_loop_max_angular_vel;
+  open_loop_max_linear_vel_ = open_loop_max_linear_vel;
   min_motor_duty_ = min_motor_duty;
   max_motor_duty_ = max_motor_duty;
   left_trim_value_ = left_trim;
@@ -384,12 +387,10 @@ void SkidRobotMotionController::setMotorMaxDuty(float max_motor_duty) {
 }
 float SkidRobotMotionController::getMotorMaxDuty() { return max_motor_duty_; }
 
-void SkidRobotMotionController::setOutputDecay(float geometric_decay){
+void SkidRobotMotionController::setOutputDecay(float geometric_decay) {
   geometric_decay_ = geometric_decay;
 }
-float SkidRobotMotionController::getOutputDecay(){
-  return geometric_decay_;
-}
+float SkidRobotMotionController::getOutputDecay() { return geometric_decay_; }
 
 motor_data SkidRobotMotionController::computeMotorCommandsTc_(
     motor_data target_wheel_speeds, motor_data current_motor_speeds) {
@@ -528,9 +529,7 @@ motor_data SkidRobotMotionController::runMotionControl(
   motor_data modified_duties;
   switch (operating_mode_) {
     case OPEN_LOOP:
-      std::cerr << "control type not yet implemented.. commanding 0 motion"
-                << std::endl;
-      duty_cycles_ = {0, 0, 0, 0};
+      
       break;
     case INDEPENDENT_WHEEL:
       std::cerr << "control type not yet implemented.. commanding 0 motion"
