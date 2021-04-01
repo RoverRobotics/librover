@@ -50,9 +50,9 @@ struct robot_geometry {
 };
 
 struct pid_gains {
-  float kp;
-  float ki;
-  float kd;
+  double kp;
+  double ki;
+  double kd;
 };
 
 struct pid_outputs {
@@ -65,9 +65,9 @@ struct pid_outputs {
   float delta_error;
   float target_value;
   float measured_value;
-  float kp;
-  float ki;
-  float kd;
+  double kp;
+  double ki;
+  double kd;
 };
 
 struct pid_output_limits {
@@ -110,9 +110,9 @@ class Control::PidController {
 
  private:
   std::string name_;
-  float kp_;
-  float ki_;
-  float kd_;
+  double kp_;
+  double ki_;
+  double kd_;
   float integral_error_;
   float integral_error_limit_;
   float previous_error_;
