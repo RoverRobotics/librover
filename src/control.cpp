@@ -9,16 +9,12 @@ namespace Control {
 
 motor_data computeSkidSteerWheelSpeeds(robot_velocities target_velocities,
                                        robot_geometry robot_geometry) {
-  /* see documentation for math */
-  /* radius of robot's stance */
-  float rs = sqrt(pow(0.5 * robot_geometry.wheel_base, 2) +
-                  pow(0.5 * robot_geometry.intra_axle_distance, 2));
 
   /* travel rate(m/s) */
   float left_travel_rate = target_velocities.linear_velocity -
-                           (target_velocities.angular_velocity * rs);
+                           (0.5 * target_velocities.angular_velocity * robot_geometry.wheel_base);
   float right_travel_rate = target_velocities.linear_velocity +
-                            (target_velocities.angular_velocity * rs);
+                            (0.5 * target_velocities.angular_velocity * robot_geometry.wheel_base);
 
   /* convert (m/s) -> rpm */
   float left_wheel_speed =
@@ -33,13 +29,6 @@ motor_data computeSkidSteerWheelSpeeds(robot_velocities target_velocities,
 
 robot_velocities computeVelocitiesFromWheelspeeds(
     motor_data wheel_speeds, robot_geometry robot_geometry) {
-  /* see documentation for math */
-  /* radius of robot's stance */
-  float rs = sqrt(pow(0.5 * robot_geometry.wheel_base, 2) +
-                  pow(0.5 * robot_geometry.intra_axle_distance, 2));
-
-  /* circumference of robot's stance (meters) */
-  float cs = 2 * M_PI * rs;
 
   float left_magnitude = (wheel_speeds.fl + wheel_speeds.rl) / 2;
   float right_magnitude = (wheel_speeds.fr + wheel_speeds.rr) / 2;
@@ -55,7 +44,7 @@ robot_velocities computeVelocitiesFromWheelspeeds(
   /* compute velocities */
   float linear_velocity = (right_travel_rate + left_travel_rate) / 2;
   float angular_velocity =
-      travel_differential / (2 * rs);  // possibly add traction factor here
+      travel_differential / robot_geometry.wheel_base;  // possibly add traction factor here
 
   robot_velocities returnstruct;
   returnstruct.linear_velocity = linear_velocity;
