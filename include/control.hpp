@@ -211,6 +211,9 @@ class Control::SkidRobotMotionController {
   motor_data computeMotorCommandsDual_(motor_data target_wheel_speeds,
                                      motor_data current_motor_speeds);
 
+  motor_data computeMotorCommandsQuad_(motor_data target_wheel_speeds,
+                                     motor_data current_motor_speeds);
+
   motor_data clipDutyCycles_(motor_data proposed_duties);
 
   motor_data computeTorqueDistribution_(motor_data current_motor_speeds,
