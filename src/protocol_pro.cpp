@@ -2,11 +2,11 @@
 
 namespace RoverRobotics {
 
-ProProtocolObject::ProProtocolObject(const char *device,
-                                     std::string new_comm_type,
-                                     bool closed_loop, PidGains pid) {
+ProProtocolObject::ProProtocolObject(const char *device, std::string new_comm_type,
+                  Control::robot_motion_mode_t robot_mode,
+                  Control::pid_gains pid) {
   comm_type_ = new_comm_type;
-  robot_mode_ = closed_loop;
+  robot_mode_ = robot_mode;
   robotstatus_ = {0};
   estop_ = false;
   motors_speeds_[LEFT_MOTOR] = MOTOR_NEUTRAL_;
@@ -21,8 +21,13 @@ ProProtocolObject::ProProtocolObject(const char *device,
       REG_MOTOR_CHARGER_STATE,   BuildNO,
       BATTERY_VOLTAGE_A};
   pid_ = pid;
-  motor1_control_ = OdomControl(robot_mode_, pid_, 1.5, 0);
-  motor2_control_ = OdomControl(robot_mode_, pid_, 1.5, 0);
+  PidGains oldgain = {pid_.kp, pid_.ki , pid_.kd};
+  if (robot_mode_ = Control::INDEPENDENT_WHEEL)
+    closed_loop_ = true;
+  else
+    closed_loop_ = false;
+  motor1_control_ = OdomControl(closed_loop_, oldgain, 1.5, 0);
+  motor2_control_ = OdomControl(closed_loop_, oldgain, 1.5, 0);
 
   register_comm_base(device);
 
@@ -32,7 +37,7 @@ ProProtocolObject::ProProtocolObject(const char *device,
   // Create a new Thread with 50 mili seconds sleep timer
   slow_data_write_thread_ =
       std::thread([this, slow_data]() { this->send_command(50, slow_data); });
-  // Create a motor update thread with 30 mili second sleep timer 
+  // Create a motor update thread with 30 mili second sleep timer
   motor_commands_update_thread_ =
       std::thread([this]() { this->motors_control_loop(30); });
 }
@@ -118,19 +123,19 @@ void ProProtocolObject::motors_control_loop(int sleeptime) {
     // motor speeds in m/s
     motors_speeds_[LEFT_MOTOR] =
         motor1_control_.run(motor1_vel, motor1_measured_vel,
-                           pid_update_elapsedtime / 1000, firmware);
+                            pid_update_elapsedtime / 1000, firmware);
     motors_speeds_[RIGHT_MOTOR] =
         motor2_control_.run(motor2_vel, motor2_measured_vel,
-                           pid_update_elapsedtime / 1000, firmware);
+                            pid_update_elapsedtime / 1000, firmware);
 
     // Convert to 8 bit Command
     motors_speeds_[LEFT_MOTOR] = motor1_control_.boundMotorSpeed(
-        int(round(motors_speeds_[LEFT_MOTOR] * 50 + MOTOR_NEUTRAL_)), MOTOR_MAX_,
-        MOTOR_MIN_);
+        int(round(motors_speeds_[LEFT_MOTOR] * 50 + MOTOR_NEUTRAL_)),
+        MOTOR_MAX_, MOTOR_MIN_);
 
     motors_speeds_[RIGHT_MOTOR] = motor2_control_.boundMotorSpeed(
-        int(round(motors_speeds_[RIGHT_MOTOR] * 50 + MOTOR_NEUTRAL_)), MOTOR_MAX_,
-        MOTOR_MIN_);
+        int(round(motors_speeds_[RIGHT_MOTOR] * 50 + MOTOR_NEUTRAL_)),
+        MOTOR_MAX_, MOTOR_MIN_);
     robotstatus_mutex_.unlock();
     time_last = time_now;
   }
@@ -316,8 +321,8 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
 
 bool ProProtocolObject::is_connected() { return comm_base_->is_connected(); }
 
-int ProProtocolObject::cycle_robot_mode(){
-  //TODO
+int ProProtocolObject::cycle_robot_mode() {
+  // TODO
   return 0;
 }
 void ProProtocolObject::register_comm_base(const char *device) {
@@ -329,7 +334,7 @@ void ProProtocolObject::register_comm_base(const char *device) {
       comm_base_ = std::make_unique<CommSerial>(
           device, [this](std::vector<uint32_t> c) { unpack_comm_response(c); },
           setting);
-    } catch (int i){
+    } catch (int i) {
       throw(i);
     }
 
@@ -339,7 +344,7 @@ void ProProtocolObject::register_comm_base(const char *device) {
 }
 
 void ProProtocolObject::send_command(int sleeptime,
-                                    std::vector<uint32_t> datalist) {
+                                     std::vector<uint32_t> datalist) {
   while (true) {
     for (int x : datalist) {
       if (comm_type_ == "serial") {

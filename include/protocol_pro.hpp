@@ -9,7 +9,8 @@ class RoverRobotics::ProProtocolObject
     : public RoverRobotics::BaseProtocolObject {
  public:
   ProProtocolObject(const char* device, std::string new_comm_type,
-                    bool closed_loop, PidGains pid);
+                    Control::robot_motion_mode_t robot_mode,
+                    Control::pid_gains pid);
   /*
    * @brief Trim Robot Velocity
    * Modify robot velocity differential (between the left side/right side) with
@@ -106,11 +107,12 @@ class RoverRobotics::ProProtocolObject
   std::thread slow_data_write_thread_;
   std::thread motor_commands_update_thread_;
   bool estop_;
+  bool closed_loop_;
   // Motor PID variables
   OdomControl motor1_control_;
   OdomControl motor2_control_;
-  bool robot_mode_;
-  PidGains pid_;
+  Control::robot_motion_mode_t robot_mode_;
+  Control::pid_gains pid_;
 
   enum robot_motors { LEFT_MOTOR, RIGHT_MOTOR, FLIPPER_MOTOR };
 

@@ -88,8 +88,8 @@ class RoverRobotics::Pro2ProtocolObject
   const int MOTOR_MAX_ = .95;
   const int MOTOR_MIN_ = .03;
   // Parameterize?
-  const Control::robot_geometry robot_geometry_ = {0.205, 0.265, .09, 0, 0};
-  const float geometric_decay_ = .99;
+  Control::robot_geometry robot_geometry_ = {0.205, 0.265, .09, 0, 0};
+  float geometric_decay_ = .99;
   float left_trim_ = 1;
   float right_trim_ = .99;
 
