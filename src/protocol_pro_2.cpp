@@ -47,9 +47,9 @@ void Pro2ProtocolObject::set_robot_velocity(double *control_array) {
   robotstatus_mutex_.lock();
   robotstatus_.cmd_linear_vel = control_array[0];
   robotstatus_.cmd_angular_vel = control_array[1];
-  // robotstatus_.cmd_ts =
-  // std::chrono::duration_cast<std::chrono::milliseconds>(
-  //     std::chrono::system_clock::now().time_since_epoch());
+  robotstatus_.cmd_ts =
+  std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::system_clock::now().time_since_epoch());
   robotstatus_mutex_.unlock();
 }
 // REMOVE?
