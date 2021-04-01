@@ -128,8 +128,7 @@ class Control::SkidRobotMotionController {
   SkidRobotMotionController(float max_motor_duty = 0.95,
                             float min_motor_duty = 0.03, float left_trim = 1.0,
                             float right_trim = 1.0,
-                            float open_loop_max_linear_vel = 7,
-                            float open_loop_max_angular_vel = 6.28);
+                            float open_loop_max_motor_rpm = 600);
   SkidRobotMotionController(robot_motion_mode_t operating_mode,
                             robot_geometry robot_geometry, pid_gains pid_gains,
                             float max_motor_duty = 0.95,
@@ -172,17 +171,16 @@ class Control::SkidRobotMotionController {
 
   std::unique_ptr<PidController> pid_controller_left_;
   std::unique_ptr<PidController> pid_controller_right_;
-  
+
   std::unique_ptr<PidController> pid_controller_fl_;
   std::unique_ptr<PidController> pid_controller_fr_;
   std::unique_ptr<PidController> pid_controller_rl_;
   std::unique_ptr<PidController> pid_controller_rr_;
-  
+
   pid_gains pid_gains_;
   robot_velocities measured_velocities_;
 
-  float open_loop_max_linear_vel_;
-  float open_loop_max_angular_vel_;
+  float open_loop_max_motor_rpm_;
 
   float max_motor_duty_;
   float min_motor_duty_;
