@@ -125,6 +125,7 @@ class Control::PidController {
 class Control::SkidRobotMotionController {
  public:
   /* constructors */
+  SkidRobotMotionController();
   SkidRobotMotionController(robot_motion_mode_t operating_mode,
                             robot_geometry robot_geometry,
                             float max_motor_duty = 0.95,

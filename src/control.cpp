@@ -227,6 +227,9 @@ pid_outputs PidController::runControl(float target, float measured) {
   return returnstruct;
 }
 
+SkidRobotMotionController::SkidRobotMotionController(){
+ 
+}
 SkidRobotMotionController::SkidRobotMotionController(
     robot_motion_mode_t operating_mode, robot_geometry robot_geometry,
     float max_motor_duty, float min_motor_duty, float left_trim,

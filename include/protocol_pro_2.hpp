@@ -1,6 +1,4 @@
 #pragma once
-
-#include "control.hpp"
 #include "protocol_base.hpp"
 
 namespace RoverRobotics {
@@ -10,7 +8,7 @@ class RoverRobotics::Pro2ProtocolObject
     : public RoverRobotics::BaseProtocolObject {
  public:
   Pro2ProtocolObject(const char* device, std::string new_comm_type,
-                     Control::robot_motion_mode_t robot_mode, PidGains pid);
+                     Control::robot_motion_mode_t robot_mode, Control::pid_gains pid);
   /*
    * @brief Trim Robot Velocity
    * Modify robot velocity differential (between the left side/right side) with
@@ -37,12 +35,12 @@ class RoverRobotics::Pro2ProtocolObject
   robotData info_request() override;
   /*
    * @brief Set Robot velocity
-   * Set Robot velocity: IF closed_loop_ TRUE, this function will attempt a
+   * Set Robot velocity: IF robot_mode_ TRUE, this function will attempt a
    * speed PID loop which uses all the available sensor data (wheels, IMUs, etc)
    * from the robot to produce the commanded velocity as best as possible. IF
-   * closed_loop_ FALSE, this function simply translates the commanded
+   * robot_mode_ FALSE, this function simply translates the commanded
    * velocities into motor duty cycles and there is no expectation that the
-   * commanded velocities will be realized by the robot. In closed_loop_ FALSE
+   * commanded velocities will be realized by the robot. In robot_mode_ FALSE
    * mode, motor power is roughly proportional to commanded velocity.
    * @param controllarray an double array of control in m/s
    */
@@ -61,12 +59,16 @@ class RoverRobotics::Pro2ProtocolObject
    */
   bool is_connected() override;
   /*
+   * @brief Cycle through robot supported modes
+   * @return int of the current mode enum
+   */
+  int cycle_robot_mode() override;
+  /*
    * @brief Attempt to make connection to robot via device
-   * @param device is the address of the device (ttyUSB0 , can0, ttyACM0)
+   * @param device is the address of the device (ttyUSB0 , can0, ttyACM0, etc)
    */
   void register_comm_base(const char* device) override;
-
-  int set_robot_mode() override;
+  
 
  private:
   /*

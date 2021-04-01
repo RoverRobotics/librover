@@ -6,7 +6,7 @@ ProProtocolObject::ProProtocolObject(const char *device,
                                      std::string new_comm_type,
                                      bool closed_loop, PidGains pid) {
   comm_type_ = new_comm_type;
-  closed_loop_ = closed_loop;
+  robot_mode_ = closed_loop;
   robotstatus_ = {0};
   estop_ = false;
   motors_speeds_[LEFT_MOTOR] = MOTOR_NEUTRAL_;
@@ -21,8 +21,8 @@ ProProtocolObject::ProProtocolObject(const char *device,
       REG_MOTOR_CHARGER_STATE,   BuildNO,
       BATTERY_VOLTAGE_A};
   pid_ = pid;
-  motor1_control_ = OdomControl(closed_loop_, pid_, 1.5, 0);
-  motor2_control_ = OdomControl(closed_loop_, pid_, 1.5, 0);
+  motor1_control_ = OdomControl(robot_mode_, pid_, 1.5, 0);
+  motor2_control_ = OdomControl(robot_mode_, pid_, 1.5, 0);
 
   register_comm_base(device);
 
@@ -316,6 +316,10 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
 
 bool ProProtocolObject::is_connected() { return comm_base_->is_connected(); }
 
+int ProProtocolObject::cycle_robot_mode(){
+  //TODO
+  return 0;
+}
 void ProProtocolObject::register_comm_base(const char *device) {
   if (comm_type_ == "serial") {
     std::vector<uint32_t> setting;

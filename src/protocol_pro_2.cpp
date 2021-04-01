@@ -1,12 +1,9 @@
 #include "protocol_pro_2.hpp"
-
-#include <iomanip>
-#include <iostream>
 namespace RoverRobotics {
 Pro2ProtocolObject::Pro2ProtocolObject(const char *device,
                                        std::string new_comm_type,
                                        Control::robot_motion_mode_t robot_mode,
-                                       PidGains pid) {
+                                       Control::pid_gains pid) {
   robotstatus_mutex_.lock();
   comm_type_ = new_comm_type;
   robot_mode_ = robot_mode;
@@ -16,7 +13,7 @@ Pro2ProtocolObject::Pro2ProtocolObject(const char *device,
   motors_speeds_[FRONT_RIGHT_MOTOR] = MOTOR_NEUTRAL_;
   motors_speeds_[BACK_LEFT_MOTOR] = MOTOR_NEUTRAL_;
   motors_speeds_[BACK_RIGHT_MOTOR] = MOTOR_NEUTRAL_;
-  pid_ = {pid.Kp, pid.Ki, pid.Kd};  // TODO Change this if Utils.hpp is gone
+  pid_ = pid;  // TODO Change this if Utils.hpp is gone
   skid_control_ =
       Control::SkidRobotMotionController(
           Control::TRACTION_CONTROL, robot_geometry_, pid_,
@@ -147,7 +144,7 @@ void Pro2ProtocolObject::send_command(int sleeptime) {
     std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));
   }
 }
-int Pro2ProtocolObject::set_robot_mode() {}
+int Pro2ProtocolObject::cycle_robot_mode() {}
 
 void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
   float linear_vel, angular_vel, rpm_FL, rpm_FR, rpm_BL, rpm_BR;

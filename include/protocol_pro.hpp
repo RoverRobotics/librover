@@ -36,12 +36,12 @@ class RoverRobotics::ProProtocolObject
   robotData info_request() override;
   /*
    * @brief Set Robot velocity
-   * Set Robot velocity: IF closed_loop_ TRUE, this function will attempt a
+   * Set Robot velocity: IF robot_mode_ TRUE, this function will attempt a
    * speed PID loop which uses all the available sensor data (wheels, IMUs, etc)
    * from the robot to produce the commanded velocity as best as possible. IF
-   * closed_loop_ FALSE, this function simply translates the commanded
+   * robot_mode_ FALSE, this function simply translates the commanded
    * velocities into motor duty cycles and there is no expectation that the
-   * commanded velocities will be realized by the robot. In closed_loop_ FALSE
+   * commanded velocities will be realized by the robot. In robot_mode_ FALSE
    * mode, motor power is roughly proportional to commanded velocity.
    * @param controllarray an double array of control in m/s
    */
@@ -59,6 +59,11 @@ class RoverRobotics::ProProtocolObject
    * @return bool
    */
   bool is_connected() override;
+  /*
+   * @brief Cycle through robot supported modes
+   * @return int of the current mode enum
+   */
+  int cycle_robot_mode() override;
   /*
    * @brief Attempt to make connection to robot via device
    * @param device is the address of the device (ttyUSB0 , can0, ttyACM0)
@@ -85,7 +90,7 @@ class RoverRobotics::ProProtocolObject
 
   const unsigned char startbyte_ = 253;
   const int requestbyte_ = 10;
-  const int termios_baud_code_ = 4097; // THIS = baudrate of 57600
+  const int termios_baud_code_ = 4097;  // THIS = baudrate of 57600
   const int RECEIVE_MSG_LEN_ = 5;
   const double odom_angular_coef_ = 2.3;
   const double odom_traction_factor_ = 0.7;
@@ -104,7 +109,7 @@ class RoverRobotics::ProProtocolObject
   // Motor PID variables
   OdomControl motor1_control_;
   OdomControl motor2_control_;
-  bool closed_loop_;
+  bool robot_mode_;
   PidGains pid_;
 
   enum robot_motors { LEFT_MOTOR, RIGHT_MOTOR, FLIPPER_MOTOR };
