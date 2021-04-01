@@ -1,7 +1,7 @@
 #pragma once
 
-#include "protocol_base.hpp"
 #include "control.hpp"
+#include "protocol_base.hpp"
 
 namespace RoverRobotics {
 class Pro2ProtocolObject;
@@ -10,7 +10,7 @@ class RoverRobotics::Pro2ProtocolObject
     : public RoverRobotics::BaseProtocolObject {
  public:
   Pro2ProtocolObject(const char* device, std::string new_comm_type,
-                     bool closed_loop, PidGains pid);
+                     Control::robot_operating_mode_t robot_mode, PidGains pid);
   /*
    * @brief Trim Robot Velocity
    * Modify robot velocity differential (between the left side/right side) with
@@ -66,6 +66,8 @@ class RoverRobotics::Pro2ProtocolObject
    */
   void register_comm_base(const char* device) override;
 
+  int set_robot_mode() override;
+
  private:
   /*
    * @brief Thread Driven function that will send commands to the robot at set
@@ -81,13 +83,18 @@ class RoverRobotics::Pro2ProtocolObject
   void motors_control_loop(int sleeptime);
   const float MOTOR_RPM_TO_MPS_RATIO_ = 13749 / 1.26 / 0.72;
   const int MOTOR_NEUTRAL_ = 0;
-  const int MOTOR_MAX_ = 5;
-  const int MOTOR_MIN_ = -5;
+  const int MOTOR_MAX_ = .95;
+  const int MOTOR_MIN_ = .03;
+  // Parameterize?
+  const Control::robot_geometry robot_geometry_ = {0.205, 0.265, .09, 0, 0};
+  const float geometric_decay_ = .99;
+  float left_trim_ = 1;
+  float right_trim_ = .99;
 
-  const unsigned char startbyte_ = 253;
-  const int requestbyte_ = 10;
-  const double odom_angular_coef_ = 2.3;
-  const double odom_traction_factor_ = 0.7;
+
+
+  //motors control 
+  Control::SkidRobotMotionController skid_control_;
   const double CONTROL_LOOP_TIMEOUT_MS_ = 100;
   std::unique_ptr<CommBase> comm_base_;
   std::string comm_type_;
@@ -96,13 +103,12 @@ class RoverRobotics::Pro2ProtocolObject
   robotData robotstatus_;
   double motors_speeds_[4];
   double trimvalue_;
-  std::thread fast_data_write_thread_;
-  std::thread slow_data_write_thread_;
-  std::thread motor_commands_update_thread_;
+  std::thread write_to_robot_thread_;
+  std::thread motor_speed_update_thread_;
   bool estop_;
   // Motor PID variables
-  bool closed_loop_;
-  PidGains pid_;
+  Control::robot_operating_mode_t robot_mode_;
+  Control::pid_gains pid_;
 
   enum robot_motors {
     FRONT_LEFT_MOTOR,

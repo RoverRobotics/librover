@@ -50,9 +50,9 @@ struct robot_geometry {
 };
 
 struct pid_gains {
-  float kp;
-  float ki;
-  float kd;
+  double kp;
+  double ki;
+  double kd;
 };
 
 struct pid_outputs {

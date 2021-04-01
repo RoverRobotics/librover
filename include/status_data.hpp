@@ -1,6 +1,12 @@
 #include <chrono>
 #pragma once
 
+namespace RoverRobotics {
+typedef enum robot_operating_mode_t {
+  OPEN_LOOP,
+  TRACTION_CONTROL,
+  INDEPENDENT_WHEELS
+};
 struct robotData {
   // Motor Infos
   signed short int motor1_id;
@@ -57,3 +63,4 @@ struct robotData {
   double cmd_angular_vel;
   std::chrono::milliseconds cmd_ts;
 };
+}  // namespace RoverRobotics
