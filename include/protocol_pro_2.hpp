@@ -88,7 +88,7 @@ class RoverRobotics::Pro2ProtocolObject
   const int requestbyte_ = 10;
   const double odom_angular_coef_ = 2.3;
   const double odom_traction_factor_ = 0.7;
-  const double CONTROL_LOOP_TIMEOUT_MS_ = 200;
+  const double CONTROL_LOOP_TIMEOUT_MS_ = 100;
   std::unique_ptr<CommBase> comm_base_;
   std::string comm_type_;
 
