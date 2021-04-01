@@ -153,8 +153,14 @@ class Control::SkidRobotMotionController {
   void setMotorMaxDuty(float max_motor_duty);
   float getMotorMaxDuty();
 
+  void setMotorMinDuty(float max_min_duty);
+  float getMotorMinDuty();
+
   void setOutputDecay(float geometric_decay);
   float getOutputDecay();
+
+  void setOpenLoopMaxRpm(float open_loop_max_motor_rpm);
+  float getOpenLoopMaxRpm();
 
   motor_data runMotionControl(robot_velocities velocity_targets,
                               motor_data current_duty_cycles,
@@ -202,7 +208,7 @@ class Control::SkidRobotMotionController {
 
   void initializePids();
 
-  motor_data computeMotorCommandsTc_(motor_data target_wheel_speeds,
+  motor_data computeMotorCommandsDual_(motor_data target_wheel_speeds,
                                      motor_data current_motor_speeds);
 
   motor_data clipDutyCycles_(motor_data proposed_duties);
