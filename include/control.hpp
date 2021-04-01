@@ -200,6 +200,8 @@ class Control::SkidRobotMotionController {
 
   motor_data duty_cycles_;
 
+  void initializePids();
+
   motor_data computeMotorCommandsTc_(motor_data target_wheel_speeds,
                                      motor_data current_motor_speeds);
 

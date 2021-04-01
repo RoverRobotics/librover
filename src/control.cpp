@@ -321,7 +321,13 @@ SkidRobotMotionController::SkidRobotMotionController(
   left_trim_value_ = left_trim;
   right_trim_value_ = right_trim;
   geometric_decay_ = geometric_decay;
-  switch (operating_mode) {
+
+  initializePids();
+  
+}
+
+void SkidRobotMotionController::initializePids(){
+  switch (operating_mode_) {
     case OPEN_LOOP:
       break;
     case INDEPENDENT_WHEEL:
@@ -347,7 +353,6 @@ SkidRobotMotionController::SkidRobotMotionController(
       break;
   }
 }
-
 void SkidRobotMotionController::setAccelerationLimits(robot_velocities limits) {
   max_linear_acceleration_ = limits.linear_velocity;
   max_angular_acceleration_ = limits.angular_velocity;
