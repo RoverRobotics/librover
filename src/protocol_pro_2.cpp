@@ -19,6 +19,17 @@ Pro2ProtocolObject::Pro2ProtocolObject(const char *device,
   skid_control_->setAccelerationLimits({5, 100000});
   skid_control_->setOpenLoopMaxRpm(600);
   skid_control_->setOperatingMode(robot_mode_);
+  switch (robot_mode_) {
+    case Control::OPEN_LOOP:
+      robotmode_num_ = 0;
+      break;
+    case Control::TRACTION_CONTROL:
+      robotmode_num_ = 1;
+      break;
+    case Control::INDEPENDENT_WHEEL:
+      robotmode_num_ = 2;
+      break;
+  }
   register_comm_base(device);
   write_to_robot_thread_ = std::thread([this]() { this->send_command(30); });
   // Create a motor update thread with 30 mili second sleep timer
@@ -141,7 +152,24 @@ void Pro2ProtocolObject::send_command(int sleeptime) {
     std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));
   }
 }
-int Pro2ProtocolObject::cycle_robot_mode() {}
+int Pro2ProtocolObject::cycle_robot_mode() {
+  if (robotmode_num_ < 2) {
+    robotmode_num_ += 1;
+  } else
+    robotmode_num_ = 0;
+  switch (robotmode_num_) {
+    case 0:
+      skid_control_->setOperatingMode(Control::OPEN_LOOP);
+      break;
+    case 1:
+      skid_control_->setOperatingMode(Control::TRACTION_CONTROL);
+      break;
+    case 2:
+      skid_control_->setOperatingMode(Control::INDEPENDENT_WHEEL);
+      break;
+  }
+  return robotmode_num_;
+}
 
 void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
   float linear_vel, angular_vel, rpm_FL, rpm_FR, rpm_BL, rpm_BR;

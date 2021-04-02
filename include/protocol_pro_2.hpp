@@ -92,6 +92,7 @@ class RoverRobotics::Pro2ProtocolObject
   float geometric_decay_ = .99;
   float left_trim_ = 1;
   float right_trim_ = .99;
+  int robotmode_num_ = 0;
 
 
 
