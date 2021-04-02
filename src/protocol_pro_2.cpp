@@ -13,14 +13,13 @@ Pro2ProtocolObject::Pro2ProtocolObject(const char *device,
   motors_speeds_[BACK_LEFT_MOTOR] = MOTOR_NEUTRAL_;
   motors_speeds_[BACK_RIGHT_MOTOR] = MOTOR_NEUTRAL_;
   pid_ = pid;
-  skid_control_ = Control::SkidRobotMotionController(
+  skid_control_ = std::make_unique<Control::SkidRobotMotionController>(
       Control::TRACTION_CONTROL, robot_geometry_, pid_, MOTOR_MAX_, MOTOR_MIN_,
       left_trim_, right_trim_, geometric_decay_);
-  skid_control_.setAccelerationLimits({5, 100000});
-  skid_control_.setOperatingMode(robot_mode_);
-  std::cerr << "test";
+  skid_control_->setAccelerationLimits({5, 100000});
+  skid_control_->setOpenLoopMaxRpm(600);
+  skid_control_->setOperatingMode(robot_mode_);
   register_comm_base(device);
-
   write_to_robot_thread_ = std::thread([this]() { this->send_command(30); });
   // Create a motor update thread with 30 mili second sleep timer
   motor_speed_update_thread_ =
@@ -155,53 +154,45 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
     std::chrono::milliseconds time_now =
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch());
-    robotstatus_mutex_.lock();
     // get data from robot
-    // linear_vel = robotstatus_.cmd_linear_vel;
-    // angular_vel = robotstatus_.cmd_angular_vel;
-    // rpm_FL = robotstatus_.motor1_rpm;
-    // rpm_FR = robotstatus_.motor2_rpm;
-    // rpm_BL = robotstatus_.motor3_rpm;
-    // rpm_BR = robotstatus_.motor4_rpm;
-    // time_from_msg = robotstatus_.cmd_ts;
-    // robotstatus_mutex_.unlock();
-    // auto duty_cycles =
-    //     skid_control_.runMotionControl({linear_vel, angular_vel}, {0, 0, 0,
-    //     0},
-    //                                    {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
-    // if (!estop_ &&
-    //     (time_now - time_from_msg).count() <= CONTROL_LOOP_TIMEOUT_MS_) {
-    //   auto velocities =
-    //       skid_control_.getMeasuredVelocities({rpm_FL, rpm_FR, rpm_BL,
-    //       rpm_BR});
-    //   robotstatus_mutex_.lock();
-    //   motors_speeds_[FRONT_LEFT_MOTOR] = duty_cycles.fl;
-    //   motors_speeds_[FRONT_RIGHT_MOTOR] = duty_cycles.fr;
-    //   motors_speeds_[BACK_LEFT_MOTOR] = duty_cycles.rl;
-    //   motors_speeds_[BACK_RIGHT_MOTOR] = duty_cycles.rr;
-    //   robotstatus_.linear_vel = velocities.linear_velocity;
-    //   robotstatus_.angular_vel = velocities.angular_velocity;
-    //   robotstatus_mutex_.unlock();
-    // } else {
-    //   auto velocities =
-    //       skid_control_.getMeasuredVelocities({rpm_FL, rpm_FR, rpm_BL,
-    //       rpm_BR});
-    //   robotstatus_mutex_.lock();
-    //   motors_speeds_[FRONT_LEFT_MOTOR] = MOTOR_NEUTRAL_;
-    //   motors_speeds_[FRONT_RIGHT_MOTOR] = MOTOR_NEUTRAL_;
-    //   motors_speeds_[BACK_LEFT_MOTOR] = MOTOR_NEUTRAL_;
-    //   motors_speeds_[BACK_RIGHT_MOTOR] = MOTOR_NEUTRAL_;
-    //   robotstatus_.linear_vel = velocities.linear_velocity;
-    //   robotstatus_.angular_vel = velocities.angular_velocity;
+    robotstatus_mutex_.lock();
+    linear_vel = robotstatus_.cmd_linear_vel;
+    angular_vel = robotstatus_.cmd_angular_vel;
+    rpm_FL = robotstatus_.motor1_rpm;
+    rpm_FR = robotstatus_.motor2_rpm;
+    rpm_BL = robotstatus_.motor3_rpm;
+    rpm_BR = robotstatus_.motor4_rpm;
+    time_from_msg = robotstatus_.cmd_ts;
     robotstatus_mutex_.unlock();
-    time_last = time_now;
+    auto duty_cycles =
+        skid_control_->runMotionControl({linear_vel, angular_vel}, {0, 0, 0, 0},
+                                        {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
+    if (!estop_ &&
+        (time_now - time_from_msg).count() <= CONTROL_LOOP_TIMEOUT_MS_) {
+      auto velocities = skid_control_->getMeasuredVelocities(
+          {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
+      robotstatus_mutex_.lock();
+      motors_speeds_[FRONT_LEFT_MOTOR] = duty_cycles.fl;
+      motors_speeds_[FRONT_RIGHT_MOTOR] = duty_cycles.fr;
+      motors_speeds_[BACK_LEFT_MOTOR] = duty_cycles.rl;
+      motors_speeds_[BACK_RIGHT_MOTOR] = duty_cycles.rr;
+      robotstatus_.linear_vel = velocities.linear_velocity;
+      robotstatus_.angular_vel = velocities.angular_velocity;
+      robotstatus_mutex_.unlock();
+    } else {
+      auto velocities = skid_control_->getMeasuredVelocities(
+          {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
+      robotstatus_mutex_.lock();
+      motors_speeds_[FRONT_LEFT_MOTOR] = MOTOR_NEUTRAL_;
+      motors_speeds_[FRONT_RIGHT_MOTOR] = MOTOR_NEUTRAL_;
+      motors_speeds_[BACK_LEFT_MOTOR] = MOTOR_NEUTRAL_;
+      motors_speeds_[BACK_RIGHT_MOTOR] = MOTOR_NEUTRAL_;
+      robotstatus_.linear_vel = velocities.linear_velocity;
+      robotstatus_.angular_vel = velocities.angular_velocity;
+      robotstatus_mutex_.unlock();
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));
   }
-#ifdef DEBUG
-
-#endif
-  // end timeout
-  
-  std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));
 }
 
 }  // namespace RoverRobotics

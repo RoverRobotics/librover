@@ -85,8 +85,8 @@ class RoverRobotics::Pro2ProtocolObject
   void motors_control_loop(int sleeptime);
   const float MOTOR_RPM_TO_MPS_RATIO_ = 13749 / 1.26 / 0.72;
   const int MOTOR_NEUTRAL_ = 0;
-  const int MOTOR_MAX_ = .95;
-  const int MOTOR_MIN_ = .03;
+  const float MOTOR_MAX_ = .95;
+  const float MOTOR_MIN_ = .03;
   // Parameterize?
   Control::robot_geometry robot_geometry_ = {0.205, 0.265, .09, 0, 0};
   float geometric_decay_ = .99;
@@ -96,7 +96,7 @@ class RoverRobotics::Pro2ProtocolObject
 
 
   //motors control 
-  Control::SkidRobotMotionController skid_control_;
+  std::unique_ptr<Control::SkidRobotMotionController> skid_control_;
   const double CONTROL_LOOP_TIMEOUT_MS_ = 100;
   std::unique_ptr<CommBase> comm_base_;
   std::string comm_type_;
