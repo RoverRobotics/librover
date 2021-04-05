@@ -1,6 +1,6 @@
 #include <chrono>
 #pragma once
-
+namespace RoverRobotics {
 struct robotData {
   // Motor Infos
   signed short int motor1_id;
@@ -57,3 +57,4 @@ struct robotData {
   double cmd_angular_vel;
   std::chrono::milliseconds cmd_ts;
 };
+}  // namespace RoverRobotics

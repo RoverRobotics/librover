@@ -1,9 +1,9 @@
 #pragma once
 
 #include "comm_base.hpp"
-#include "comm_serial.hpp"
 #include "comm_can.hpp"
-
+#include "comm_serial.hpp"
+#include "control.hpp"
 namespace RoverRobotics {
 class BaseProtocolObject;
 }
@@ -25,12 +25,12 @@ class RoverRobotics::BaseProtocolObject {
   virtual void send_estop(bool) = 0;
   /*
    * @brief Set Robot velocity
-   * Set Robot velocity: IF closed_loop_ TRUE, this function will attempt a
+   * Set Robot velocity: IF robot_mode_ TRUE, this function will attempt a
    * speed PID loop which uses all the available sensor data (wheels, IMUs, etc)
    * from the robot to produce the commanded velocity as best as possible. IF
-   * closed_loop_ FALSE, this function simply translates the commanded
+   * robot_mode_ FALSE, this function simply translates the commanded
    * velocities into motor duty cycles and there is no expectation that the
-   * commanded velocities will be realized by the robot. In closed_loop_ FALSE
+   * commanded velocities will be realized by the robot. In robot_mode_ FALSE
    * mode, motor power is roughly proportional to commanded velocity.
    * @param controllarray an double array of control in m/s
    */
@@ -47,17 +47,22 @@ class RoverRobotics::BaseProtocolObject {
   virtual robotData info_request() = 0;
   /*
    * @brief Unpack bytes from the robot
-   * This is meant to use as a callback function when there are bytes available to
-   * process
+   * This is meant to use as a callback function when there are bytes available
+   * to process
    * @param std::vector<uin32_t> Bytes stream from the robot
    * @return structure of statusData
    */
   virtual void unpack_comm_response(std::vector<uint32_t>) = 0;
   /*
    * @brief Check if Communication still exist
-   * @return bool
+   * @return bool true = connected false = disconnected
    */
   virtual bool is_connected() = 0;
+  /*
+   * @brief Cycle through robot supported modes
+   * @return int of the current mode enum
+   */
+  virtual int cycle_robot_mode() = 0;
   /*
    * @brief Attempt to make connection to robot via device
    * @param device is the address of the device (ttyUSB0 , can0, ttyACM0)
