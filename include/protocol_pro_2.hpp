@@ -1,7 +1,5 @@
 #pragma once
-
 #include "protocol_base.hpp"
-#include "control.hpp"
 
 namespace RoverRobotics {
 class Pro2ProtocolObject;
@@ -10,7 +8,7 @@ class RoverRobotics::Pro2ProtocolObject
     : public RoverRobotics::BaseProtocolObject {
  public:
   Pro2ProtocolObject(const char* device, std::string new_comm_type,
-                     bool closed_loop, PidGains pid);
+                     Control::robot_motion_mode_t robot_mode, Control::pid_gains pid);
   /*
    * @brief Trim Robot Velocity
    * Modify robot velocity differential (between the left side/right side) with
@@ -37,12 +35,12 @@ class RoverRobotics::Pro2ProtocolObject
   robotData info_request() override;
   /*
    * @brief Set Robot velocity
-   * Set Robot velocity: IF closed_loop_ TRUE, this function will attempt a
+   * Set Robot velocity: IF robot_mode_ TRUE, this function will attempt a
    * speed PID loop which uses all the available sensor data (wheels, IMUs, etc)
    * from the robot to produce the commanded velocity as best as possible. IF
-   * closed_loop_ FALSE, this function simply translates the commanded
+   * robot_mode_ FALSE, this function simply translates the commanded
    * velocities into motor duty cycles and there is no expectation that the
-   * commanded velocities will be realized by the robot. In closed_loop_ FALSE
+   * commanded velocities will be realized by the robot. In robot_mode_ FALSE
    * mode, motor power is roughly proportional to commanded velocity.
    * @param controllarray an double array of control in m/s
    */
@@ -61,10 +59,16 @@ class RoverRobotics::Pro2ProtocolObject
    */
   bool is_connected() override;
   /*
+   * @brief Cycle through robot supported modes
+   * @return int of the current mode enum
+   */
+  int cycle_robot_mode() override;
+  /*
    * @brief Attempt to make connection to robot via device
-   * @param device is the address of the device (ttyUSB0 , can0, ttyACM0)
+   * @param device is the address of the device (ttyUSB0 , can0, ttyACM0, etc)
    */
   void register_comm_base(const char* device) override;
+  
 
  private:
   /*
@@ -81,13 +85,19 @@ class RoverRobotics::Pro2ProtocolObject
   void motors_control_loop(int sleeptime);
   const float MOTOR_RPM_TO_MPS_RATIO_ = 13749 / 1.26 / 0.72;
   const int MOTOR_NEUTRAL_ = 0;
-  const int MOTOR_MAX_ = 5;
-  const int MOTOR_MIN_ = -5;
+  const float MOTOR_MAX_ = .95;
+  const float MOTOR_MIN_ = .03;
+  // Parameterize?
+  Control::robot_geometry robot_geometry_ = {0.205, 0.265, .09, 0, 0};
+  float geometric_decay_ = .99;
+  float left_trim_ = 1;
+  float right_trim_ = .99;
+  int robotmode_num_ = 0;
 
-  const unsigned char startbyte_ = 253;
-  const int requestbyte_ = 10;
-  const double odom_angular_coef_ = 2.3;
-  const double odom_traction_factor_ = 0.7;
+
+
+  //motors control 
+  std::unique_ptr<Control::SkidRobotMotionController> skid_control_;
   const double CONTROL_LOOP_TIMEOUT_MS_ = 100;
   std::unique_ptr<CommBase> comm_base_;
   std::string comm_type_;
@@ -96,13 +106,12 @@ class RoverRobotics::Pro2ProtocolObject
   robotData robotstatus_;
   double motors_speeds_[4];
   double trimvalue_;
-  std::thread fast_data_write_thread_;
-  std::thread slow_data_write_thread_;
-  std::thread motor_commands_update_thread_;
+  std::thread write_to_robot_thread_;
+  std::thread motor_speed_update_thread_;
   bool estop_;
   // Motor PID variables
-  bool closed_loop_;
-  PidGains pid_;
+  Control::robot_motion_mode_t robot_mode_;
+  Control::pid_gains pid_;
 
   enum robot_motors {
     FRONT_LEFT_MOTOR,
