@@ -16,89 +16,101 @@
 
 #define RPM_TO_RADS_SEC 0.10472
 
-namespace Control {
+namespace Control
+{
 
-/* classes */
-class PidController;
-class SkidRobotMotionController;
-class AlphaBetaFilter;
+  /* classes */
+  class PidController;
+  class SkidRobotMotionController;
+  class AlphaBetaFilter;
 
-/* datatypes */
-typedef enum {
-  OPEN_LOOP,
-  TRACTION_CONTROL,
-  INDEPENDENT_WHEEL
-} robot_motion_mode_t;
+  /* datatypes */
+  typedef enum
+  {
+    OPEN_LOOP,
+    TRACTION_CONTROL,
+    INDEPENDENT_WHEEL
+  } robot_motion_mode_t;
 
-struct angular_scaling_params{
-  float a_coef;
-  float b_coef;
-  float c_coef;
-  float min_scale_val;
-  float max_scale_val;
-};
+  struct angular_scaling_params
+  {
+    float a_coef;
+    float b_coef;
+    float c_coef;
+    float min_scale_val;
+    float max_scale_val;
+  };
 
-struct robot_velocities {
-  float linear_velocity;
-  float angular_velocity;
-};
+  struct robot_velocities
+  {
+    float linear_velocity;
+    float angular_velocity;
+  };
 
-struct motor_data {
-  float fl;
-  float fr;
-  float rl;
-  float rr;
-};
+  struct motor_data
+  {
+    float fl;
+    float fr;
+    float rl;
+    float rr;
+  };
 
-struct robot_geometry {
-  float intra_axle_distance;
-  float wheel_base;
-  float wheel_radius;
-  float center_of_mass_x_offset;
-  float center_of_mass_y_offset;
-};
+  struct robot_geometry
+  {
+    float intra_axle_distance;
+    float wheel_base;
+    float wheel_radius;
+    float center_of_mass_x_offset;
+    float center_of_mass_y_offset;
+  };
 
-struct pid_gains {
-  double kp;
-  double ki;
-  double kd;
-};
+  struct pid_gains
+  {
+    double kp;
+    double ki;
+    double kd;
+  };
 
-struct pid_outputs {
-  std::string name;
-  double time;
-  float dt;
-  float pid_output;
-  float error;
-  float integral_error;
-  float delta_error;
-  float target_value;
-  float measured_value;
-  double kp;
-  double ki;
-  double kd;
-};
+  struct pid_outputs
+  {
+    std::string name;
+    double time;
+    float dt;
+    float pid_output;
+    float error;
+    float integral_error;
+    float delta_error;
+    float target_value;
+    float measured_value;
+    double kp;
+    double ki;
+    double kd;
+  };
 
-struct pid_output_limits {
-  float posmax;
-  float negmax;
-};
+  struct pid_output_limits
+  {
+    float posmax;
+    float negmax;
+  };
 
-/* useful functions */
-motor_data computeSkidSteerWheelSpeeds(robot_velocities target_velocities,
-                                       robot_geometry robot_geometry);
+  /* useful functions */
+  motor_data computeSkidSteerWheelSpeeds(robot_velocities target_velocities,
+                                         robot_geometry robot_geometry);
 
-robot_velocities limitAcceleration(robot_velocities target_velocities,
-                                   robot_velocities measured_velocities,
-                                   robot_velocities delta_v_limits, float dt);
+  robot_velocities limitAcceleration(robot_velocities target_velocities,
+                                     robot_velocities measured_velocities,
+                                     robot_velocities delta_v_limits, float dt);
 
-robot_velocities computeVelocitiesFromWheelspeeds(
-    motor_data wheel_speeds, robot_geometry robot_geometry);
+  robot_velocities scaleAngularCommand(robot_velocities target_velocities, robot_velocities measured_velocities, angular_scaling_params scaling_params);
 
-}  // namespace Control
+  robot_velocities computeVelocitiesFromWheelspeeds(
+      motor_data wheel_speeds, robot_geometry robot_geometry);
 
-class Control::PidController {
- public:
+} // namespace Control
+
+class Control::PidController
+{
+public:
   /* constructors */
   PidController(pid_gains pid_gains, std::string name);
   PidController(pid_gains pid_gains, pid_output_limits pid_output_limits,
@@ -117,7 +129,7 @@ class Control::PidController {
 
   void writePidDataToCsv(std::ofstream &log_file, pid_outputs data);
 
- private:
+private:
   std::string name_;
   double kp_;
   double ki_;
@@ -131,8 +143,9 @@ class Control::PidController {
   std::chrono::steady_clock::time_point time_origin_;
 };
 
-class Control::SkidRobotMotionController {
- public:
+class Control::SkidRobotMotionController
+{
+public:
   /* constructors */
   SkidRobotMotionController();
   SkidRobotMotionController(robot_motion_mode_t operating_mode,
@@ -181,7 +194,7 @@ class Control::SkidRobotMotionController {
 
   robot_velocities getMeasuredVelocities(motor_data current_motor_speeds);
 
- private:
+private:
   std::string log_folder_path_;
 #ifdef DEBUG
   std::ofstream log_file_;
@@ -224,10 +237,10 @@ class Control::SkidRobotMotionController {
   void initializePids();
 
   motor_data computeMotorCommandsDual_(motor_data target_wheel_speeds,
-                                     motor_data current_motor_speeds);
+                                       motor_data current_motor_speeds);
 
   motor_data computeMotorCommandsQuad_(motor_data target_wheel_speeds,
-                                     motor_data current_motor_speeds);
+                                       motor_data current_motor_speeds);
 
   motor_data clipDutyCycles_(motor_data proposed_duties);
 
@@ -236,13 +249,14 @@ class Control::SkidRobotMotionController {
 };
 
 // #TODO: implement if needed
-class Control::AlphaBetaFilter {
- public:
+class Control::AlphaBetaFilter
+{
+public:
   /* constructors */
   AlphaBetaFilter(float alpha);
 
   float update(float new_value);
 
- private:
+private:
   float running_sum_;
 };

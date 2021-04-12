@@ -97,6 +97,21 @@ robot_velocities limitAcceleration(robot_velocities target_velocities,
   return return_velocities;
 }
 
+robot_velocities scaleAngularCommand(robot_velocities target_velocities, robot_velocities measured_velocities, angular_scaling_params scaling_params){
+  float angular_scale_factor = std::clamp(
+    (float)(scaling_params.a_coef * pow(measured_velocities.linear_velocity, 2) +
+    scaling_params.b_coef * measured_velocities.linear_velocity +
+    scaling_params.c_coef),
+    scaling_params.min_scale_val,
+    scaling_params.max_scale_val
+  );
+
+  return (robot_velocities){
+    .linear_velocity = target_velocities.linear_velocity,
+    .angular_velocity = target_velocities.angular_velocity * angular_scale_factor
+  };
+}
+
 /* classes */
 PidController::PidController(struct pid_gains pid_gains, std::string name)
     : /* defaults */
@@ -237,6 +252,7 @@ SkidRobotMotionController::SkidRobotMotionController(
     : log_folder_path_("~/Documents/"),
       duty_cycles_({0}),
       measured_velocities_({0}),
+      angular_scaling_params_((angular_scaling_params){.a_coef = 0, .b_coef = 0, .c_coef = 1, .min_scale_val = 1.0, .max_scale_val = 1.0}),
       max_linear_acceleration_(std::numeric_limits<float>::max()),
       max_angular_acceleration_(std::numeric_limits<float>::max()),
       time_last_(std::chrono::steady_clock::now()),
@@ -284,6 +300,7 @@ SkidRobotMotionController::SkidRobotMotionController(
     : log_folder_path_("~/Documents/"),
       duty_cycles_({0}),
       measured_velocities_({0}),
+      angular_scaling_params_((angular_scaling_params){.a_coef = 0, .b_coef = 0, .c_coef = 1, .min_scale_val = 1.0, .max_scale_val = 1.0}),
       max_linear_acceleration_(std::numeric_limits<float>::max()),
       max_angular_acceleration_(std::numeric_limits<float>::max()),
       time_last_(std::chrono::steady_clock::now()),
@@ -602,7 +619,9 @@ motor_data SkidRobotMotionController::runMotionControl(
 
   velocity_commands = limitAcceleration(velocity_targets, measured_velocities_,
                                         acceleration_limits, delta_time);
-  // velocity_commands = velocity_targets;
+  
+  /* scale the angular command */
+  velocity_commands = scaleAngularCommand(velocity_commands, measured_velocities_, angular_scaling_params_);
 
   /* get target wheelspeeds from velocities */
   motor_data target_wheel_speeds =
