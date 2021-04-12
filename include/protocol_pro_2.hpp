@@ -8,7 +8,8 @@ class RoverRobotics::Pro2ProtocolObject
     : public RoverRobotics::BaseProtocolObject {
  public:
   Pro2ProtocolObject(const char* device, std::string new_comm_type,
-                     Control::robot_motion_mode_t robot_mode, Control::pid_gains pid);
+                    Control::robot_motion_mode_t robot_mode,
+                    Control::pid_gains pid, Control::angular_scaling_params angular_scale);
   /*
    * @brief Trim Robot Velocity
    * Modify robot velocity differential (between the left side/right side) with
@@ -83,20 +84,22 @@ class RoverRobotics::Pro2ProtocolObject
    * @param sleeptime sleep time between each cycle
    */
   void motors_control_loop(int sleeptime);
+  
+  
+
+
+
+  //robot CONTROL exclusive variables
+  // Parameterize geometry?
+  Control::robot_geometry robot_geometry_ = {0.4191, 0.46355, 0.1397, 0, 0};
   const float MOTOR_RPM_TO_MPS_RATIO_ = 13749 / 1.26 / 0.72;
   const int MOTOR_NEUTRAL_ = 0;
   const float MOTOR_MAX_ = .95;
   const float MOTOR_MIN_ = .03;
-  // Parameterize?
-  Control::robot_geometry robot_geometry_ = {0.4191, 0.46355, 0.1397, 0, 0};
   float geometric_decay_ = .97;
   float left_trim_ = 1;
   float right_trim_ = 1;
   int robotmode_num_ = 0;
-
-
-
-  //motors control 
   std::unique_ptr<Control::SkidRobotMotionController> skid_control_;
   const double CONTROL_LOOP_TIMEOUT_MS_ = 100;
   std::unique_ptr<CommBase> comm_base_;
@@ -112,11 +115,12 @@ class RoverRobotics::Pro2ProtocolObject
   // Motor PID variables
   Control::robot_motion_mode_t robot_mode_;
   Control::pid_gains pid_;
+  Control::angular_scaling_params angular_scaling_params_;
 
   enum robot_motors {
-    FRONT_LEFT_MOTOR,
-    FRONT_RIGHT_MOTOR,
-    BACK_LEFT_MOTOR,
-    BACK_RIGHT_MOTOR
+    FRONT_LEFT_MOTOR = 0,
+    FRONT_RIGHT_MOTOR = 1,
+    BACK_LEFT_MOTOR = 2,
+    BACK_RIGHT_MOTOR = 3
   };
 };

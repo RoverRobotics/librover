@@ -1,11 +1,12 @@
 #include "protocol_pro_2.hpp"
 namespace RoverRobotics {
-Pro2ProtocolObject::Pro2ProtocolObject(const char *device,
-                                       std::string new_comm_type,
-                                       Control::robot_motion_mode_t robot_mode,
-                                       Control::pid_gains pid) {
+Pro2ProtocolObject::Pro2ProtocolObject(
+    const char *device, std::string new_comm_type,
+    Control::robot_motion_mode_t robot_mode, Control::pid_gains pid,
+    Control::angular_scaling_params angular_scale) {
   comm_type_ = new_comm_type;
   robot_mode_ = robot_mode;
+  angular_scaling_params_ = angular_scale;
   robotstatus_ = {0};
   estop_ = false;
   motors_speeds_[FRONT_LEFT_MOTOR] = MOTOR_NEUTRAL_;
@@ -16,13 +17,15 @@ Pro2ProtocolObject::Pro2ProtocolObject(const char *device,
   skid_control_ = std::make_unique<Control::SkidRobotMotionController>(
       Control::TRACTION_CONTROL, robot_geometry_, pid_, MOTOR_MAX_, MOTOR_MIN_,
       left_trim_, right_trim_, geometric_decay_);
+  skid_control_->setAngularScaling(angular_scaling_params_);
   skid_control_->setAccelerationLimits({5, 100000});
   skid_control_->setOpenLoopMaxRpm(600);
   skid_control_->setOperatingMode(robot_mode_);
   switch (robot_mode_) {
     case Control::OPEN_LOOP:
       robotmode_num_ = 0;
-      skid_control_->setAccelerationLimits({std::numeric_limits<float>::max(), std::numeric_limits<float>::max()});
+      skid_control_->setAccelerationLimits({std::numeric_limits<float>::max(),
+                                            std::numeric_limits<float>::max()});
       break;
     case Control::TRACTION_CONTROL:
       robotmode_num_ = 1;
@@ -161,15 +164,18 @@ int Pro2ProtocolObject::cycle_robot_mode() {
   switch (robotmode_num_) {
     case 0:
       skid_control_->setOperatingMode(Control::OPEN_LOOP);
-      skid_control_->setAccelerationLimits({std::numeric_limits<float>::max(), std::numeric_limits<float>::max()});
+      skid_control_->setAccelerationLimits({std::numeric_limits<float>::max(),
+                                            std::numeric_limits<float>::max()});
       break;
     case 1:
       skid_control_->setOperatingMode(Control::TRACTION_CONTROL);
-      skid_control_->setAccelerationLimits({5,std::numeric_limits<float>::max()});
+      skid_control_->setAccelerationLimits(
+          {5, std::numeric_limits<float>::max()});
       break;
     case 2:
       skid_control_->setOperatingMode(Control::INDEPENDENT_WHEEL);
-      skid_control_->setAccelerationLimits({5,std::numeric_limits<float>::max()});
+      skid_control_->setAccelerationLimits(
+          {5, std::numeric_limits<float>::max()});
       break;
   }
   return robotmode_num_;
@@ -198,9 +204,9 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
     robotstatus_mutex_.unlock();
     if (!estop_ &&
         (time_now - time_from_msg).count() <= CONTROL_LOOP_TIMEOUT_MS_) {
-      auto duty_cycles =
-        skid_control_->runMotionControl({linear_vel, angular_vel}, {0, 0, 0, 0},
-                                        {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
+      auto duty_cycles = skid_control_->runMotionControl(
+          {linear_vel, angular_vel}, {0, 0, 0, 0},
+          {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
       auto velocities = skid_control_->getMeasuredVelocities(
           {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
       robotstatus_mutex_.lock();
@@ -212,9 +218,8 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
       robotstatus_.angular_vel = velocities.angular_velocity;
       robotstatus_mutex_.unlock();
     } else {
-      auto duty_cycles =
-        skid_control_->runMotionControl({0, 0}, {0, 0, 0, 0},
-                                        {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
+      auto duty_cycles = skid_control_->runMotionControl(
+          {0, 0}, {0, 0, 0, 0}, {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
       auto velocities = skid_control_->getMeasuredVelocities(
           {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
       robotstatus_mutex_.lock();
