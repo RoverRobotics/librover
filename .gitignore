@@ -16,3 +16,4 @@ src/workspace.code-workspace
 src/debug
 *.csv
 include/*.gch
+Debug
