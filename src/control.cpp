@@ -415,6 +415,14 @@ float SkidRobotMotionController::getOpenLoopMaxRpm() {
   return open_loop_max_motor_rpm_;
 }
 
+void SkidRobotMotionController::setAngularScaling(angular_scaling_params angular_scaling_params){
+  angular_scaling_params_ = angular_scaling_params;
+}
+
+angular_scaling_params SkidRobotMotionController::getAngularScaling(){
+  return angular_scaling_params_;
+}
+
 motor_data SkidRobotMotionController::computeMotorCommandsDual_(
     motor_data target_wheel_speeds, motor_data current_motor_speeds) {
   /* average front and rear wheels */

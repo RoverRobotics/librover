@@ -172,6 +172,9 @@ class Control::SkidRobotMotionController {
   void setOpenLoopMaxRpm(float open_loop_max_motor_rpm);
   float getOpenLoopMaxRpm();
 
+  void setAngularScaling(angular_scaling_params angular_scaling_params);
+  angular_scaling_params getAngularScaling();
+
   motor_data runMotionControl(robot_velocities velocity_targets,
                               motor_data current_duty_cycles,
                               motor_data current_motor_speeds);
@@ -208,6 +211,8 @@ class Control::SkidRobotMotionController {
 
   float max_linear_acceleration_;
   float max_angular_acceleration_;
+
+  angular_scaling_params angular_scaling_params_;
 
   float geometric_decay_;
 
