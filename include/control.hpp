@@ -30,6 +30,14 @@ typedef enum {
   INDEPENDENT_WHEEL
 } robot_motion_mode_t;
 
+struct angular_scaling_params{
+  float a_coef;
+  float b_coef;
+  float c_coef;
+  float min_scale_val;
+  float max_scale_val;
+};
+
 struct robot_velocities {
   float linear_velocity;
   float angular_velocity;
