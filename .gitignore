@@ -15,5 +15,5 @@ src/workspace.code-workspace
 .vscode/settings.json
 src/debug
 *.csv
-include/*.gch
+*.gch
 Debug
