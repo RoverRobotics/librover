@@ -73,9 +73,9 @@ void Pro2ProtocolObject::get_params_file() {
   }
 }
 void Pro2ProtocolObject::update_drivetrim(double delta) {
-  trimvalue_ += delta;
   // convert trim value to left and right motor power ratio
   if (-0.15 < trimvalue_ && trimvalue_ < .15) {
+    trimvalue_ += delta;
     if (trimvalue_ >= 0) {
       left_trim_ = 1;
       right_trim_ = 1 - trimvalue_;
