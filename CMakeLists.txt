@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 2.8.3)
 project(librover LANGUAGES CXX DESCRIPTION "C++ Library for communicating with Rover Robotics products")
 set(DEFAULT_BUILD_TYPE CMAKE_CXX_FLAGS_RELEASE)
 
-add_compile_options(-std=c++17 -DDEBUG -lpthread)
+add_compile_options(-std=c++17 -lpthread)
+#add_compile_options(-std=c++17 -DDEBUG -lpthread)
+
 
 
 add_library(librover SHARED
