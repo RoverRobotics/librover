@@ -75,14 +75,16 @@ void Pro2ProtocolObject::get_params_file() {
 void Pro2ProtocolObject::update_drivetrim(double delta) {
   trimvalue_ += delta;
   // convert trim value to left and right motor power ratio
-  if (trimvalue_ >= 0) {
-    left_trim_ = 1;
-    right_trim_ = 1 - trimvalue_;
-  } else if (trimvalue_ < 0) {
-    right_trim_ = 1;
-    left_trim_ = 1 + trimvalue_;
+  if (-0.15 < trimvalue_ && trimvalue_ < .15) {
+    if (trimvalue_ >= 0) {
+      left_trim_ = 1;
+      right_trim_ = 1 - trimvalue_;
+    } else if (trimvalue_ < 0) {
+      right_trim_ = 1;
+      left_trim_ = 1 + trimvalue_;
+    }
+    skid_control_->setTrim(left_trim_, right_trim_);
   }
-  skid_control_->setTrim(left_trim_, right_trim_);
   update_params(
       "trim",
       std::to_string(trimvalue_));  // update config file to have new trim value
@@ -316,13 +318,9 @@ void Pro2ProtocolObject::update_params(std::string replacing_key,
   char newrobotconfig_path[n + 1];
   strcpy(newrobotconfig_path, path.c_str());
   if (rename(newrobotconfig_path, robotconfig_path) == 0)
-    puts("File successfully renamed");
+    puts("Config File Updated");
   else
-    perror("Error renaming file");
-  if (remove(newrobotconfig_path) != 0)
-    perror("Error deleting file");
-  else
-    puts("File successfully deleted");
+    perror("Error Saving config file");
 }
 std::vector<std::string> Pro2ProtocolObject::split(std::string str,
                                                    std::string token) {
