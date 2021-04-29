@@ -7,9 +7,10 @@ class Pro2ProtocolObject;
 class RoverRobotics::Pro2ProtocolObject
     : public RoverRobotics::BaseProtocolObject {
  public:
-  Pro2ProtocolObject(const char* device, std::string new_comm_type,
-                    Control::robot_motion_mode_t robot_mode,
-                    Control::pid_gains pid, Control::angular_scaling_params angular_scale);
+  Pro2ProtocolObject(const char *device, std::string new_comm_type,
+                     Control::robot_motion_mode_t robot_mode,
+                     Control::pid_gains pid,
+                     Control::angular_scaling_params angular_scale);
   /*
    * @brief Trim Robot Velocity
    * Modify robot velocity differential (between the left side/right side) with
@@ -45,7 +46,7 @@ class RoverRobotics::Pro2ProtocolObject
    * mode, motor power is roughly proportional to commanded velocity.
    * @param controllarray an double array of control in m/s
    */
-  void set_robot_velocity(double* controllarray) override;
+  void set_robot_velocity(double *controllarray) override;
   /*
    * @brief Unpack bytes from the robot
    * This is meant to use as a callback function when there are bytes available
@@ -68,8 +69,7 @@ class RoverRobotics::Pro2ProtocolObject
    * @brief Attempt to make connection to robot via device
    * @param device is the address of the device (ttyUSB0 , can0, ttyACM0, etc)
    */
-  void register_comm_base(const char* device) override;
-  
+  void register_comm_base(const char *device) override;
 
  private:
   /*
@@ -84,12 +84,12 @@ class RoverRobotics::Pro2ProtocolObject
    * @param sleeptime sleep time between each cycle
    */
   void motors_control_loop(int sleeptime);
-  
-  
 
+  void get_params_file();
 
-
-  //robot CONTROL exclusive variables
+  std::vector<std::string> split(std::string str, std::string token);
+  void update_params(std::string replacing_key, std::string replacing_value);
+  // robot CONTROL exclusive variables
   // Parameterize geometry?
   Control::robot_geometry robot_geometry_ = {0.4191, 0.46355, 0.1397, 0, 0};
   const float MOTOR_RPM_TO_MPS_RATIO_ = 13749 / 1.26 / 0.72;

@@ -97,19 +97,20 @@ robot_velocities limitAcceleration(robot_velocities target_velocities,
   return return_velocities;
 }
 
-robot_velocities scaleAngularCommand(robot_velocities target_velocities, robot_velocities measured_velocities, angular_scaling_params scaling_params){
+robot_velocities scaleAngularCommand(robot_velocities target_velocities,
+                                     robot_velocities measured_velocities,
+                                     angular_scaling_params scaling_params) {
   float angular_scale_factor = std::clamp(
-    (float)(scaling_params.a_coef * pow(measured_velocities.linear_velocity, 2) +
-    scaling_params.b_coef * measured_velocities.linear_velocity +
-    scaling_params.c_coef),
-    scaling_params.min_scale_val,
-    scaling_params.max_scale_val
-  );
+      (float)(scaling_params.a_coef *
+                  pow(measured_velocities.linear_velocity, 2) +
+              scaling_params.b_coef * measured_velocities.linear_velocity +
+              scaling_params.c_coef),
+      scaling_params.min_scale_val, scaling_params.max_scale_val);
 
   return (robot_velocities){
-    .linear_velocity = target_velocities.linear_velocity,
-    .angular_velocity = target_velocities.angular_velocity * angular_scale_factor
-  };
+      .linear_velocity = target_velocities.linear_velocity,
+      .angular_velocity =
+          target_velocities.angular_velocity * angular_scale_factor};
 }
 
 /* classes */
@@ -157,6 +158,17 @@ pid_gains PidController::getGains() {
   pid_gains.ki = ki_;
   pid_gains.kd = kd_;
   return pid_gains;
+}
+
+void SkidRobotMotionController::setTrim(float left_trim, float right_trim) {
+  left_trim_value_ = left_trim;
+  right_trim_value_ = right_trim;
+}
+float SkidRobotMotionController::getLeftTrim() {
+  return left_trim_value_;
+}
+float SkidRobotMotionController::getRightTrim() {
+  return right_trim_value_;
 }
 
 void PidController::setOutputLimits(pid_output_limits pid_output_limits) {
@@ -242,9 +254,7 @@ pid_outputs PidController::runControl(float target, float measured) {
   return returnstruct;
 }
 
-SkidRobotMotionController::SkidRobotMotionController(){
- 
-}
+SkidRobotMotionController::SkidRobotMotionController() {}
 SkidRobotMotionController::SkidRobotMotionController(
     robot_motion_mode_t operating_mode, robot_geometry robot_geometry,
     float max_motor_duty, float min_motor_duty, float left_trim,
@@ -252,7 +262,11 @@ SkidRobotMotionController::SkidRobotMotionController(
     : log_folder_path_("~/Documents/"),
       duty_cycles_({0}),
       measured_velocities_({0}),
-      angular_scaling_params_((angular_scaling_params){.a_coef = 0, .b_coef = 0, .c_coef = 1, .min_scale_val = 1.0, .max_scale_val = 1.0}),
+      angular_scaling_params_((angular_scaling_params){.a_coef = 0,
+                                                       .b_coef = 0,
+                                                       .c_coef = 1,
+                                                       .min_scale_val = 1.0,
+                                                       .max_scale_val = 1.0}),
       max_linear_acceleration_(std::numeric_limits<float>::max()),
       max_angular_acceleration_(std::numeric_limits<float>::max()),
       time_last_(std::chrono::steady_clock::now()),
@@ -300,7 +314,11 @@ SkidRobotMotionController::SkidRobotMotionController(
     : log_folder_path_("~/Documents/"),
       duty_cycles_({0}),
       measured_velocities_({0}),
-      angular_scaling_params_((angular_scaling_params){.a_coef = 0, .b_coef = 0, .c_coef = 1, .min_scale_val = 1.0, .max_scale_val = 1.0}),
+      angular_scaling_params_((angular_scaling_params){.a_coef = 0,
+                                                       .b_coef = 0,
+                                                       .c_coef = 1,
+                                                       .min_scale_val = 1.0,
+                                                       .max_scale_val = 1.0}),
       max_linear_acceleration_(std::numeric_limits<float>::max()),
       max_angular_acceleration_(std::numeric_limits<float>::max()),
       time_last_(std::chrono::steady_clock::now()),
@@ -432,11 +450,12 @@ float SkidRobotMotionController::getOpenLoopMaxRpm() {
   return open_loop_max_motor_rpm_;
 }
 
-void SkidRobotMotionController::setAngularScaling(angular_scaling_params angular_scaling_params){
+void SkidRobotMotionController::setAngularScaling(
+    angular_scaling_params angular_scaling_params) {
   angular_scaling_params_ = angular_scaling_params;
 }
 
-angular_scaling_params SkidRobotMotionController::getAngularScaling(){
+angular_scaling_params SkidRobotMotionController::getAngularScaling() {
   return angular_scaling_params_;
 }
 
@@ -461,12 +480,10 @@ motor_data SkidRobotMotionController::computeMotorCommandsDual_(
 #endif
 
   /* math to split the torque distribution */
-  motor_data power_proposals = (motor_data){
-    .fl = l_pid_output.pid_output,
-    .fr = r_pid_output.pid_output,
-    .rl = l_pid_output.pid_output,
-    .rr = r_pid_output.pid_output
-  };
+  motor_data power_proposals = (motor_data){.fl = l_pid_output.pid_output,
+                                            .fr = r_pid_output.pid_output,
+                                            .rl = l_pid_output.pid_output,
+                                            .rr = r_pid_output.pid_output};
 
   isnan(power_proposals.fr) ? power_proposals.fr = 0
                             : power_proposals.fr = power_proposals.fr;
@@ -484,7 +501,6 @@ motor_data SkidRobotMotionController::computeMotorCommandsDual_(
 
 motor_data SkidRobotMotionController::computeMotorCommandsQuad_(
     motor_data target_wheel_speeds, motor_data current_motor_speeds) {
-  
   /* run pid, 1 per wheel */
   pid_outputs fl_pid_output = pid_controller_fl_->runControl(
       target_wheel_speeds.fl, current_motor_speeds.fl);
@@ -506,12 +522,10 @@ motor_data SkidRobotMotionController::computeMotorCommandsQuad_(
 #endif
 
   /* math to split the torque distribution */
-  motor_data power_proposals = (motor_data){
-    .fl = fl_pid_output.pid_output,
-    .fr = fr_pid_output.pid_output,
-    .rl = rl_pid_output.pid_output,
-    .rr = rr_pid_output.pid_output
-  };
+  motor_data power_proposals = (motor_data){.fl = fl_pid_output.pid_output,
+                                            .fr = fr_pid_output.pid_output,
+                                            .rl = rl_pid_output.pid_output,
+                                            .rr = rr_pid_output.pid_output};
 
   isnan(power_proposals.fr) ? power_proposals.fr = 0
                             : power_proposals.fr = power_proposals.fr;
@@ -619,9 +633,10 @@ motor_data SkidRobotMotionController::runMotionControl(
 
   velocity_commands = limitAcceleration(velocity_targets, measured_velocities_,
                                         acceleration_limits, delta_time);
-  
+
   /* scale the angular command */
-  velocity_commands = scaleAngularCommand(velocity_commands, measured_velocities_, angular_scaling_params_);
+  velocity_commands = scaleAngularCommand(
+      velocity_commands, measured_velocities_, angular_scaling_params_);
 
   /* get target wheelspeeds from velocities */
   motor_data target_wheel_speeds =
@@ -651,7 +666,7 @@ motor_data SkidRobotMotionController::runMotionControl(
     case INDEPENDENT_WHEEL:
       motor_duties_add =
           computeMotorCommandsQuad_(target_wheel_speeds, current_motor_speeds);
-      
+
       /* add the change to the duty cycles */
       duty_cycles_.fl += motor_duties_add.fl;
       duty_cycles_.fr += motor_duties_add.fr;
