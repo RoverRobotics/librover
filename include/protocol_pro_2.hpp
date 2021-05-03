@@ -95,20 +95,16 @@ class RoverRobotics::Pro2ProtocolObject
    */
   void motors_control_loop(int sleeptime);
 
-  void get_params_file();
-
-  std::vector<std::string> split(std::string str, std::string token);
-  void update_params(std::string replacing_key, std::string replacing_value);
-  
+  void update_params();
+  Utilities::ParamsUtil params_util_;
+  std::string robot_params_path = strcat(std::getenv("HOME"), "robot.config");
+  // robot CONTROL exclusive variables
   /* metric units (meters) */
-  Control::robot_geometry robot_geometry_ = {
-      .intra_axle_distance = 0.4191,
-      .wheel_base = 0.46355,
-      .wheel_radius = 0.1397,
-      .center_of_mass_x_offset = 0,
-      .center_of_mass_y_offset = 0};
-
-  
+  Control::robot_geometry robot_geometry_ = {.intra_axle_distance = 0.4191,
+                                             .wheel_base = 0.46355,
+                                             .wheel_radius = 0.1397,
+                                             .center_of_mass_x_offset = 0,
+                                             .center_of_mass_y_offset = 0};
   const float MOTOR_RPM_TO_MPS_RATIO_ = 13749 / 1.26 / 0.72;
   const int MOTOR_NEUTRAL_ = 0;
 
