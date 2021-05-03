@@ -4,6 +4,7 @@
 namespace RoverRobotics {
 class Pro2ProtocolObject;
 }
+
 class RoverRobotics::Pro2ProtocolObject
     : public RoverRobotics::BaseProtocolObject {
  public:
@@ -89,18 +90,22 @@ class RoverRobotics::Pro2ProtocolObject
   Utilities::ParamsUtil params_util_;
   std::string robot_params_path = strcat(std::getenv("HOME"), "robot.config");
   // robot CONTROL exclusive variables
-  // Parameterize geometry?
-  Control::robot_geometry robot_geometry_ = {0.4191, 0.46355, 0.1397, 0, 0};
+  /* metric units (meters) */
+  Control::robot_geometry robot_geometry_ = {.intra_axle_distance = 0.4191,
+                                             .wheel_base = 0.46355,
+                                             .wheel_radius = 0.1397,
+                                             .center_of_mass_x_offset = 0,
+                                             .center_of_mass_y_offset = 0};
   const float MOTOR_RPM_TO_MPS_RATIO_ = 13749 / 1.26 / 0.72;
   const int MOTOR_NEUTRAL_ = 0;
-  const float MOTOR_MAX_ = .95;
-  const float MOTOR_MIN_ = .03;
-  float geometric_decay_ = .97;
+  const float MOTOR_MAX_ = .97;
+  const float MOTOR_MIN_ = .01;
+  float geometric_decay_ = .99;
   float left_trim_ = 1;
   float right_trim_ = 1;
   int robotmode_num_ = 0;
   std::unique_ptr<Control::SkidRobotMotionController> skid_control_;
-  const double CONTROL_LOOP_TIMEOUT_MS_ = 100;
+  const double CONTROL_LOOP_TIMEOUT_MS_ = 400;
   std::unique_ptr<CommBase> comm_base_;
   std::string comm_type_;
 
