@@ -13,7 +13,8 @@ src/comm_serial.cpp
 src/utils.cpp
 src/comm_can.cpp
 src/protocol_pro_2.cpp
-src/control.cpp)
+src/control.cpp
+src/utilities.cpp)
 
 # set_property(TARGET debug PROPERTY COMPILE_OPTIONS "-std=c++17;-pthread;-DDEBUG")
 

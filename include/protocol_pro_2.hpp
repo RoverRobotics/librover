@@ -85,10 +85,9 @@ class RoverRobotics::Pro2ProtocolObject
    */
   void motors_control_loop(int sleeptime);
 
-  void get_params_file();
-
-  std::vector<std::string> split(std::string str, std::string token);
-  void update_params(std::string replacing_key, std::string replacing_value);
+  void update_params();
+  Utilities::ParamsUtil params_util_;
+  std::string robot_params_path = strcat(std::getenv("HOME"), "robot.config");
   // robot CONTROL exclusive variables
   // Parameterize geometry?
   Control::robot_geometry robot_geometry_ = {0.4191, 0.46355, 0.1397, 0, 0};

@@ -14,7 +14,6 @@ Pro2ProtocolObject::Pro2ProtocolObject(
   motors_speeds_[BACK_LEFT_MOTOR] = MOTOR_NEUTRAL_;
   motors_speeds_[BACK_RIGHT_MOTOR] = MOTOR_NEUTRAL_;
   pid_ = pid;
-  get_params_file();
   skid_control_ = std::make_unique<Control::SkidRobotMotionController>(
       Control::TRACTION_CONTROL, robot_geometry_, pid_, MOTOR_MAX_, MOTOR_MIN_,
       left_trim_, right_trim_, geometric_decay_);
@@ -42,34 +41,16 @@ Pro2ProtocolObject::Pro2ProtocolObject(
       std::thread([this]() { this->motors_control_loop(30); });
 }
 
-void Pro2ProtocolObject::get_params_file() {
-  // open yaml
-  std::ifstream robotconfig;
-  std::string const HOME = std::getenv("HOME") ? std::getenv("HOME") : ".";
-  robotconfig.open(HOME + "/rover.config");
-  if (robotconfig.is_open()) {
-    std::string line;
-    std::cerr << "Loading config from " + HOME + "/rover.config" << std::endl;
-    while (std::getline(robotconfig, line)) {
-      std::vector<std::string> key =
-          split(line, ":");  // get key-value pair into vector
-      std::vector<std::string> values =
-          split(key[1], " ");  // get all the values from this key
-      if (key[0] == "trim") {  // check for key
-        trimvalue_ = std::stod(values[0]);
-        std::cerr << "new trim value " << trimvalue_ << std::endl;
+void Pro2ProtocolObject::update_params() {
+  std::vector<std::vector<std::string>> params = params_util_.get_params();
+  for (const auto& inner : params) {
+      std::vector<std::string> key_pair;
+      for (const auto& item : inner) {
+          key_pair.push_back(item);
       }
-      // other params?
-    }
-  } else {
-    std::cerr << "Failed to load config from " + HOME + "/rover.config"
-              << std::endl;
-    std::cerr << "Making a default config at " + HOME + "/rover.config"
-              << std::endl;
-    std::ofstream newrobotconfig;
-    newrobotconfig.open(HOME + "/rover.config");
-    newrobotconfig << "trim:0" << std::endl;
-    newrobotconfig.close();
+      if (key_pair[0] == "trim"){
+        trimvalue_ = stof(key_pair[1]);
+      }
   }
 }
 void Pro2ProtocolObject::update_drivetrim(double delta) {
@@ -85,9 +66,7 @@ void Pro2ProtocolObject::update_drivetrim(double delta) {
     }
     skid_control_->setTrim(left_trim_, right_trim_);
   }
-  update_params(
-      "trim",
-      std::to_string(trimvalue_));  // update config file to have new trim value
+  params_util_.write_params("trim",std::to_string(trimvalue_));
 }
 
 void Pro2ProtocolObject::send_estop(bool estop) {
@@ -283,60 +262,5 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
   }
 }
 
-void Pro2ProtocolObject::update_params(std::string replacing_key,
-                                       std::string replacing_value) {
-  // open previous config file;
-  std::ifstream robotconfig;
-  std::ofstream newrobotconfig;
-  std::string const HOME = std::getenv("HOME") ? std::getenv("HOME") : ".";
-
-  robotconfig.open(HOME + "/rover.config");
-  newrobotconfig.open(HOME + "/rover.config.tmp");
-  if (robotconfig.is_open()) {
-    std::string line;
-    std::cerr << "Updating config at " + HOME + "/rover.config" << std::endl;
-    while (std::getline(robotconfig, line)) {
-      std::vector<std::string> key =
-          split(line, ":");  // get key-value pair into vector
-      std::vector<std::string> values =
-          split(key[1], " ");         // get all the values from this key
-      if (key[0] == replacing_key) {  // check for key
-        newrobotconfig << replacing_key << ":" << replacing_value
-                       << std::endl;  // output modified value instead
-      } else
-        newrobotconfig << line;  // output original value
-    }
-  }
-  robotconfig.close();
-  newrobotconfig.close();
-  std::string path = HOME + "/rover.config";
-  int n = path.length();
-  char robotconfig_path[n + 1];
-  strcpy(robotconfig_path, path.c_str());
-  path = HOME + "/rover.config.tmp";
-  n = path.length();
-  char newrobotconfig_path[n + 1];
-  strcpy(newrobotconfig_path, path.c_str());
-  if (rename(newrobotconfig_path, robotconfig_path) == 0)
-    puts("Config File Updated");
-  else
-    perror("Error Saving config file");
-}
-std::vector<std::string> Pro2ProtocolObject::split(std::string str,
-                                                   std::string token) {
-  std::vector<std::string> result;
-  while (str.size()) {
-    int index = str.find(token);
-    if (index != std::string::npos) {
-      result.push_back(str.substr(0, index));
-      str = str.substr(index + token.size());
-      if (str.size() == 0) result.push_back(str);
-    } else {
-      result.push_back(str);
-      str = "";
-    }
-  }
-  return result;
-}
 
 }  // namespace RoverRobotics
