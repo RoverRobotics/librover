@@ -1,8 +1,17 @@
 #pragma once
 #include "protocol_base.hpp"
+#include "vesc.hpp"
 
 namespace RoverRobotics {
 class Pro2ProtocolObject;
+
+enum VESC_IDS{
+  FRONT_LEFT = 0,
+  FRONT_RIGHT = 1,
+  BACK_LEFT = 2,
+  BACK_RIGHT = 3
+};
+
 }
 
 class RoverRobotics::Pro2ProtocolObject
@@ -98,35 +107,43 @@ class RoverRobotics::Pro2ProtocolObject
       .wheel_radius = 0.1397,
       .center_of_mass_x_offset = 0,
       .center_of_mass_y_offset = 0};
+
+  
   const float MOTOR_RPM_TO_MPS_RATIO_ = 13749 / 1.26 / 0.72;
   const int MOTOR_NEUTRAL_ = 0;
+
+  /* max: 1.0, min: 0.0  */
   const float MOTOR_MAX_ = .97;
   const float MOTOR_MIN_ = .01;
   float geometric_decay_ = .99;
   float left_trim_ = 1;
   float right_trim_ = 1;
+
+
   int robotmode_num_ = 0;
-  std::unique_ptr<Control::SkidRobotMotionController> skid_control_;
+
   const double CONTROL_LOOP_TIMEOUT_MS_ = 400;
+
+  std::unique_ptr<Control::SkidRobotMotionController> skid_control_;
   std::unique_ptr<CommBase> comm_base_;
   std::string comm_type_;
 
-  std::mutex robotstatus_mutex_;
-  robotData robotstatus_;
-  double motors_speeds_[4];
-  double trimvalue_;
   std::thread write_to_robot_thread_;
   std::thread motor_speed_update_thread_;
+  std::mutex robotstatus_mutex_;
+
+  /* main data structure */
+  robotData robotstatus_;
+
+  double motors_speeds_[4];
+  double trimvalue_;
+  
   bool estop_;
-  // Motor PID variables
+
   Control::robot_motion_mode_t robot_mode_;
   Control::pid_gains pid_;
   Control::angular_scaling_params angular_scaling_params_;
 
-  enum robot_motors {
-    FRONT_LEFT_MOTOR = 0,
-    FRONT_RIGHT_MOTOR = 1,
-    BACK_LEFT_MOTOR = 2,
-    BACK_RIGHT_MOTOR = 3
-  };
+  vesc::BridgedVescArray vescArray_;
+
 };

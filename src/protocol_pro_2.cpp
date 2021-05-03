@@ -9,12 +9,14 @@ Pro2ProtocolObject::Pro2ProtocolObject(
   angular_scaling_params_ = angular_scale;
   robotstatus_ = {0};
   estop_ = false;
-  motors_speeds_[FRONT_LEFT_MOTOR] = MOTOR_NEUTRAL_;
-  motors_speeds_[FRONT_RIGHT_MOTOR] = MOTOR_NEUTRAL_;
-  motors_speeds_[BACK_LEFT_MOTOR] = MOTOR_NEUTRAL_;
-  motors_speeds_[BACK_RIGHT_MOTOR] = MOTOR_NEUTRAL_;
+  motors_speeds_[FRONT_LEFT] = MOTOR_NEUTRAL_;
+  motors_speeds_[FRONT_RIGHT] = MOTOR_NEUTRAL_;
+  motors_speeds_[BACK_LEFT] = MOTOR_NEUTRAL_;
+  motors_speeds_[BACK_RIGHT] = MOTOR_NEUTRAL_;
   pid_ = pid;
+
   get_params_file();
+
   skid_control_ = std::make_unique<Control::SkidRobotMotionController>(
       Control::TRACTION_CONTROL, robot_geometry_, pid_, MOTOR_MAX_, MOTOR_MIN_,
       left_trim_, right_trim_, geometric_decay_);
@@ -22,6 +24,7 @@ Pro2ProtocolObject::Pro2ProtocolObject(
   skid_control_->setAccelerationLimits({5, 100000});
   skid_control_->setOpenLoopMaxRpm(600);
   skid_control_->setOperatingMode(robot_mode_);
+
   switch (robot_mode_) {
     case Control::OPEN_LOOP:
       robotmode_num_ = 0;
@@ -35,8 +38,14 @@ Pro2ProtocolObject::Pro2ProtocolObject(
       robotmode_num_ = 2;
       break;
   }
+
+  vescArray_ = vesc::BridgedVescArray(
+      std::vector<uint8_t>{VESC_IDS::FRONT_LEFT, VESC_IDS::FRONT_RIGHT,
+                           VESC_IDS::BACK_LEFT, VESC_IDS::BACK_RIGHT});
+
   register_comm_base(device);
   write_to_robot_thread_ = std::thread([this]() { this->send_command(30); });
+
   // Create a motor update thread with 30 mili second sleep timer
   motor_speed_update_thread_ =
       std::thread([this]() { this->motors_control_loop(30); });
@@ -110,46 +119,34 @@ void Pro2ProtocolObject::set_robot_velocity(double *control_array) {
 }
 
 void Pro2ProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
-  static std::vector<uint32_t> msgqueue;
-  robotstatus_mutex_.lock();
-  if (comm_type_ == "can") {
-    if ((robotmsg[0] == 0x001B)) {
+  if (auto parsedMsg = vescArray_.parseReceivedMessage(robotmsg)) {
+    robotstatus_mutex_.lock();
+    switch (parsedMsg->vescId) {
+      case (FRONT_LEFT):
+        robotstatus_.motor1_rpm = parsedMsg->rpm;
+        robotstatus_.motor1_id = parsedMsg->vescId;
+        robotstatus_.motor1_current = parsedMsg->current;
+        break;
+      case (FRONT_RIGHT):
+        robotstatus_.motor2_rpm = parsedMsg->rpm;
+        robotstatus_.motor2_id = parsedMsg->vescId;
+        robotstatus_.motor2_current = parsedMsg->current;
+        break;
+      case (BACK_LEFT):
+        robotstatus_.motor3_rpm = parsedMsg->rpm;
+        robotstatus_.motor3_id = parsedMsg->vescId;
+        robotstatus_.motor3_current = parsedMsg->current;
+        break;
+      case (BACK_RIGHT):
+        robotstatus_.motor4_rpm = parsedMsg->rpm;
+        robotstatus_.motor4_id = parsedMsg->vescId;
+        robotstatus_.motor4_current = parsedMsg->current;
+        break;
+      default:
+        break;
     }
-    if ((robotmsg[0] & 0xFFFFFF00) == 0x80000900) {
-      int vesc_id = robotmsg[0] & 0xFF;
-      int32_t rpm_scaled = ((uint8_t)robotmsg[2] << 24) |
-                           ((uint8_t)robotmsg[3] << 16) |
-                           ((uint8_t)robotmsg[4] << 8) | ((uint8_t)robotmsg[5]);
-      int16_t current_scaled =
-          ((uint8_t)robotmsg[6] << 8) | ((uint8_t)robotmsg[7]);
-      int16_t duty_scaled =
-          (((uint8_t)robotmsg[8] << 8) | ((uint8_t)robotmsg[9]));
-
-      float rpm = (float)rpm_scaled / 1000 * 60;
-      float current = (float)current_scaled / 10;
-      float duty = (float)duty_scaled / 10;
-      if (vesc_id == 0) {
-        robotstatus_.motor1_rpm = rpm;
-        robotstatus_.motor1_id = vesc_id;
-        robotstatus_.motor1_current = current;
-      } else if (vesc_id == 1) {
-        robotstatus_.motor2_rpm = rpm;
-        robotstatus_.motor2_id = vesc_id;
-        robotstatus_.motor2_current = current;
-      } else if (vesc_id == 2) {
-        robotstatus_.motor3_rpm = rpm;
-        robotstatus_.motor3_id = vesc_id;
-        robotstatus_.motor3_current = current;
-      } else if (vesc_id == 3) {
-        robotstatus_.motor4_rpm = rpm;
-        robotstatus_.motor4_id = vesc_id;
-        robotstatus_.motor4_current = current;
-      } else {
-        return;
-      }
-    }
+    robotstatus_mutex_.unlock();
   }
-  robotstatus_mutex_.unlock();
 }
 
 bool Pro2ProtocolObject::is_connected() { return comm_base_->is_connected(); }
@@ -170,36 +167,30 @@ void Pro2ProtocolObject::register_comm_base(const char *device) {
 
 void Pro2ProtocolObject::send_command(int sleeptime) {
   while (true) {
-    if (comm_type_ == "can") {
+    std::vector<std::vector<uint32_t>> messages;
+    for (uint8_t vid = VESC_IDS::FRONT_LEFT; vid > VESC_IDS::BACK_RIGHT; vid++) {
+      
+      
       robotstatus_mutex_.lock();
-      for (int i = 0; i < 4; i++) {
-        int32_t v = static_cast<int32_t>(motors_speeds_[i] * 100000.0);
-        std::vector<uint32_t> write_buffer;
-        if (motors_speeds_[i] == 0 && robotstatus_.linear_vel == 0 &&
-            robotstatus_.angular_vel == 0) {
-          v = 0;
-          write_buffer = {
-              i | 0x80000100U,
-              4,
-              static_cast<uint8_t>((static_cast<uint32_t>(v) >> 24) & 0xFF),
-              static_cast<uint8_t>((static_cast<uint32_t>(v) >> 16) & 0xFF),
-              static_cast<uint8_t>((static_cast<uint32_t>(v) >> 8) & 0xFF),
-              static_cast<uint8_t>(static_cast<uint32_t>(v) & 0xFF)};
-        } else {
-          write_buffer = {
-              i | 0x80000000U,
-              4,
-              static_cast<uint8_t>((static_cast<uint32_t>(v) >> 24) & 0xFF),
-              static_cast<uint8_t>((static_cast<uint32_t>(v) >> 16) & 0xFF),
-              static_cast<uint8_t>((static_cast<uint32_t>(v) >> 8) & 0xFF),
-              static_cast<uint8_t>(static_cast<uint32_t>(v) & 0xFF)};
-        }
-        comm_base_->write_to_device(write_buffer);
-      }
+      int32_t signedMotorCommand = static_cast<int32_t>(
+          motors_speeds_[vid] * vesc::DUTY_COMMAND_SCALING_FACTOR);
+      
+      /* only use current control when robot is stopped to prevent wasted energy
+       */
+      bool useCurrentControl = motors_speeds_[vid] == 0 &&
+                               robotstatus_.linear_vel == 0 &&
+                               robotstatus_.angular_vel == 0;
+
       robotstatus_mutex_.unlock();
-    } else {  //! How did you get here?
-      throw(-3);
+
+      comm_base_->write_to_device(
+          vescArray_.buildCommandMessage((vesc::vescChannelCommand){
+              .vescId = vid,
+              .commandType = (useCurrentControl ? vesc::vescPacketFlags::CURRENT
+                                                : vesc::vescPacketFlags::DUTY),
+              .commandValue = (useCurrentControl ? 0 : signedMotorCommand)}));
     }
+    
     std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));
   }
 }
@@ -258,10 +249,10 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
       auto velocities = skid_control_->getMeasuredVelocities(
           {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
       robotstatus_mutex_.lock();
-      motors_speeds_[FRONT_LEFT_MOTOR] = duty_cycles.fl;
-      motors_speeds_[FRONT_RIGHT_MOTOR] = duty_cycles.fr;
-      motors_speeds_[BACK_LEFT_MOTOR] = duty_cycles.rl;
-      motors_speeds_[BACK_RIGHT_MOTOR] = duty_cycles.rr;
+      motors_speeds_[FRONT_LEFT] = duty_cycles.fl;
+      motors_speeds_[FRONT_RIGHT] = duty_cycles.fr;
+      motors_speeds_[BACK_LEFT] = duty_cycles.rl;
+      motors_speeds_[BACK_RIGHT] = duty_cycles.rr;
       robotstatus_.linear_vel = velocities.linear_velocity;
       robotstatus_.angular_vel = velocities.angular_velocity;
       robotstatus_mutex_.unlock();
@@ -271,10 +262,10 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
       auto velocities = skid_control_->getMeasuredVelocities(
           {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
       robotstatus_mutex_.lock();
-      motors_speeds_[FRONT_LEFT_MOTOR] = MOTOR_NEUTRAL_;
-      motors_speeds_[FRONT_RIGHT_MOTOR] = MOTOR_NEUTRAL_;
-      motors_speeds_[BACK_LEFT_MOTOR] = MOTOR_NEUTRAL_;
-      motors_speeds_[BACK_RIGHT_MOTOR] = MOTOR_NEUTRAL_;
+      motors_speeds_[FRONT_LEFT] = MOTOR_NEUTRAL_;
+      motors_speeds_[FRONT_RIGHT] = MOTOR_NEUTRAL_;
+      motors_speeds_[BACK_LEFT] = MOTOR_NEUTRAL_;
+      motors_speeds_[BACK_RIGHT] = MOTOR_NEUTRAL_;
       robotstatus_.linear_vel = velocities.linear_velocity;
       robotstatus_.angular_vel = velocities.angular_velocity;
       robotstatus_mutex_.unlock();

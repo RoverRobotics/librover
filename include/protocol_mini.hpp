@@ -15,4 +15,4 @@ class RoverRobotics::MiniProtocolObject
       .wheel_radius = 0.09,
       .center_of_mass_x_offset = 0,
       .center_of_mass_y_offset = 0};
-}
+};
