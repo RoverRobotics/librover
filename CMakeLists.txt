@@ -35,5 +35,5 @@ install(TARGETS librover
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 
 add_compile_options(-std=c++17 -DDEBUG -lpthread)
-add_executable(Debug src/debug.cpp)
-target_link_libraries(Debug LINK_PUBLIC librover pthread)
+add_executable(debug.out src/debug.cpp)
+target_link_libraries(debug.out LINK_PUBLIC librover pthread)
