@@ -1,6 +1,7 @@
 #pragma once
 #include "protocol_base.hpp"
 #include "vesc.hpp"
+#include "utilities.hpp"
 
 namespace RoverRobotics {
 class Pro2ProtocolObject;
@@ -96,9 +97,11 @@ class RoverRobotics::Pro2ProtocolObject
   void motors_control_loop(int sleeptime);
 
   void update_params();
-  Utilities::ParamsUtil params_util_;
-  std::string robot_params_path = strcat(std::getenv("HOME"), "robot.config");
-  // robot CONTROL exclusive variables
+
+  std::unique_ptr<Utilities::ParamsUtil> params_util_;
+  const std::string ROBOT_PARAM_PATH = strcat(std::getenv("HOME"), "robot.config");
+  
+
   /* metric units (meters) */
   Control::robot_geometry robot_geometry_ = {.intra_axle_distance = 0.4191,
                                              .wheel_base = 0.46355,
@@ -115,6 +118,14 @@ class RoverRobotics::Pro2ProtocolObject
   float left_trim_ = 1;
   float right_trim_ = 1;
 
+  /* derivative of acceleration */
+  const float LINEAR_JERK_LIMIT_ = 5;
+
+  /* empirically measured */
+  const float OPEN_LOOP_MAX_RPM_ = 600;
+
+  /* limit to the trim that can be applied; more than this means a robot issue*/
+  const float MAX_CURVATURE_CORRECTION_ = .15;
 
   int robotmode_num_ = 0;
 
