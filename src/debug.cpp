@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "librover/protocol_pro_2.hpp"
+#include "protocol_pro_2.hpp"
 #include "time.h"
 using namespace RoverRobotics;
 
