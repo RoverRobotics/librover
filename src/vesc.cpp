@@ -1,4 +1,5 @@
 #include "vesc.hpp"
+#include <iostream>
 
 namespace vesc {
 
@@ -6,7 +7,7 @@ BridgedVescArray::BridgedVescArray(std::vector<uint8_t> vescIds) {
   vescIds_ = vescIds;
 }
 
-std::optional<vescChannelStatus> BridgedVescArray::parseReceivedMessage(
+vescChannelStatus BridgedVescArray::parseReceivedMessage(
     std::vector<uint32_t> robotmsg) {
   /* process valid RPM packets */
   if ((robotmsg[0] & CONTENT_MASK) ==
@@ -32,9 +33,10 @@ std::optional<vescChannelStatus> BridgedVescArray::parseReceivedMessage(
     float duty = (float)duty_scaled * DUTY_SCALING_FACTOR;
 
     return (vescChannelStatus){
-        .vescId = vescId, .current = current, .rpm = rpm, .duty = duty};
+        .vescId = vescId, .current = current, .rpm = rpm, .duty = duty, .dataValid = true};
   } else {
-    return {};
+    return (vescChannelStatus){
+        .vescId = 0, .current = 0, .rpm = 0, .duty = 0, .dataValid = false};
   }
 }
 
@@ -51,7 +53,13 @@ std::vector<uint32_t> BridgedVescArray::buildCommandMessage(
     case (CURRENT):
       command.commandValue /= CURRENT_SCALING_FACTOR;
       break;
+    case (DUTY):
+      std::cerr << "duty before" << command.commandValue << std::endl;
+      command.commandValue *= DUTY_COMMAND_SCALING_FACTOR;
+      std::cerr << "duty after" << command.commandValue << std::endl;
+      break;
     default:
+      std::cerr << "unknown command type" << std::endl;
       exit(-1);
   };
 

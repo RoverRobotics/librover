@@ -364,6 +364,7 @@ SkidRobotMotionController::SkidRobotMotionController(
 }
 
 void SkidRobotMotionController::initializePids() {
+  pid_mutex_.lock();
   switch (operating_mode_) {
     case OPEN_LOOP:
       break;
@@ -389,6 +390,7 @@ void SkidRobotMotionController::initializePids() {
       /* probably throw exception here */
       break;
   }
+  pid_mutex_.unlock();
 }
 void SkidRobotMotionController::setAccelerationLimits(robot_velocities limits) {
   max_linear_acceleration_ = limits.linear_velocity;
@@ -468,11 +470,14 @@ motor_data SkidRobotMotionController::computeMotorCommandsDual_(
       (current_motor_speeds.fr + current_motor_speeds.rr) / 2;
 
   /* run pid, 1 per side */
+
+  pid_mutex_.lock();
   pid_outputs l_pid_output =
       pid_controller_left_->runControl(target_wheel_speeds.fl, left_magnitude);
 
   pid_outputs r_pid_output = pid_controller_right_->runControl(
       target_wheel_speeds.fr, right_magnitude);
+  pid_mutex_.unlock();
 
 #ifdef DEBUG
   pid_controller_left_->writePidDataToCsv(log_file_, l_pid_output);
@@ -502,6 +507,7 @@ motor_data SkidRobotMotionController::computeMotorCommandsDual_(
 motor_data SkidRobotMotionController::computeMotorCommandsQuad_(
     motor_data target_wheel_speeds, motor_data current_motor_speeds) {
   /* run pid, 1 per wheel */
+  pid_mutex_.lock();
   pid_outputs fl_pid_output = pid_controller_fl_->runControl(
       target_wheel_speeds.fl, current_motor_speeds.fl);
 
@@ -513,7 +519,7 @@ motor_data SkidRobotMotionController::computeMotorCommandsQuad_(
 
   pid_outputs rr_pid_output = pid_controller_rr_->runControl(
       target_wheel_speeds.rr, current_motor_speeds.rr);
-
+  pid_mutex_.unlock();
 #ifdef DEBUG
   pid_controller_fl_->writePidDataToCsv(log_file_, fl_pid_output);
   pid_controller_fr_->writePidDataToCsv(log_file_, fr_pid_output);

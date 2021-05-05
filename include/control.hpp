@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <mutex>
 
 #ifdef DEBUG
 #include <ctime>
@@ -198,6 +199,7 @@ class Control::SkidRobotMotionController {
   robot_motion_mode_t operating_mode_;
   robot_geometry robot_geometry_;
 
+  std::mutex pid_mutex_;
   std::unique_ptr<PidController> pid_controller_left_;
   std::unique_ptr<PidController> pid_controller_right_;
 

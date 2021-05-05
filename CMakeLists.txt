@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(librover LANGUAGES CXX DESCRIPTION "C++ Library for communicating with Rover Robotics products")
-set(DEFAULT_BUILD_TYPE CMAKE_CXX_FLAGS_RELEASE)
 
-add_compile_options(-std=c++17 -lpthread)
+add_compile_options(-std=c++17 -lpthread -g -O0)
 #add_compile_options(-std=c++17 -DDEBUG -lpthread)
 
 
@@ -34,6 +33,6 @@ install(TARGETS librover
 
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 
-add_compile_options(-std=c++17 -DDEBUG -lpthread)
+add_compile_options(-std=c++17 -DDEBUG -lpthread -g -O0)
 add_executable(debug.out src/debug.cpp)
 target_link_libraries(debug.out LINK_PUBLIC librover pthread)

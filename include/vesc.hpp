@@ -11,6 +11,7 @@ typedef struct {
   float current;
   float rpm;
   float duty;
+  bool dataValid;
 } vescChannelStatus;
 
 enum vescPacketFlags : uint32_t {
@@ -46,7 +47,7 @@ const uint32_t SEND_MSG_LENGTH = 4;
 class vesc::BridgedVescArray {
  public:
   BridgedVescArray(std::vector<uint8_t> vescIds = std::vector<uint8_t>{0, 1, 2, 3});
-  std::optional<vesc::vescChannelStatus> parseReceivedMessage(
+  vesc::vescChannelStatus parseReceivedMessage(
       std::vector<uint32_t> robotmsg);
   std::vector<uint32_t> buildCommandMessage(
       vesc::vescChannelCommand command);

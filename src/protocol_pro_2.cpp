@@ -5,7 +5,7 @@ Pro2ProtocolObject::Pro2ProtocolObject(
     Control::robot_motion_mode_t robot_mode, Control::pid_gains pid,
     Control::angular_scaling_params angular_scale) {
   /* create object to load/store persistent parameters (ie trim) */
-  params_util_ = std::make_unique<Utilities::ParamsUtil>(ROBOT_PARAM_PATH);
+  //params_util_ = std::make_unique<Utilities::ParamsUtil>(ROBOT_PARAM_PATH);
 
   /* set comm mode: can vs serial vs other */
   comm_type_ = new_comm_type;
@@ -104,7 +104,7 @@ void Pro2ProtocolObject::update_drivetrim(double delta) {
     }
     skid_control_->setTrim(left_trim_, right_trim_);
   }
-  params_util_->write_params("trim", std::to_string(trimvalue_));
+  //params_util_->write_params("trim", std::to_string(trimvalue_));
 }
 
 void Pro2ProtocolObject::send_estop(bool estop) {
@@ -113,9 +113,19 @@ void Pro2ProtocolObject::send_estop(bool estop) {
   robotstatus_mutex_.unlock();
 }
 
-robotData Pro2ProtocolObject::status_request() { return robotstatus_; }
+robotData Pro2ProtocolObject::status_request() { 
+  robotstatus_mutex_.lock();
+  auto returnData = robotstatus_;
+  robotstatus_mutex_.unlock();
+  return returnData; 
+}
 
-robotData Pro2ProtocolObject::info_request() { return robotstatus_; }
+robotData Pro2ProtocolObject::info_request() { 
+  robotstatus_mutex_.lock();
+  auto returnData = robotstatus_;
+  robotstatus_mutex_.unlock();
+  return returnData; 
+}
 
 void Pro2ProtocolObject::set_robot_velocity(double *control_array) {
   robotstatus_mutex_.lock();
@@ -127,28 +137,29 @@ void Pro2ProtocolObject::set_robot_velocity(double *control_array) {
 }
 
 void Pro2ProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
-  if (auto parsedMsg = vescArray_.parseReceivedMessage(robotmsg)) {
+  auto parsedMsg = vescArray_.parseReceivedMessage(robotmsg);
+  if (parsedMsg.dataValid) {
     robotstatus_mutex_.lock();
-    switch (parsedMsg->vescId) {
+    switch (parsedMsg.vescId) {
       case (FRONT_LEFT):
-        robotstatus_.motor1_rpm = parsedMsg->rpm;
-        robotstatus_.motor1_id = parsedMsg->vescId;
-        robotstatus_.motor1_current = parsedMsg->current;
+        robotstatus_.motor1_rpm = parsedMsg.rpm;
+        robotstatus_.motor1_id = parsedMsg.vescId;
+        robotstatus_.motor1_current = parsedMsg.current;
         break;
       case (FRONT_RIGHT):
-        robotstatus_.motor2_rpm = parsedMsg->rpm;
-        robotstatus_.motor2_id = parsedMsg->vescId;
-        robotstatus_.motor2_current = parsedMsg->current;
+        robotstatus_.motor2_rpm = parsedMsg.rpm;
+        robotstatus_.motor2_id = parsedMsg.vescId;
+        robotstatus_.motor2_current = parsedMsg.current;
         break;
       case (BACK_LEFT):
-        robotstatus_.motor3_rpm = parsedMsg->rpm;
-        robotstatus_.motor3_id = parsedMsg->vescId;
-        robotstatus_.motor3_current = parsedMsg->current;
+        robotstatus_.motor3_rpm = parsedMsg.rpm;
+        robotstatus_.motor3_id = parsedMsg.vescId;
+        robotstatus_.motor3_current = parsedMsg.current;
         break;
       case (BACK_RIGHT):
-        robotstatus_.motor4_rpm = parsedMsg->rpm;
-        robotstatus_.motor4_id = parsedMsg->vescId;
-        robotstatus_.motor4_current = parsedMsg->current;
+        robotstatus_.motor4_rpm = parsedMsg.rpm;
+        robotstatus_.motor4_id = parsedMsg.vescId;
+        robotstatus_.motor4_current = parsedMsg.current;
         break;
       default:
         break;
@@ -175,9 +186,11 @@ void Pro2ProtocolObject::register_comm_base(const char *device) {
 
 void Pro2ProtocolObject::send_command(int sleeptime) {
   while (true) {
-    std::vector<std::vector<uint32_t>> messages;
-    for (uint8_t vid = VESC_IDS::FRONT_LEFT; vid > VESC_IDS::BACK_RIGHT;
+
+    /* loop over the motors */
+    for (uint8_t vid = VESC_IDS::FRONT_LEFT; vid < VESC_IDS::BACK_RIGHT;
          vid++) {
+
       robotstatus_mutex_.lock();
       int32_t signedMotorCommand = static_cast<int32_t>(
           motors_speeds_[vid] * vesc::DUTY_COMMAND_SCALING_FACTOR);
@@ -190,12 +203,16 @@ void Pro2ProtocolObject::send_command(int sleeptime) {
 
       robotstatus_mutex_.unlock();
 
-      comm_base_->write_to_device(
-          vescArray_.buildCommandMessage((vesc::vescChannelCommand){
+      auto msg =  vescArray_.buildCommandMessage((vesc::vescChannelCommand){
               .vescId = vid,
               .commandType = (useCurrentControl ? vesc::vescPacketFlags::CURRENT
                                                 : vesc::vescPacketFlags::DUTY),
-              .commandValue = (useCurrentControl ? MOTOR_NEUTRAL_ : signedMotorCommand)}));
+              .commandValue = (useCurrentControl ? MOTOR_NEUTRAL_ : signedMotorCommand)});
+
+      //std::cerr << "message to vesc: " << std::endl;
+      //for (auto m : msg) std::cerr << m << std::endl;
+
+      comm_base_->write_to_device(msg);
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));

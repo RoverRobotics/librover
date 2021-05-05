@@ -3,7 +3,8 @@
 namespace RoverRobotics {
 CommCan::CommCan(const char *device,
                  std::function<void(std::vector<uint32_t>)> parsefunction,
-                 std::vector<uint32_t> setting) {
+                 std::vector<uint32_t> setting):
+                 is_connected_(false) {
   if ((fd = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0) {
     // failed to create socket
     throw(-1);
