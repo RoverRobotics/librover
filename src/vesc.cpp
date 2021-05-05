@@ -54,25 +54,25 @@ std::vector<uint32_t> BridgedVescArray::buildCommandMessage(
       command.commandValue /= CURRENT_SCALING_FACTOR;
       break;
     case (DUTY):
-      std::cerr << "duty before" << command.commandValue << std::endl;
       command.commandValue *= DUTY_COMMAND_SCALING_FACTOR;
-      std::cerr << "duty after" << command.commandValue << std::endl;
       break;
     default:
       std::cerr << "unknown command type" << std::endl;
       exit(-1);
   };
 
+  auto casted_command = static_cast<int32_t> (command.commandValue);
+
   write_buffer = {
       command.vescId | vescPacketFlags::PACKET_FLAG | command.commandType,
       SEND_MSG_LENGTH,
-      static_cast<uint8_t>((static_cast<uint32_t>(command.commandValue) >> 24) &
+      static_cast<uint8_t>((casted_command >> 24) &
                            0xFF),
-      static_cast<uint8_t>((static_cast<uint32_t>(command.commandValue) >> 16) &
+      static_cast<uint8_t>((casted_command >> 16) &
                            0xFF),
-      static_cast<uint8_t>((static_cast<uint32_t>(command.commandValue) >> 8) &
+      static_cast<uint8_t>((casted_command >> 8) &
                            0xFF),
-      static_cast<uint8_t>(static_cast<uint32_t>(command.commandValue) & 0xFF)};
+      static_cast<uint8_t>(casted_command & 0xFF)};
 
   return write_buffer;
 }

@@ -24,7 +24,7 @@ enum vescPacketFlags : uint32_t {
 typedef struct {
   uint8_t vescId;
   vescPacketFlags commandType;
-  int32_t commandValue;
+  float commandValue;
 } vescChannelCommand;
 
 /*

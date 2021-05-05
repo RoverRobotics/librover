@@ -192,8 +192,7 @@ void Pro2ProtocolObject::send_command(int sleeptime) {
          vid++) {
 
       robotstatus_mutex_.lock();
-      int32_t signedMotorCommand = static_cast<int32_t>(
-          motors_speeds_[vid] * vesc::DUTY_COMMAND_SCALING_FACTOR);
+      auto signedMotorCommand = motors_speeds_[vid];
 
       /* only use current control when robot is stopped to prevent wasted energy
        */
@@ -208,9 +207,6 @@ void Pro2ProtocolObject::send_command(int sleeptime) {
               .commandType = (useCurrentControl ? vesc::vescPacketFlags::CURRENT
                                                 : vesc::vescPacketFlags::DUTY),
               .commandValue = (useCurrentControl ? MOTOR_NEUTRAL_ : signedMotorCommand)});
-
-      //std::cerr << "message to vesc: " << std::endl;
-      //for (auto m : msg) std::cerr << m << std::endl;
 
       comm_base_->write_to_device(msg);
     }
@@ -278,6 +274,8 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
           (Control::motor_data){.fl = 0, .fr = 0, .rl = 0, .rr = 0},
           (Control::motor_data){
               .fl = rpm_FL, .fr = rpm_FR, .rl = rpm_BL, .rr = rpm_BR});
+
+      std::cerr << "duty " << duty_cycles.fl << std::endl;
       
       /* compute velocities of robot from wheel rpms */
       auto velocities =
