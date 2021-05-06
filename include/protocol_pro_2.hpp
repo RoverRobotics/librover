@@ -98,8 +98,9 @@ class RoverRobotics::Pro2ProtocolObject
 
   void update_params();
 
-  std::unique_ptr<Utilities::ParamsUtil> params_util_;
-  const std::string ROBOT_PARAM_PATH = strcat(std::getenv("HOME"), "robot.config");
+  std::unique_ptr<Utilities::PersistentParams> persistent_params_;
+
+  const std::string ROBOT_PARAM_PATH = strcat(std::getenv("HOME"), "/robot.config");
   
 
   /* metric units (meters) */

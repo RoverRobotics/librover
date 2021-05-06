@@ -1,46 +1,97 @@
 #include "utilities.hpp"
+#include <algorithm>
 namespace Utilities {
 
-ParamsUtil::ParamsUtil(std::string robot_config_path) {
-  robot_config_path_ = robot_config_path;
-  temp_robot_config_path_ = robot_config_path + ".tmp";
+PersistentParams::PersistentParams(std::string robot_param_path) {
+  robot_param_path_ = robot_param_path;
 }
 
-void ParamsUtil::write_params(std::string replacing_key,
-                              std::string replacing_value) {
-  // open previous config file;
-  std::string const HOME = std::getenv("HOME") ? std::getenv("HOME") : ".";
+std::vector<std::pair<std::string, double>>
+PersistentParams::read_params_from_file_() {
+  /* create the return vector */
+  std::vector<std::pair<std::string, double>> return_data;
+  
+  /* open file */
+  file_rw_.open(robot_param_path_);
 
-  file_reader_.open(robot_config_path_);
-  file_writer_.open(temp_robot_config_path_);
-  if (file_reader_.is_open()) {
+  /* read in all the lines, 1 key/pair per line, ":" delimited */
+  if (file_rw_.is_open()) {
     std::string line;
-    while (std::getline(file_reader_, line)) {
-      std::vector<std::string> key =
-          split(line, ":"); /* get key-value pair into vector */
-      std::vector<std::string> values =
-          split(key[1], " ");        /* get all the values from this key */
-      if (key[0] == replacing_key) { /* check for key */
-        file_writer_ << replacing_key << ":" << replacing_value
-                     << std::endl; /* output modified value instead */
-      } else
-        file_writer_ << line; /* output original value */
+    while (std::getline(file_rw_, line)) {
+      
+      /* split the line into 1 key and 1 value*/
+      std::vector<std::string> key_and_value = split_(line, ":");
+
+      /* extract key and value */
+      std::string key = key_and_value.front();
+      double value = std::stod(key_and_value.back());
+
+      return_data.push_back(std::pair<std::string, double>(key, value));
     }
+  }else{
+    std::cout << "error reading persistent parameter file" << std::endl;
   }
-  file_reader_.close();
-  file_writer_.close();
-  int n = robot_config_path_.length();
-  char robotconfig_path[n + 1];
-  strcpy(robotconfig_path, robot_config_path_.c_str());
-  n = temp_robot_config_path_.length();
-  char newrobotconfig_path[n + 1];
-  strcpy(newrobotconfig_path, temp_robot_config_path_.c_str());
-  if (rename(newrobotconfig_path, robotconfig_path) == 0)
-    puts("Config File Updated");
-  else
-    perror("Error Saving config file");
+
+  file_rw_.close();
+  return return_data;
 }
-std::vector<std::string> ParamsUtil::split(std::string str, std::string token) {
+
+void PersistentParams::write_param(std::string param_name, double value){
+  /* determine if param exists already */
+  auto param_pairs = read_params_from_file_();
+
+  /* build an array of just the keys */
+  std::vector<std::string> keys_only;
+  for(auto it = begin(param_pairs); it != end(param_pairs); ++it) keys_only.push_back(it->first);
+
+  /* search the keys for match to the param_name */
+  auto location = std::find(keys_only.begin(), keys_only.end(), param_name);
+
+  /* parameter already exists, delete from the array */
+  if(location != keys_only.end()){
+    param_pairs.erase(param_pairs.begin() + (location - keys_only.begin()));
+  }
+
+  /* update the pairs array then rewrite the file */
+  param_pairs.push_back(std::pair<std::string, double>(param_name, value));
+
+  /* clear the output file, then write it */
+  file_rw_.open(robot_param_path_, std::ifstream::out | std::ifstream::trunc);
+
+  if(!file_rw_.is_open()){
+    std::cout << "Failed to open persistent param file" << std::endl;
+    return;
+  }
+
+  for(auto pair: param_pairs){
+    file_rw_ << pair.first << ":" << pair.second << std::endl;
+  }
+
+  file_rw_.close();
+  return;
+}
+
+std::optional<double> PersistentParams::read_param(std::string param_name){
+  /* determine if param exists already */
+  auto param_pairs = read_params_from_file_();
+
+  /* build an array of just the keys */
+  std::vector<std::string> keys_only;
+  for(auto it = begin(param_pairs); it != end(param_pairs); ++it) keys_only.push_back(it->first);
+
+  /* search the keys for match to the param_name */
+  auto location = std::find(keys_only.begin(), keys_only.end(), param_name);
+
+  /* parameter already exists, delete from the array */
+  if(location == keys_only.end()){
+    return {};
+  }
+
+  return param_pairs[location - keys_only.begin()].second;
+
+}
+
+std::vector<std::string> PersistentParams::split_(std::string str, std::string token) {
   std::vector<std::string> result;
   while (str.size()) {
     int index = str.find(token);
@@ -56,37 +107,6 @@ std::vector<std::string> ParamsUtil::split(std::string str, std::string token) {
   return result;
 }
 
-std::vector<std::vector<std::string>> ParamsUtil::get_params() {
-  // open yaml
-  std::vector<std::vector<std::string>> params;
-  file_reader_.open(robot_config_path_);
-  if (file_reader_.is_open()) {
-    std::string line;
-    int line_position = -1;
-    while (std::getline(file_reader_, line)) {
-      line_position++;
-      std::vector<std::string> key =
-          split(line, ":");  // get key-value pair into vector
-      std::vector<std::string> values =
-          split(key[1], " ");            // get all the values from this key
-      params[line_position][0] = key[0]; /* get key name */
-      params[line_position].insert(params[line_position].end(), values.begin(),
-                                   values.end());
-    }
-    file_reader_.close();
-    return params;
-  } else {
-    std::cerr << "Failed to load config from " + robot_config_path_
-              << std::endl;
-    std::cerr << "Making a default config at " + robot_config_path_
-              << std::endl;
-    std::ofstream file_writer_;
-    file_writer_.open(robot_config_path_);
-    file_writer_ << "trim:0" << std::endl;
-    file_writer_.close();
-    params[0][0] = "trim";
-    params[0][1] = "0";
-  }
-  return params;
-}
+
+
 }  // namespace Utilities

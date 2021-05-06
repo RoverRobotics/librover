@@ -5,7 +5,10 @@ Pro2ProtocolObject::Pro2ProtocolObject(
     Control::robot_motion_mode_t robot_mode, Control::pid_gains pid,
     Control::angular_scaling_params angular_scale) {
   /* create object to load/store persistent parameters (ie trim) */
-  //params_util_ = std::make_unique<Utilities::ParamsUtil>(ROBOT_PARAM_PATH);
+  persistent_params_ = std::make_unique<Utilities::PersistentParams>(ROBOT_PARAM_PATH);
+  //if(auto test = persistent_params_->read_param("trim")) std::cerr << "trim: " << test.value() << std::endl;
+  //if(auto test = persistent_params_->read_param("foo")) std::cerr << "foo: " << test.value() << std::endl;
+  //if(auto test = persistent_params_->read_param("bar")) std::cerr << "bar: " << test.value() << std::endl;
 
   /* set comm mode: can vs serial vs other */
   comm_type_ = new_comm_type;
@@ -76,16 +79,7 @@ Pro2ProtocolObject::Pro2ProtocolObject(
 }
 
 void Pro2ProtocolObject::update_params() {
-  std::vector<std::vector<std::string>> params = params_util_->get_params();
-  for (const auto &inner : params) {
-    std::vector<std::string> key_pair;
-    for (const auto &item : inner) {
-      key_pair.push_back(item);
-    }
-    if (key_pair[0] == "trim") {
-      trimvalue_ = stof(key_pair[1]);
-    }
-  }
+  
 }
 
 void Pro2ProtocolObject::update_drivetrim(double delta) {

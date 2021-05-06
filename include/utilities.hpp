@@ -8,22 +8,25 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <optional>
 
 namespace Utilities {
 /* classes */
-class ParamsUtil;
+class PersistentParams;
 }  // namespace Utilities
 
-class Utilities::ParamsUtil {
+class Utilities::PersistentParams {
  private:
-  std::string robot_config_path_;
-  std::string temp_robot_config_path_;
-  std::ifstream file_reader_;
-  std::ofstream file_writer_;
-  std::vector<std::string> split(std::string str, std::string token);
+  std::string robot_param_path_;
+  std::fstream file_rw_;
+
+  std::vector<std::pair<std::string, double>> read_params_from_file_();
+
+  std::vector<std::string> split_(std::string str, std::string token);
 
  public:
-  ParamsUtil(std::string robot_config_path);
-  void write_params(std::string replacing_key, std::string replacing_value);
-  std::vector<std::vector<std::string>> get_params();
+  PersistentParams(std::string robot_param_path);
+  void write_param(std::string key, double value);
+  std::optional<double> read_param(std::string key);
+
 };
