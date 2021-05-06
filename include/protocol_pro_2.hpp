@@ -113,8 +113,8 @@ class RoverRobotics::Pro2ProtocolObject
 
   /* max: 1.0, min: 0.0  */
   const float MOTOR_MAX_ = .97;
-  const float MOTOR_MIN_ = .01;
-  float geometric_decay_ = .99;
+  const float MOTOR_MIN_ = .02;
+  float geometric_decay_ = .98;
   float left_trim_ = 1;
   float right_trim_ = 1;
 

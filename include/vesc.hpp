@@ -33,10 +33,10 @@ multiply values FROM VESC after receiving
 divide values TO VESC before sending
 */
 
-const uint32_t RPM_SCALING_FACTOR = 60 / 1000;
-const uint32_t DUTY_SCALING_FACTOR = 1 / 10;
-const uint32_t CURRENT_SCALING_FACTOR = 1 / 10;
-const uint32_t DUTY_COMMAND_SCALING_FACTOR = 100000;
+const float RPM_SCALING_FACTOR = 60.0 / 1000.0;
+const float DUTY_SCALING_FACTOR = 1.0 / 10.0;
+const float CURRENT_SCALING_FACTOR = 1.0 / 10.0;
+const float DUTY_COMMAND_SCALING_FACTOR = 100000.0;
 
 const uint32_t CONTENT_MASK = 0xFFFFFF00;
 const uint32_t ID_MASK = 0x000000FF;

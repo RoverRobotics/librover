@@ -188,7 +188,7 @@ void Pro2ProtocolObject::send_command(int sleeptime) {
   while (true) {
 
     /* loop over the motors */
-    for (uint8_t vid = VESC_IDS::FRONT_LEFT; vid < VESC_IDS::BACK_RIGHT;
+    for (uint8_t vid = VESC_IDS::FRONT_LEFT; vid <= VESC_IDS::BACK_RIGHT;
          vid++) {
 
       robotstatus_mutex_.lock();
@@ -206,7 +206,7 @@ void Pro2ProtocolObject::send_command(int sleeptime) {
               .vescId = vid,
               .commandType = (useCurrentControl ? vesc::vescPacketFlags::CURRENT
                                                 : vesc::vescPacketFlags::DUTY),
-              .commandValue = (useCurrentControl ? MOTOR_NEUTRAL_ : signedMotorCommand)});
+              .commandValue = (useCurrentControl ? (float)MOTOR_NEUTRAL_ : signedMotorCommand)});
 
       comm_base_->write_to_device(msg);
     }
@@ -263,6 +263,11 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
     time_from_msg = robotstatus_.cmd_ts;
     robotstatus_mutex_.unlock();
 
+    // std::cerr << "FL RPM " << rpm_FL << std::endl;
+    // std::cerr << "FR RPM " << rpm_FR << std::endl;
+    // std::cerr << "BL RPM " << rpm_BL << std::endl;
+    // std::cerr << "BR RPM " << rpm_BR << std::endl;
+
     /* compute motion targets if no estop and data is not stale */
     if (!estop_ &&
         (time_now - time_from_msg).count() <= CONTROL_LOOP_TIMEOUT_MS_) {
@@ -275,7 +280,7 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
           (Control::motor_data){
               .fl = rpm_FL, .fr = rpm_FR, .rl = rpm_BL, .rr = rpm_BR});
 
-      std::cerr << "duty " << duty_cycles.fl << std::endl;
+      
       
       /* compute velocities of robot from wheel rpms */
       auto velocities =
