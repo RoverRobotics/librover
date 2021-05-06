@@ -87,6 +87,7 @@ void Pro2ProtocolObject::update_params() {
     }
   }
 }
+
 void Pro2ProtocolObject::update_drivetrim(double delta) {
   if (-MAX_CURVATURE_CORRECTION_ < trimvalue_ &&
       trimvalue_ < MAX_CURVATURE_CORRECTION_) {
@@ -262,11 +263,6 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
     rpm_BR = robotstatus_.motor4_rpm;
     time_from_msg = robotstatus_.cmd_ts;
     robotstatus_mutex_.unlock();
-
-    // std::cerr << "FL RPM " << rpm_FL << std::endl;
-    // std::cerr << "FR RPM " << rpm_FR << std::endl;
-    // std::cerr << "BL RPM " << rpm_BL << std::endl;
-    // std::cerr << "BR RPM " << rpm_BR << std::endl;
 
     /* compute motion targets if no estop and data is not stale */
     if (!estop_ &&

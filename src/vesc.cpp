@@ -19,10 +19,6 @@ vescChannelStatus BridgedVescArray::parseReceivedMessage(
                          ((uint8_t)robotmsg[3] << 16) |
                          ((uint8_t)robotmsg[4] << 8) | ((uint8_t)robotmsg[5]);
 
-
-
-    
-
     /* combine shifted byte values into a single current value */
     int16_t current_scaled =
         ((uint8_t)robotmsg[6] << 8) | ((uint8_t)robotmsg[7]);
@@ -35,9 +31,6 @@ vescChannelStatus BridgedVescArray::parseReceivedMessage(
     float rpm = ((float)rpm_scaled) * RPM_SCALING_FACTOR;
     float current =((float)current_scaled) * CURRENT_SCALING_FACTOR;
     float duty = ((float)duty_scaled) * DUTY_SCALING_FACTOR;
-
-    std::cerr << "rpm scaled " << rpm_scaled << std::endl;
-    std::cerr << "rpm " << rpm << std::endl;
 
     return (vescChannelStatus){
         .vescId = vescId, .current = current, .rpm = rpm, .duty = duty, .dataValid = true};
