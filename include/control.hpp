@@ -6,9 +6,9 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
-#include <mutex>
 
 #ifdef DEBUG
 #include <ctime>
@@ -88,17 +88,51 @@ struct pid_output_limits {
 };
 
 /* useful functions */
+
+/*
+ * @brief Translate linear and angular commands into target wheelspeeds based on
+ * robot geometery
+ * @param target_velocities is the target linear and angular velocities
+ * @param robot_geometry is a description of the robot geometry
+ */
 motor_data computeSkidSteerWheelSpeeds(robot_velocities target_velocities,
                                        robot_geometry robot_geometry);
 
+/*
+ * @brief Limit the acceleration and deceleration of the robot (prevent
+ * tipping/jerking)
+ * @param target_velocities is the target linear and angular velocities
+ * @param measured_velocities is the robot's measured linear and angular
+ * velocities
+ * @param delta_v_limits is the acceleration limits for linear and angular
+ * velocities
+ * @param dt is the time delta between this call to limitAcceleration() and the
+ * previous call
+ */
 robot_velocities limitAcceleration(robot_velocities target_velocities,
                                    robot_velocities measured_velocities,
                                    robot_velocities delta_v_limits, float dt);
 
+/*
+ * @brief Applies scaling to the angular command based on the current linear
+ * velocity
+ * @param target_velocities is the target linear and angular velocities
+ * @param measured_velocities is the robot's measured linear and angular
+ * velocities
+ * @param scaling_params is 2nd order polynomial coefficients for scaling. The
+ * output is: final_angular_command = [ax**2 + bx + c] * input_angular_command ,
+ * where x is the current linear velocity
+ */
 robot_velocities scaleAngularCommand(robot_velocities target_velocities,
                                      robot_velocities measured_velocities,
                                      angular_scaling_params scaling_params);
 
+/*
+ * @brief Computes estimated robot velocities (linear, angular) from wheelspeeds
+ * (ie rpms) and robot geometry
+ * @param wheel_speeds rpm data for each wheel
+ * @param robot_geometry is a description of the robot's geometry
+ */
 robot_velocities computeVelocitiesFromWheelspeeds(
     motor_data wheel_speeds, robot_geometry robot_geometry);
 
@@ -107,21 +141,72 @@ robot_velocities computeVelocitiesFromWheelspeeds(
 class Control::PidController {
  public:
   /* constructors */
+
+  /*
+   * @brief A class for generic PID control
+   * @param pid_gains P, I, and D terms/coefficients/gains
+   * @param name is a human readable name which is assigned to this instance of
+   * the PID controller
+   */
   PidController(pid_gains pid_gains, std::string name);
+
+  /*
+   * @brief A class for generic PID control
+   * @param pid_gains P, I, and D terms/coefficients/gains
+   * @param name is a human readable name which is assigned to this instance of
+   * the PID controller
+   * @param pid_output_limits sets output limits for systems which have bound
+   * input ranges (ie a valve which operates on the control range of [0, 1])
+   */
   PidController(pid_gains pid_gains, pid_output_limits pid_output_limits,
                 std::string name);
 
+  /*
+   * @brief set the pid gains (P, I, D)
+   * @param pid_gains P, I, and D terms/coefficients/gains
+   */
   void setGains(pid_gains pid_gains);
+
+  /*
+   * @brief get the pid gains (P, I, D)
+   */
   pid_gains getGains();
 
+  /*
+   * @brief set the output limits of the PID output
+   * @param pid_output_limits sets output limits for systems which have bound
+   * input ranges (ie a valve which operates on the control range of [0, 1])
+   */
   void setOutputLimits(pid_output_limits pid_output_limits);
+
+  /*
+   * @brief get the output limits of the PID output
+   */
   pid_output_limits getOutputLimits();
 
+  /*
+   * @brief limit the amount of error that can be accumulated/integrated for the I-term
+   * @param error_limit is the limit to the error that can be accumulated
+   */
   void setIntegralErrorLimit(float error_limit);
+
+  /*
+   * @brief limit the amount of error that can be accumulated/integrated for the I-term
+   */
   float getIntegralErrorLimit();
 
+  /*
+   * @brief run the PID loop, compute the PID control output
+   * @param target is the desired value
+   * @param measured is the measured value of the system at present
+   */
   pid_outputs runControl(float target, float measured);
 
+  /*
+   * @brief a datalogging function for the PID class
+   * @param log_file is a file handle for the output file
+   * @param data is the pid_output data
+   */
   void writePidDataToCsv(std::ofstream &log_file, pid_outputs data);
 
  private:
