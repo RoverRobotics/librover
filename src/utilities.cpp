@@ -12,6 +12,7 @@ PersistentParams::read_params_from_file_() {
   std::vector<std::pair<std::string, double>> return_data;
   
   /* open file */
+  file_mutex.lock();
   file_rw_.open(robot_param_path_);
 
   /* read in all the lines, 1 key/pair per line, ":" delimited */
@@ -33,6 +34,7 @@ PersistentParams::read_params_from_file_() {
   }
 
   file_rw_.close();
+  file_mutex.unlock();
   return return_data;
 }
 
@@ -56,6 +58,7 @@ void PersistentParams::write_param(std::string param_name, double value){
   param_pairs.push_back(std::pair<std::string, double>(param_name, value));
 
   /* clear the output file, then write it */
+  file_mutex.lock();
   file_rw_.open(robot_param_path_, std::ifstream::out | std::ifstream::trunc);
 
   if(!file_rw_.is_open()){
@@ -68,6 +71,7 @@ void PersistentParams::write_param(std::string param_name, double value){
   }
 
   file_rw_.close();
+  file_mutex.unlock();
   return;
 }
 
@@ -106,7 +110,5 @@ std::vector<std::string> PersistentParams::split_(std::string str, std::string t
   }
   return result;
 }
-
-
 
 }  // namespace Utilities

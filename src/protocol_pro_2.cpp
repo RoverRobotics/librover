@@ -4,11 +4,9 @@ Pro2ProtocolObject::Pro2ProtocolObject(
     const char *device, std::string new_comm_type,
     Control::robot_motion_mode_t robot_mode, Control::pid_gains pid,
     Control::angular_scaling_params angular_scale) {
+  
   /* create object to load/store persistent parameters (ie trim) */
   persistent_params_ = std::make_unique<Utilities::PersistentParams>(ROBOT_PARAM_PATH);
-  //if(auto test = persistent_params_->read_param("trim")) std::cerr << "trim: " << test.value() << std::endl;
-  //if(auto test = persistent_params_->read_param("foo")) std::cerr << "foo: " << test.value() << std::endl;
-  //if(auto test = persistent_params_->read_param("bar")) std::cerr << "bar: " << test.value() << std::endl;
 
   /* set comm mode: can vs serial vs other */
   comm_type_ = new_comm_type;
@@ -36,32 +34,35 @@ Pro2ProtocolObject::Pro2ProtocolObject(
   skid_control_ = std::make_unique<Control::SkidRobotMotionController>(
       Control::TRACTION_CONTROL, robot_geometry_, pid_, MOTOR_MAX_, MOTOR_MIN_,
       left_trim_, right_trim_, geometric_decay_);
-  skid_control_->setAngularScaling(angular_scaling_params_);
 
-  /* by default, limit the linear acceleration but not the angular */
-  skid_control_->setAccelerationLimits((Control::robot_velocities){
-      .linear_velocity = LINEAR_JERK_LIMIT_,
-      .angular_velocity = std::numeric_limits<float>::max()});
+  /* MUST be done after skid control is constructed */
+  load_persistent_params();
+
+  /* set some default params */
   skid_control_->setOpenLoopMaxRpm(OPEN_LOOP_MAX_RPM_);
-  skid_control_->setOperatingMode(robot_mode_);
+  skid_control_->setAngularScaling(angular_scaling_params_);
 
   /* make an object to decode and encode motor controller messages*/
   vescArray_ = vesc::BridgedVescArray(
       std::vector<uint8_t>{VESC_IDS::FRONT_LEFT, VESC_IDS::FRONT_RIGHT,
                            VESC_IDS::BACK_LEFT, VESC_IDS::BACK_RIGHT});
 
-  /* maintain a variable to track the robot operating mode*/
+  /* set mode specific limits */
   switch (robot_mode_) {
     case Control::OPEN_LOOP:
-      robotmode_num_ = 0;
+      skid_control_->setOperatingMode(Control::OPEN_LOOP);
       skid_control_->setAccelerationLimits({std::numeric_limits<float>::max(),
                                             std::numeric_limits<float>::max()});
       break;
     case Control::TRACTION_CONTROL:
-      robotmode_num_ = 1;
+      skid_control_->setOperatingMode(Control::TRACTION_CONTROL);
+      skid_control_->setAccelerationLimits(
+          {LINEAR_JERK_LIMIT_, std::numeric_limits<float>::max()});
       break;
     case Control::INDEPENDENT_WHEEL:
-      robotmode_num_ = 2;
+      skid_control_->setOperatingMode(Control::INDEPENDENT_WHEEL);
+      skid_control_->setAccelerationLimits(
+          {LINEAR_JERK_LIMIT_, std::numeric_limits<float>::max()});
       break;
   }
 
@@ -78,13 +79,18 @@ Pro2ProtocolObject::Pro2ProtocolObject(
       std::thread([this]() { this->motors_control_loop(30); });
 }
 
-void Pro2ProtocolObject::update_params() {
+void Pro2ProtocolObject::load_persistent_params() {
   
+  /* trim (aka curvature correction) */
+  if(auto param = persistent_params_->read_param("trim")){
+    update_drivetrim(param.value());
+    std::cout << "Loaded trim from persistent param file: " << param.value() << std::endl;
+  }
 }
 
 void Pro2ProtocolObject::update_drivetrim(double delta) {
-  if (-MAX_CURVATURE_CORRECTION_ < trimvalue_ &&
-      trimvalue_ < MAX_CURVATURE_CORRECTION_) {
+
+  if (-MAX_CURVATURE_CORRECTION_ < (trimvalue_ + delta) && (trimvalue_ + delta) < MAX_CURVATURE_CORRECTION_) {
     trimvalue_ += delta;
 
     /* reduce power to right wheels */
@@ -98,8 +104,10 @@ void Pro2ProtocolObject::update_drivetrim(double delta) {
       left_trim_ = 1 + trimvalue_;
     }
     skid_control_->setTrim(left_trim_, right_trim_);
+    std::cout << "writing trim " << trimvalue_ << " to file " << std::endl;
+    persistent_params_->write_param("trim", trimvalue_);
   }
-  //params_util_->write_params("trim", std::to_string(trimvalue_));
+  
 }
 
 void Pro2ProtocolObject::send_estop(bool estop) {
@@ -211,27 +219,27 @@ void Pro2ProtocolObject::send_command(int sleeptime) {
 }
 
 int Pro2ProtocolObject::cycle_robot_mode() {
-  if (robotmode_num_ < 2) {
-    robotmode_num_ += 1;
-  } else
-    robotmode_num_ = 0;
+  
+  robotmode_num_ = ++robotmode_num_ % (Control::NUM_MOTION_MODES);
+ 
   switch (robotmode_num_) {
-    case 0:
+    case Control::OPEN_LOOP:
       skid_control_->setOperatingMode(Control::OPEN_LOOP);
       skid_control_->setAccelerationLimits({std::numeric_limits<float>::max(),
                                             std::numeric_limits<float>::max()});
       break;
-    case 1:
+    case Control::TRACTION_CONTROL:
       skid_control_->setOperatingMode(Control::TRACTION_CONTROL);
       skid_control_->setAccelerationLimits(
           {LINEAR_JERK_LIMIT_, std::numeric_limits<float>::max()});
       break;
-    case 2:
+    case Control::INDEPENDENT_WHEEL:
       skid_control_->setOperatingMode(Control::INDEPENDENT_WHEEL);
       skid_control_->setAccelerationLimits(
           {LINEAR_JERK_LIMIT_, std::numeric_limits<float>::max()});
       break;
   }
+  std::cout << "robot_mode: " << robotmode_num_ << std::endl;
   return robotmode_num_;
 }
 

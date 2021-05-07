@@ -26,10 +26,12 @@ class AlphaBetaFilter;
 
 /* datatypes */
 typedef enum {
-  OPEN_LOOP,
-  TRACTION_CONTROL,
-  INDEPENDENT_WHEEL
+  OPEN_LOOP = 0,
+  TRACTION_CONTROL = 1,
+  INDEPENDENT_WHEEL = 2,
 } robot_motion_mode_t;
+
+const uint8_t NUM_MOTION_MODES = 3;
 
 struct angular_scaling_params {
   float a_coef;

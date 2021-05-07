@@ -96,7 +96,11 @@ class RoverRobotics::Pro2ProtocolObject
    */
   void motors_control_loop(int sleeptime);
 
-  void update_params();
+  /*
+   * @brief loads the persistent parameters from a non-volatile config file
+   * 
+   */
+  void load_persistent_params();
 
   std::unique_ptr<Utilities::PersistentParams> persistent_params_;
 
@@ -128,7 +132,7 @@ class RoverRobotics::Pro2ProtocolObject
   /* limit to the trim that can be applied; more than this means a robot issue*/
   const float MAX_CURVATURE_CORRECTION_ = .15;
 
-  int robotmode_num_ = 0;
+  int robotmode_num_ = Control::INDEPENDENT_WHEEL;
 
   const double CONTROL_LOOP_TIMEOUT_MS_ = 400;
 
@@ -144,7 +148,7 @@ class RoverRobotics::Pro2ProtocolObject
   robotData robotstatus_;
 
   double motors_speeds_[4];
-  double trimvalue_;
+  double trimvalue_ = 0;
   
   bool estop_;
 
