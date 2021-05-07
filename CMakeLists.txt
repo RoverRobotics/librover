@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.8.0)
 project(librover LANGUAGES CXX DESCRIPTION "C++ Library for communicating with Rover Robotics products")
 
 add_compile_options(-std=c++17 -lpthread -g -O0)
