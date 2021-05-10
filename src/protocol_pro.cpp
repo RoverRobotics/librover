@@ -22,7 +22,7 @@ ProProtocolObject::ProProtocolObject(const char *device, std::string new_comm_ty
       BATTERY_VOLTAGE_A};
   pid_ = pid;
   PidGains oldgain = {pid_.kp, pid_.ki , pid_.kd};
-  if (robot_mode_ == Control::INDEPENDENT_WHEEL)
+  if (robot_mode_ != Control::OPEN_LOOP)
     closed_loop_ = true;
   else
     closed_loop_ = false;
