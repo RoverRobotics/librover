@@ -22,7 +22,7 @@ ProProtocolObject::ProProtocolObject(const char *device, std::string new_comm_ty
       BATTERY_VOLTAGE_A};
   pid_ = pid;
   PidGains oldgain = {pid_.kp, pid_.ki , pid_.kd};
-  if (robot_mode_ = Control::INDEPENDENT_WHEEL)
+  if (robot_mode_ == Control::INDEPENDENT_WHEEL)
     closed_loop_ = true;
   else
     closed_loop_ = false;
@@ -153,7 +153,7 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
     while (msgqueue[startbyte_index] != startbyte_ &&
            startbyte_index < msgqueue.size())
       startbyte_index++;
-    if (startbyte_index > msgqueue.size()) {
+    if (startbyte_index >= msgqueue.size()) {
       msgqueue.clear();
       return;
     } else {
