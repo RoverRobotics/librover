@@ -153,7 +153,7 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
     while (msgqueue[startbyte_index] != startbyte_ &&
            startbyte_index < msgqueue.size())
       startbyte_index++;
-    if (startbyte_index > msgqueue.size()) {
+    if (startbyte_index >= msgqueue.size()) {
       msgqueue.clear();
       return;
     } else {
