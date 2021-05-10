@@ -50,7 +50,7 @@ void ProProtocolObject::send_estop(bool estop) {
   robotstatus_mutex_.unlock();
 }
 
-robotData ProProtocolObject::status_request() { return robotstatus_; }
+robotData ProProtocolObject::status_request() { std::cerr << robotstatus_.motor1_rpm << std::endl ; return robotstatus_; }
 
 robotData ProProtocolObject::info_request() { return robotstatus_; }
 
@@ -179,7 +179,7 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
     checksum = 255 - (dataNO + data1 + data2) % 255;
     read_checksum = (unsigned char)msgqueue[4];
     if (checksum == read_checksum) {  // verify checksum
-      int b = (data1 << 8) + data2;
+      int16_t b = (data1 << 8) + data2;
       switch (int(dataNO)) {
         case REG_PWR_TOTAL_CURRENT:
           break;
