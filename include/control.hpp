@@ -412,14 +412,16 @@ class Control::SkidRobotMotionController {
   angular_scaling_params getAngularScaling();
 
   /*
-   * @brief compute the duty cycles for each motor based on the target, current speed, and current duty cycle
+   * @brief compute the duty cycles for each motor based on the target, current
+   * speed, and current duty cycle
    */
   motor_data runMotionControl(robot_velocities velocity_targets,
                               motor_data current_duty_cycles,
                               motor_data current_motor_speeds);
 
   /*
-   * @brief get an estimate of the robot's velocities from the motor_speeds (derived)
+   * @brief get an estimate of the robot's velocities from the motor_speeds
+   * (derived)
    */
   robot_velocities getMeasuredVelocities(motor_data current_motor_speeds);
 
