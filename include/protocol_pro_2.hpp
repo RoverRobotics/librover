@@ -1,16 +1,27 @@
 #pragma once
-
 #include "protocol_base.hpp"
+#include "vesc.hpp"
+#include "utilities.hpp"
 
 namespace RoverRobotics {
-class ProProtocolObject;
+class Pro2ProtocolObject;
+
+enum VESC_IDS{
+  FRONT_LEFT = 0,
+  FRONT_RIGHT = 1,
+  BACK_LEFT = 2,
+  BACK_RIGHT = 3
+};
+
 }
-class RoverRobotics::ProProtocolObject
+
+class RoverRobotics::Pro2ProtocolObject
     : public RoverRobotics::BaseProtocolObject {
  public:
-  ProProtocolObject(const char* device, std::string new_comm_type,
-                    Control::robot_motion_mode_t robot_mode,
-                    Control::pid_gains pid);
+  Pro2ProtocolObject(const char *device, std::string new_comm_type,
+                     Control::robot_motion_mode_t robot_mode,
+                     Control::pid_gains pid,
+                     Control::angular_scaling_params angular_scale);
   /*
    * @brief Trim Robot Velocity
    * Modify robot velocity differential (between the left side/right side) with
@@ -46,7 +57,7 @@ class RoverRobotics::ProProtocolObject
    * mode, motor power is roughly proportional to commanded velocity.
    * @param controllarray an double array of control in m/s
    */
-  void set_robot_velocity(double* controllarray) override;
+  void set_robot_velocity(double *controllarray) override;
   /*
    * @brief Unpack bytes from the robot
    * This is meant to use as a callback function when there are bytes available
@@ -67,9 +78,9 @@ class RoverRobotics::ProProtocolObject
   int cycle_robot_mode() override;
   /*
    * @brief Attempt to make connection to robot via device
-   * @param device is the address of the device (ttyUSB0 , can0, ttyACM0)
+   * @param device is the address of the device (ttyUSB0 , can0, ttyACM0, etc)
    */
-  void register_comm_base(const char* device) override;
+  void register_comm_base(const char *device) override;
 
  private:
   /*
@@ -78,80 +89,73 @@ class RoverRobotics::ProProtocolObject
    * @param sleeptime sleep time between each cycle
    * @param datalist list of data to request
    */
-  void send_command(int sleeptime, std::vector<uint32_t> datalist);
+  void send_command(int sleeptime);
   /*
    * @brief Thread Driven function update the robot motors using pid
    * @param sleeptime sleep time between each cycle
    */
   void motors_control_loop(int sleeptime);
-  const float MOTOR_RPM_TO_MPS_RATIO_ = 13749 / 1.26 / 0.72;
-  const int MOTOR_NEUTRAL_ = 125;
-  const int MOTOR_MAX_ = 250;
-  const int MOTOR_MIN_ = 0;
 
-  const unsigned char startbyte_ = 253;
-  const int requestbyte_ = 10;
-  const int termios_baud_code_ = 4097;  // THIS = baudrate of 57600
-  const int RECEIVE_MSG_LEN_ = 5;
-  const double odom_angular_coef_ = 2.3;
-  const double odom_traction_factor_ = 0.7;
-  const double CONTROL_LOOP_TIMEOUT_MS_ = 200;
+  /*
+   * @brief loads the persistent parameters from a non-volatile config file
+   * 
+   */
+  void load_persistent_params();
+
+  std::unique_ptr<Utilities::PersistentParams> persistent_params_;
+
+  const std::string ROBOT_PARAM_PATH = strcat(std::getenv("HOME"), "/robot.config");
+  
+
+  /* metric units (meters) */
+  Control::robot_geometry robot_geometry_ = {.intra_axle_distance = 0.4191,
+                                             .wheel_base = 0.46355,
+                                             .wheel_radius = 0.1397,
+                                             .center_of_mass_x_offset = 0,
+                                             .center_of_mass_y_offset = 0};
+  const float MOTOR_RPM_TO_MPS_RATIO_ = 13749 / 1.26 / 0.72;
+  const int MOTOR_NEUTRAL_ = 0;
+
+  /* max: 1.0, min: 0.0  */
+  const float MOTOR_MAX_ = .97;
+  const float MOTOR_MIN_ = .02;
+  float geometric_decay_ = .98;
+  float left_trim_ = 1;
+  float right_trim_ = 1;
+
+  /* derivative of acceleration */
+  const float LINEAR_JERK_LIMIT_ = 5;
+
+  /* empirically measured */
+  const float OPEN_LOOP_MAX_RPM_ = 600;
+
+  /* limit to the trim that can be applied; more than this means a robot issue*/
+  const float MAX_CURVATURE_CORRECTION_ = .15;
+
+  int robotmode_num_ = Control::INDEPENDENT_WHEEL;
+
+  const double CONTROL_LOOP_TIMEOUT_MS_ = 400;
+
+  std::unique_ptr<Control::SkidRobotMotionController> skid_control_;
   std::unique_ptr<CommBase> comm_base_;
   std::string comm_type_;
 
+  std::thread write_to_robot_thread_;
+  std::thread motor_speed_update_thread_;
   std::mutex robotstatus_mutex_;
+
+  /* main data structure */
   robotData robotstatus_;
-  double motors_speeds_[3];
-  double trimvalue_;
-  std::thread fast_data_write_thread_;
-  std::thread slow_data_write_thread_;
-  std::thread motor_commands_update_thread_;
+
+  double motors_speeds_[4];
+  double trimvalue_ = 0;
+  
   bool estop_;
-  bool closed_loop_;
-  // Motor PID variables
-  OdomControl motor1_control_;
-  OdomControl motor2_control_;
+
   Control::robot_motion_mode_t robot_mode_;
   Control::pid_gains pid_;
+  Control::angular_scaling_params angular_scaling_params_;
 
-  enum robot_motors { LEFT_MOTOR, RIGHT_MOTOR, FLIPPER_MOTOR };
+  vesc::BridgedVescArray vescArray_;
 
-  enum uart_param {
-    REG_PWR_TOTAL_CURRENT = 0,
-    REG_MOTOR_FB_RPM_LEFT = 2,
-    REG_MOTOR_FB_RPM_RIGHT = 4,
-    REG_FLIPPER_FB_POSITION_POT1 = 6,
-    REG_FLIPPER_FB_POSITION_POT2 = 8,
-    REG_MOTOR_FB_CURRENT_LEFT = 10,
-    REG_MOTOR_FB_CURRENT_RIGHT = 12,
-    REG_MOTOR_ENCODER_COUNT_LEFT = 14,
-    REG_MOTOR_ENCODER_COUNT_RIGHT = 16,
-    REG_MOTOR_FAULT_FLAG_LEFT = 18,
-    REG_MOTOR_TEMP_LEFT = 20,
-    REG_MOTOR_TEMP_RIGHT = 22,
-    REG_PWR_BAT_VOLTAGE_A = 24,
-    REG_PWR_BAT_VOLTAGE_B = 26,
-    EncoderInterval_0 = 28,
-    EncoderInterval_1 = 30,
-    EncoderInterval_2 = 32,
-    REG_ROBOT_REL_SOC_A = 34,
-    REG_ROBOT_REL_SOC_B = 36,
-    REG_MOTOR_CHARGER_STATE = 38,
-    BuildNO = 40,
-    REG_PWR_A_CURRENT = 42,
-    REG_PWR_B_CURRENT = 44,
-    REG_MOTOR_FLIPPER_ANGLE = 46,
-    to_computer_REG_MOTOR_SIDE_FAN_SPEED = 48,
-    to_computer_REG_MOTOR_SLOW_SPEED = 50,
-    BATTERY_STATUS_A = 52,
-    BATTERY_STATUS_B = 54,
-    BATTERY_MODE_A = 56,
-    BATTERY_MODE_B = 58,
-    BATTERY_TEMP_A = 60,
-    BATTERY_TEMP_B = 62,
-    BATTERY_VOLTAGE_A = 64,
-    BATTERY_VOLTAGE_B = 66,
-    BATTERY_CURRENT_A = 68,
-    BATTERY_CURRENT_B = 70
-  };
 };

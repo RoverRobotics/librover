@@ -2,11 +2,11 @@
 
 namespace RoverRobotics {
 
-ProProtocolObject::ProProtocolObject(const char *device,
-                                     std::string new_comm_type,
-                                     bool closed_loop, PidGains pid) {
+ProProtocolObject::ProProtocolObject(const char *device, std::string new_comm_type,
+                  Control::robot_motion_mode_t robot_mode,
+                  Control::pid_gains pid) {
   comm_type_ = new_comm_type;
-  closed_loop_ = closed_loop;
+  robot_mode_ = robot_mode;
   robotstatus_ = {0};
   estop_ = false;
   motors_speeds_[LEFT_MOTOR] = MOTOR_NEUTRAL_;
@@ -21,18 +21,23 @@ ProProtocolObject::ProProtocolObject(const char *device,
       REG_MOTOR_CHARGER_STATE,   BuildNO,
       BATTERY_VOLTAGE_A};
   pid_ = pid;
-  motor1_control_ = OdomControl(closed_loop_, pid_, 1.5, 0);
-  motor2_control_ = OdomControl(closed_loop_, pid_, 1.5, 0);
+  PidGains oldgain = {pid_.kp, pid_.ki , pid_.kd};
+  if (robot_mode_ != Control::OPEN_LOOP)
+    closed_loop_ = true;
+  else
+    closed_loop_ = false;
+  motor1_control_ = OdomControl(closed_loop_, oldgain, 1.5, 0);
+  motor2_control_ = OdomControl(closed_loop_, oldgain, 1.5, 0);
 
   register_comm_base(device);
 
   // Create a New Thread with 30 mili seconds sleep timer
   fast_data_write_thread_ =
-      std::thread([this, fast_data]() { this->sendCommand(30, fast_data); });
+      std::thread([this, fast_data]() { this->send_command(30, fast_data); });
   // Create a new Thread with 50 mili seconds sleep timer
   slow_data_write_thread_ =
-      std::thread([this, slow_data]() { this->sendCommand(50, slow_data); });
-  // Create a motor update thread with 30 mili second sleep timer 
+      std::thread([this, slow_data]() { this->send_command(50, slow_data); });
+  // Create a motor update thread with 30 mili second sleep timer
   motor_commands_update_thread_ =
       std::thread([this]() { this->motors_control_loop(30); });
 }
@@ -45,7 +50,7 @@ void ProProtocolObject::send_estop(bool estop) {
   robotstatus_mutex_.unlock();
 }
 
-robotData ProProtocolObject::status_request() { return robotstatus_; }
+robotData ProProtocolObject::status_request() { std::cerr << robotstatus_.motor1_rpm << std::endl ; return robotstatus_; }
 
 robotData ProProtocolObject::info_request() { return robotstatus_; }
 
@@ -118,19 +123,19 @@ void ProProtocolObject::motors_control_loop(int sleeptime) {
     // motor speeds in m/s
     motors_speeds_[LEFT_MOTOR] =
         motor1_control_.run(motor1_vel, motor1_measured_vel,
-                           pid_update_elapsedtime / 1000, firmware);
+                            pid_update_elapsedtime / 1000, firmware);
     motors_speeds_[RIGHT_MOTOR] =
         motor2_control_.run(motor2_vel, motor2_measured_vel,
-                           pid_update_elapsedtime / 1000, firmware);
+                            pid_update_elapsedtime / 1000, firmware);
 
     // Convert to 8 bit Command
     motors_speeds_[LEFT_MOTOR] = motor1_control_.boundMotorSpeed(
-        int(round(motors_speeds_[LEFT_MOTOR] * 50 + MOTOR_NEUTRAL_)), MOTOR_MAX_,
-        MOTOR_MIN_);
+        int(round(motors_speeds_[LEFT_MOTOR] * 50 + MOTOR_NEUTRAL_)),
+        MOTOR_MAX_, MOTOR_MIN_);
 
     motors_speeds_[RIGHT_MOTOR] = motor2_control_.boundMotorSpeed(
-        int(round(motors_speeds_[RIGHT_MOTOR] * 50 + MOTOR_NEUTRAL_)), MOTOR_MAX_,
-        MOTOR_MIN_);
+        int(round(motors_speeds_[RIGHT_MOTOR] * 50 + MOTOR_NEUTRAL_)),
+        MOTOR_MAX_, MOTOR_MIN_);
     robotstatus_mutex_.unlock();
     time_last = time_now;
   }
@@ -148,7 +153,7 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
     while (msgqueue[startbyte_index] != startbyte_ &&
            startbyte_index < msgqueue.size())
       startbyte_index++;
-    if (startbyte_index > msgqueue.size()) {
+    if (startbyte_index >= msgqueue.size()) {
       msgqueue.clear();
       return;
     } else {
@@ -165,7 +170,6 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
   }
   if ((unsigned char)msgqueue[0] == startbyte_ &&
       msgqueue.size() >= RECEIVE_MSG_LEN_) {  // if valid start byte
-    if (DEBUG) std::cerr << "start byte found!";
     unsigned char start_byte_read, data1, data2, dataNO, checksum,
         read_checksum;
     start_byte_read = (unsigned char)msgqueue[0];
@@ -175,7 +179,7 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
     checksum = 255 - (dataNO + data1 + data2) % 255;
     read_checksum = (unsigned char)msgqueue[4];
     if (checksum == read_checksum) {  // verify checksum
-      int b = (data1 << 8) + data2;
+      int16_t b = (data1 << 8) + data2;
       switch (int(dataNO)) {
         case REG_PWR_TOTAL_CURRENT:
           break;
@@ -299,7 +303,6 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
       temp.clear();
     } else {  // !Found start byte but the msg contents were invalid, throw away
               // broken message
-      if (DEBUG) std::cerr << "failed checksum" << std::endl;
       std::vector<uint32_t> temp;
       for (int x = 1; x < msgqueue.size(); x++) {
         temp.push_back(msgqueue[x]);
@@ -312,24 +315,26 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
 
   } else {
     // !ran out of data; waiting for more
-    if (DEBUG) std::cerr << "no start byte found!";
   }
-  if (DEBUG) std::cerr << std::endl;
   robotstatus_mutex_.unlock();
 }
 
 bool ProProtocolObject::is_connected() { return comm_base_->is_connected(); }
 
+int ProProtocolObject::cycle_robot_mode() {
+  // TODO
+  return 0;
+}
 void ProProtocolObject::register_comm_base(const char *device) {
   if (comm_type_ == "serial") {
-    std::vector<uint32_t> setting_;
-    setting_.push_back(termios_baud_code_);
-    setting_.push_back(RECEIVE_MSG_LEN_);
+    std::vector<uint32_t> setting;
+    setting.push_back(termios_baud_code_);
+    setting.push_back(RECEIVE_MSG_LEN_);
     try {
       comm_base_ = std::make_unique<CommSerial>(
           device, [this](std::vector<uint32_t> c) { unpack_comm_response(c); },
-          setting_);
-    } catch (int i){
+          setting);
+    } catch (int i) {
       throw(i);
     }
 
@@ -338,8 +343,8 @@ void ProProtocolObject::register_comm_base(const char *device) {
   }
 }
 
-void ProProtocolObject::sendCommand(int sleeptime,
-                                    std::vector<uint32_t> datalist) {
+void ProProtocolObject::send_command(int sleeptime,
+                                     std::vector<uint32_t> datalist) {
   while (true) {
     for (int x : datalist) {
       if (comm_type_ == "serial") {

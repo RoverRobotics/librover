@@ -1,9 +1,10 @@
 CMakeCache.txt
-CMakeFiles/
-Makefile
 cmake_install.cmake
-install_manifest.txt
+CMakeFiles/*
+Makefile
 librover-common.a
 liblibrover.a
 liblibrover.so
-.vscode/extensions.json
+.vscode/*
+debug.out
+install_manifest.txt
