@@ -10,6 +10,7 @@ CommSerial::CommSerial(const char *device,
 
   struct termios tty;
   if (tcgetattr(serial_port_, &tty) != 0) {
+    std::cerr << "error" ;
     throw(-1);
     return;
   }
@@ -45,6 +46,7 @@ CommSerial::CommSerial(const char *device,
   read_size_ = (int)setting[1];
   // Save tty settings, also checking for error
   if (tcsetattr(serial_port_, TCSANOW, &tty) != 0) {
+    std::cerr << "error saving tty settings" ;
     throw(-1);
     return;
   }
