@@ -140,7 +140,7 @@ void ProProtocolObject::motors_control_loop(int sleeptime) {
     time_last = time_now;
   }
 }
-void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
+void ProProtocolObject::unpack_comm_response(std::vector<unsigned char> robotmsg) {
   static std::vector<uint32_t> msgqueue;
   robotstatus_mutex_.lock();
   msgqueue.insert(msgqueue.end(), robotmsg.begin(),
@@ -332,7 +332,7 @@ void ProProtocolObject::register_comm_base(const char *device) {
     setting.push_back(RECEIVE_MSG_LEN_);
     try {
       comm_base_ = std::make_unique<CommSerial>(
-          device, [this](std::vector<uint32_t> c) { unpack_comm_response(c); },
+          device, [this](std::vector<unsigned char> c) { unpack_comm_response(c); },
           setting);
     } catch (int i) {
       throw(i);
@@ -349,7 +349,7 @@ void ProProtocolObject::send_command(int sleeptime,
     for (int x : datalist) {
       if (comm_type_ == "serial") {
         robotstatus_mutex_.lock();
-        std::vector<uint32_t> write_buffer = {
+        std::vector<unsigned char> write_buffer = {
             (unsigned char)startbyte_,
             (unsigned char)int(motors_speeds_[LEFT_MOTOR]),
             (unsigned char)int(motors_speeds_[RIGHT_MOTOR]),

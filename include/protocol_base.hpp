@@ -53,7 +53,7 @@ class RoverRobotics::BaseProtocolObject {
    * @param std::vector<uin32_t> Bytes stream from the robot
    * @return structure of statusData
    */
-  virtual void unpack_comm_response(std::vector<uint32_t>) = 0;
+  virtual void unpack_comm_response(std::vector<unsigned char>) = 0;
   /*
    * @brief Check if Communication still exist
    * @return bool true = connected false = disconnected

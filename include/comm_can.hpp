@@ -17,21 +17,21 @@ class RoverRobotics::CommCan : public RoverRobotics::CommBase {
    * @param callbackfunction
    * @param settings
    */
-  CommCan(const char *device, std::function<void(std::vector<uint32_t>)>,
-          std::vector<uint32_t>);
+  CommCan(const char *device, std::function<void(std::vector<unsigned char>)>,
+          std::vector<unsigned char>);
   /*
    * @brief Write data to Can Device
    * by accepting a vector of unsigned int 32 and convert it to a byte stream
    * @param msg message to convert and write to device
    */
-  void write_to_device(std::vector<uint32_t> msg);
+  void write_to_device(std::vector<unsigned char> msg);
   /*
    * @brief Read data from Can Device
    * by reading the current device buffer then convert to a vector of unsigned
    * int 32.
    * @param callback to process the unsigned int 32.
    */
-  void read_device_loop(std::function<void(std::vector<uint32_t>)>);
+  void read_device_loop(std::function<void(std::vector<unsigned char>)>);
   /*
    * @brief Check if Can device is still connected by check the state of the
    * file descriptor

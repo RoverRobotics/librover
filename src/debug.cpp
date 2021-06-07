@@ -24,16 +24,17 @@ int main() {
     // std::cout << status.angular_vel << std::endl;
 
     auto connected = robot_->is_connected();
-    // std::cout << "connected: " << connected << std::endl;
+    std::cout << "connected: " << connected << std::endl;
 
     auto info = robot_->info_request();
-    // std::cout << info.angular_vel << std::endl;
-
+    std::cout << info.angular_vel << std::endl;
+    double controlarray[2] = {0,0};
+    robot_->set_robot_velocity(controlarray);
     robot_->cycle_robot_mode();
 
-    robot_->send_estop(true);
+    // robot_->send_estop(true);
 
-    robot_->update_drivetrim(0.01);
+    // robot_->update_drivetrim(0.01);
     // std::this_thread::sleep_for(std::chrono::milliseconds(5));
   }
 }

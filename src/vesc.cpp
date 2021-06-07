@@ -8,7 +8,7 @@ BridgedVescArray::BridgedVescArray(std::vector<uint8_t> vescIds) {
 }
 
 vescChannelStatus BridgedVescArray::parseReceivedMessage(
-    std::vector<uint32_t> robotmsg) {
+    std::vector<unsigned char> robotmsg) {
   /* process valid RPM packets */
   if ((robotmsg[0] & CONTENT_MASK) ==
       (vescPacketFlags::PACKET_FLAG | vescPacketFlags::RPM)) {
@@ -40,10 +40,10 @@ vescChannelStatus BridgedVescArray::parseReceivedMessage(
   }
 }
 
-std::vector<uint32_t> BridgedVescArray::buildCommandMessage(
+std::vector<unsigned char> BridgedVescArray::buildCommandMessage(
     vesc::vescChannelCommand command) {
   /* create a vector to hold the message */
-  std::vector<uint32_t> write_buffer;
+  std::vector<unsigned char> write_buffer;
 
   /* build the message */
   switch (command.commandType) {
