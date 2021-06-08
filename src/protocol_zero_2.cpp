@@ -414,9 +414,17 @@ namespace RoverRobotics
                     static_cast<uint8_t>((static_cast<uint32_t>(v) >> 16) & 0xFF),
                     static_cast<uint8_t>((static_cast<uint32_t>(v) >> 8) & 0xFF),
                     static_cast<uint8_t>(static_cast<uint32_t>(v) & 0xFF)};
-    unsigned char *payload2 = write_buffer.data();
-    // std::copy(write_buffer.begin(), write_buffer.end(), payload);
-    crc = crc16(payload2, write_buffer[1]);
+    unsigned char *payloadptr;
+    unsigned char payload2[7];
+    payload2[0] = COMM_CAN_FORWARD;
+    payload2[1] = RIGHT_MOTOR;
+    payload2[2] = COMM_SET_DUTY;
+    payload2[3] = static_cast<uint8_t>((static_cast<uint32_t>(v) >> 24) & 0xFF);
+    payload2[4] = static_cast<uint8_t>((static_cast<uint32_t>(v) >> 16) & 0xFF);
+    payload2[5] = static_cast<uint8_t>((static_cast<uint32_t>(v) >> 8) & 0xFF);
+    payload2[6] = static_cast<uint8_t>((static_cast<uint32_t>(v)) & 0xFF);
+    payloadptr = payload2;
+    crc = crc16(payload2, FORWARD_MSG_SIZE_);
     write_buffer.push_back(static_cast<uint8_t>(crc >> 8));
     write_buffer.push_back(static_cast<uint8_t>(crc & 0xFF));
     write_buffer.push_back(STOP_BYTE_);

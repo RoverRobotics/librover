@@ -28,7 +28,7 @@ int main() {
 
     auto info = robot_->info_request();
     std::cout << info.angular_vel << std::endl;
-    double controlarray[2] = {0,0};
+    double controlarray[2] = {1,1};
     robot_->set_robot_velocity(controlarray);
     robot_->cycle_robot_mode();
 
