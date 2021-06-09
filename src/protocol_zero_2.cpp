@@ -148,8 +148,8 @@ namespace RoverRobotics
       angular_vel_target = robotstatus_.cmd_angular_vel;
       rpm_FL = robotstatus_.motor1_rpm;
       rpm_FR = robotstatus_.motor2_rpm;
-      rpm_BL = robotstatus_.motor3_rpm;
-      rpm_BR = robotstatus_.motor4_rpm;
+      rpm_BL = robotstatus_.motor1_rpm;
+      rpm_BR = robotstatus_.motor2_rpm;
       time_from_msg = robotstatus_.cmd_ts;
       robotstatus_mutex_.unlock();
 
@@ -180,7 +180,6 @@ namespace RoverRobotics
         robotstatus_mutex_.unlock();
         send_motors_commands();
       }
-      sdfadf
       else
       {
 
