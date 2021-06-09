@@ -26,7 +26,7 @@ namespace RoverRobotics
 
     /* make and initialize the motion logic object */
     skid_control_ = std::make_unique<Control::SkidRobotMotionController>(
-        Control::TRACTION_CONTROL, robot_geometry_, pid_, MOTOR_MAX_, MOTOR_MIN_,
+        Control::OPEN_LOOP, robot_geometry_, pid_, MOTOR_MAX_, MOTOR_MIN_,
         left_trim_, right_trim_, geometric_decay_);
 
     /* MUST be done after skid control is constructed */
@@ -146,10 +146,11 @@ namespace RoverRobotics
       robotstatus_mutex_.lock();
       linear_vel_target = robotstatus_.cmd_linear_vel;
       angular_vel_target = robotstatus_.cmd_angular_vel;
-      rpm_FL = robotstatus_.motor1_rpm;
-      rpm_FR = robotstatus_.motor2_rpm;
-      rpm_BL = robotstatus_.motor1_rpm;
-      rpm_BR = robotstatus_.motor2_rpm;
+      /* Convert from motors to wheels RPM based on the robot geometry and gear ratio */
+      rpm_FL = robotstatus_.motor1_rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
+      rpm_FR = robotstatus_.motor2_rpm/ MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
+      rpm_BL = robotstatus_.motor1_rpm/ MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
+      rpm_BR = robotstatus_.motor2_rpm/ MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
       time_from_msg = robotstatus_.cmd_ts;
       robotstatus_mutex_.unlock();
 
@@ -248,7 +249,7 @@ namespace RoverRobotics
                                  (static_cast<uint32_t>(msgqueue[++payload_index]) << 16) +
                                  (static_cast<uint32_t>(msgqueue[++payload_index]) << 8) +
                                  static_cast<uint32_t>(msgqueue[++payload_index]));
-      vesc_rpm_ = static_cast<float>(v32);
+      vesc_rpm_ = static_cast<int32_t>(v32) ;
       v16 = static_cast<int16_t>((static_cast<uint16_t>(msgqueue[++payload_index]) << 8) +
                                  static_cast<uint16_t>(msgqueue[++payload_index]));
       vesc_v_in_ = static_cast<double>(v16) / 10.0;
@@ -487,7 +488,7 @@ namespace RoverRobotics
       std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));
     }
   }
-
+  
   void Zero2ProtocolObject::send_motors_commands()
   {
     robotstatus_mutex_.lock();

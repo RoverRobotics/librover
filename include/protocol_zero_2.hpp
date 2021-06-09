@@ -12,21 +12,21 @@ class RoverRobotics::Zero2ProtocolObject
 private:
   std::unique_ptr<Utilities::PersistentParams> persistent_params_;
   const std::string ROBOT_PARAM_PATH = strcat(std::getenv("HOME"), "/robot.config");
-  Control::robot_geometry robot_geometry_ = {.intra_axle_distance = 0.4191,
-                                             .wheel_base = 0.46355,
-                                             .wheel_radius = 0.1397,
+  Control::robot_geometry robot_geometry_ = {.intra_axle_distance =0.2794,
+                                             .wheel_base = 0.36195,
+                                             .wheel_radius = 0.254,
                                              .center_of_mass_x_offset = 0,
                                              .center_of_mass_y_offset = 0};
-  const float MOTOR_RPM_TO_MPS_RATIO_ = 13749 / 1.26 / 0.72; // TODO
-  const float OPEN_LOOP_MAX_RPM_ = 17000 / MOTOR_RPM_TO_MPS_RATIO_;
+  const float MOTOR_RPM_TO_WHEEL_RPM_RATIO_ = 96; 
+  const float OPEN_LOOP_MAX_RPM_ = 17000 / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
   /* limit to the trim that can be applied; more than this means a robot issue*/
   const float MAX_CURVATURE_CORRECTION_ = .15;
   const int MOTOR_NEUTRAL_ = 0;
-  const int MOTOR_MAX_ = 0.95;
-  const int MOTOR_MIN_ = -0.95;
+  const float MOTOR_MAX_ = 0.95;
+  const float MOTOR_MIN_ = -0.95;
   const float LINEAR_JERK_LIMIT_ = 5;
-  const double odom_angular_coef_ = 2.3;    // TODO
-  const double odom_traction_factor_ = 0.7; // TODO
+  const double odom_angular_coef_ = 2.3;    
+  const double odom_traction_factor_ = 0.7; 
   const double CONTROL_LOOP_TIMEOUT_MS_ = 200;
   const unsigned char PAYLOAD_BYTE_SIZE_ = 2;
   const unsigned char STOP_BYTE_ = 3;
@@ -37,7 +37,7 @@ private:
   const int RECEIVE_MSG_LEN_ = 1;
   float left_trim_ = 1;
   float right_trim_ = 1;
-  float geometric_decay_ = .98;
+  float geometric_decay_ = .99;
   int robotmode_num_ = 0;
   const int ROBOT_MODES_ = 2;
   std::unique_ptr<Control::SkidRobotMotionController> skid_control_;
@@ -86,9 +86,8 @@ private:
   };
   /*
    * @brief Thread Driven function that will send commands to the robot at set
-   * interval
+   * interval to get its data
    * @param sleeptime sleep time between each cycle
-   * @param datalist list of data to request
    */
   void send_getvalues_command(int sleeptime);
   /*

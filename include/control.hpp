@@ -446,7 +446,7 @@ class Control::SkidRobotMotionController {
   pid_gains pid_gains_;
   robot_velocities measured_velocities_;
 
-  float open_loop_max_motor_rpm_;
+  float open_loop_max_wheel_rpm_;
 
   float max_motor_duty_;
   float min_motor_duty_;
