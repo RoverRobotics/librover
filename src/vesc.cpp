@@ -10,7 +10,7 @@ namespace vesc
   }
 
   vescChannelStatus BridgedVescArray::parseReceivedMessage(
-      std::vector<unsigned char> robotmsg)
+      std::vector<uint8_t> robotmsg)
   {
     /* process valid RPM packets */
     if ((robotmsg[0] & CONTENT_MASK) ==

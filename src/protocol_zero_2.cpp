@@ -202,7 +202,7 @@ namespace RoverRobotics
       std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));
     }
   }
-  void Zero2ProtocolObject::unpack_comm_response(std::vector<unsigned char> robotmsg)
+  void Zero2ProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg)
   {
     static std::vector<uint32_t> msgqueue;
     robotstatus_mutex_.lock();
@@ -440,10 +440,10 @@ namespace RoverRobotics
       {
         unsigned char *payloadptr;
         uint16_t crc;
-        std::vector<unsigned char> write_buffer;
-        unsigned char MSG_SIZE = 1;
+        std::vector<uint8_t> write_buffer;
+        uint8_t MSG_SIZE = 1;
         robotstatus_mutex_.lock();
-        unsigned char payload[1];
+        uint8_t payload[1];
         payload[0] = COMM_GET_VALUES;
         payloadptr = payload;
         write_buffer = {
@@ -458,7 +458,7 @@ namespace RoverRobotics
         robotstatus_mutex_.unlock();
 
         robotstatus_mutex_.lock();
-        unsigned char payload2[3];
+        uint8_t payload2[3];
         payload2[0] = COMM_CAN_FORWARD;
         payload2[1] = RIGHT_MOTOR;
         payload2[2] = COMM_GET_VALUES;
@@ -494,14 +494,14 @@ namespace RoverRobotics
     robotstatus_mutex_.lock();
     int32_t v = static_cast<int32_t>(motors_speeds_[LEFT_MOTOR] * 100000.0);
     unsigned char *payloadptr;
-    unsigned char payload[5];
+    uint8_t payload[5];
     payload[0] = COMM_SET_DUTY;
     payload[1] = static_cast<uint8_t>((static_cast<uint32_t>(v) >> 24) & 0xFF);
     payload[2] = static_cast<uint8_t>((static_cast<uint32_t>(v) >> 16) & 0xFF);
     payload[3] = static_cast<uint8_t>((static_cast<uint32_t>(v) >> 8) & 0xFF);
     payload[4] = static_cast<uint8_t>((static_cast<uint32_t>(v)) & 0xFF);
     payloadptr = payload;
-    std::vector<unsigned char> write_buffer = {
+    std::vector<uint8_t> write_buffer = {
         PAYLOAD_BYTE_SIZE_,
         MSG_SIZE_,
         COMM_SET_DUTY,

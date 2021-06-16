@@ -2,8 +2,8 @@
 
 namespace RoverRobotics {
 CommCan::CommCan(const char *device,
-                 std::function<void(std::vector<unsigned char>)> parsefunction,
-                 std::vector<unsigned char> setting):
+                 std::function<void(std::vector<uint8_t>)> parsefunction,
+                 std::vector<uint8_t> setting):
                  is_connected_(false) {
   if ((fd = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0) {
     // failed to create socket
@@ -39,7 +39,7 @@ void CommCan::write_to_device(std::vector<uint8_t> msg) {
 }
 
 void CommCan::read_device_loop(
-    std::function<void(std::vector<unsigned char>)> parsefunction) {
+    std::function<void(std::vector<uint8_t>)> parsefunction) {
   std::chrono::milliseconds time_last =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
@@ -56,7 +56,7 @@ void CommCan::read_device_loop(
     }
     is_connected_ = true;
     time_last = time_now;
-    std::vector<unsigned char> msg;
+    std::vector<uint8_t> msg;
     msg.push_back(robot_frame.can_id);
     msg.push_back(robot_frame.can_dlc);
     for (int i = 0; i < sizeof(robot_frame); i++) {

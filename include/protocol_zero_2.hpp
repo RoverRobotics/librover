@@ -28,11 +28,11 @@ private:
   const double odom_angular_coef_ = 2.3;    
   const double odom_traction_factor_ = 0.7; 
   const double CONTROL_LOOP_TIMEOUT_MS_ = 200;
-  const unsigned char PAYLOAD_BYTE_SIZE_ = 2;
-  const unsigned char STOP_BYTE_ = 3;
-  const unsigned char MSG_SIZE_ = 5;
-  const unsigned char FORWARD_MSG_SIZE_ = 7;
-  const unsigned char START_BYTE_ = 2;
+  const uint8_t PAYLOAD_BYTE_SIZE_ = 2;
+  const uint8_t STOP_BYTE_ = 3;
+  const uint8_t MSG_SIZE_ = 5;
+  const uint8_t FORWARD_MSG_SIZE_ = 7;
+  const uint8_t START_BYTE_ = 2;
   const int termios_baud_code_ = 4098; // THIS = baudrate of 115200
   const int RECEIVE_MSG_LEN_ = 1;
   float left_trim_ = 1;
@@ -186,7 +186,7 @@ public:
    * @param std::vector<uin32_t> Bytes stream from the robot
    * @return structure of statusData
    */
-  void unpack_comm_response(std::vector<unsigned char>) override;
+  void unpack_comm_response(std::vector<uint8_t>) override;
   /*
    * @brief Check if Communication still exist
    * @return bool

@@ -48,8 +48,8 @@ class vesc::BridgedVescArray {
  public:
   BridgedVescArray(std::vector<uint8_t> vescIds = std::vector<uint8_t>{0, 1, 2, 3});
   vesc::vescChannelStatus parseReceivedMessage(
-      std::vector<unsigned char> robotmsg);
-  std::vector<unsigned char> buildCommandMessage(
+      std::vector<uint8_t> robotmsg);
+  std::vector<uint8_t> buildCommandMessage(
       vesc::vescChannelCommand command);
 
  private:
