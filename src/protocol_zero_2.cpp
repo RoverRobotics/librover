@@ -202,7 +202,7 @@ namespace RoverRobotics
       std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));
     }
   }
-  void Zero2ProtocolObject::unpack_comm_response(std::vector<unsigned char> robotmsg)
+  void Zero2ProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg)
   {
     static std::vector<uint32_t> msgqueue;
     robotstatus_mutex_.lock();
@@ -329,30 +329,30 @@ namespace RoverRobotics
         robotstatus_.motor2_mos_temp = vesc_fet_temp_;
       }
       robotstatus_.battery1_voltage = vesc_v_in_;
-      robotstatus_.battery1_fault_flag = NULL;
-      robotstatus_.battery2_voltage = NULL;
-      robotstatus_.battery1_temp = NULL;
-      robotstatus_.battery2_temp = NULL;
+      robotstatus_.battery1_fault_flag = 0;
+      robotstatus_.battery2_voltage = 0;
+      robotstatus_.battery1_temp = 0;
+      robotstatus_.battery2_temp = 0;
       robotstatus_.battery1_current = vesc_all_input_current_;
-      robotstatus_.battery2_current = NULL;
-      robotstatus_.battery1_SOC = NULL;
-      robotstatus_.battery2_SOC = NULL;
-      robotstatus_.battery1_fault_flag = NULL;
-      robotstatus_.battery2_fault_flag = NULL;
-      robotstatus_.motor3_rpm = NULL;
-      robotstatus_.motor3_current = NULL;
-      robotstatus_.motor3_temp = NULL;
-      robotstatus_.motor3_mos_temp = NULL;
-      robotstatus_.motor4_id = NULL;
-      robotstatus_.motor4_rpm = NULL;
-      robotstatus_.motor4_current = NULL;
-      robotstatus_.motor4_temp = NULL;
-      robotstatus_.motor4_mos_temp = NULL;
-      robotstatus_.robot_guid = NULL;
-      robotstatus_.robot_firmware = NULL;
+      robotstatus_.battery2_current = 0;
+      robotstatus_.battery1_SOC = 0;
+      robotstatus_.battery2_SOC = 0;
+      robotstatus_.battery1_fault_flag = 0;
+      robotstatus_.battery2_fault_flag = 0;
+      robotstatus_.motor3_rpm = 0;
+      robotstatus_.motor3_current = 0;
+      robotstatus_.motor3_temp = 0;
+      robotstatus_.motor3_mos_temp = 0;
+      robotstatus_.motor4_id = 0;
+      robotstatus_.motor4_rpm = 0;
+      robotstatus_.motor4_current = 0;
+      robotstatus_.motor4_temp = 0;
+      robotstatus_.motor4_mos_temp = 0;
+      robotstatus_.robot_guid = 0;
+      robotstatus_.robot_firmware = 0;
       robotstatus_.robot_fault_flag = vesc_fault_;
-      robotstatus_.robot_fan_speed = NULL;
-      robotstatus_.robot_speed_limit = NULL;
+      robotstatus_.robot_fan_speed = 0;
+      robotstatus_.robot_speed_limit = 0;
     }
     else if (msgqueue.size() > msg_size && msgqueue[0] != START_BYTE_)
     {
@@ -409,13 +409,13 @@ namespace RoverRobotics
   {
     if (comm_type_ == "serial")
     {
-      std::vector<uint32_t> setting;
+      std::vector<uint8_t> setting;
       setting.push_back(termios_baud_code_);
       setting.push_back(RECEIVE_MSG_LEN_);
       try
       {
         comm_base_ = std::make_unique<CommSerial>(
-            device, [this](std::vector<unsigned char> c)
+            device, [this](std::vector<uint8_t> c)
             { unpack_comm_response(c); },
             setting);
       }
@@ -440,10 +440,10 @@ namespace RoverRobotics
       {
         unsigned char *payloadptr;
         uint16_t crc;
-        std::vector<unsigned char> write_buffer;
-        unsigned char MSG_SIZE = 1;
+        std::vector<uint8_t> write_buffer;
+        uint8_t MSG_SIZE = 1;
         robotstatus_mutex_.lock();
-        unsigned char payload[1];
+        uint8_t payload[1];
         payload[0] = COMM_GET_VALUES;
         payloadptr = payload;
         write_buffer = {
@@ -458,7 +458,7 @@ namespace RoverRobotics
         robotstatus_mutex_.unlock();
 
         robotstatus_mutex_.lock();
-        unsigned char payload2[3];
+        uint8_t payload2[3];
         payload2[0] = COMM_CAN_FORWARD;
         payload2[1] = RIGHT_MOTOR;
         payload2[2] = COMM_GET_VALUES;
@@ -494,14 +494,14 @@ namespace RoverRobotics
     robotstatus_mutex_.lock();
     int32_t v = static_cast<int32_t>(motors_speeds_[LEFT_MOTOR] * 100000.0);
     unsigned char *payloadptr;
-    unsigned char payload[5];
+    uint8_t payload[5];
     payload[0] = COMM_SET_DUTY;
     payload[1] = static_cast<uint8_t>((static_cast<uint32_t>(v) >> 24) & 0xFF);
     payload[2] = static_cast<uint8_t>((static_cast<uint32_t>(v) >> 16) & 0xFF);
     payload[3] = static_cast<uint8_t>((static_cast<uint32_t>(v) >> 8) & 0xFF);
     payload[4] = static_cast<uint8_t>((static_cast<uint32_t>(v)) & 0xFF);
     payloadptr = payload;
-    std::vector<unsigned char> write_buffer = {
+    std::vector<uint8_t> write_buffer = {
         PAYLOAD_BYTE_SIZE_,
         MSG_SIZE_,
         COMM_SET_DUTY,

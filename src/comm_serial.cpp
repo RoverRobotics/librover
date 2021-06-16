@@ -3,8 +3,8 @@
 
 namespace RoverRobotics {
 CommSerial::CommSerial(const char *device,
-                       std::function<void(std::vector<unsigned char>)> parsefunction,
-                       std::vector<uint32_t> setting) {
+                       std::function<void(std::vector<uint8_t>)> parsefunction,
+                       std::vector<uint8_t> setting) {
   // open serial port at specified port
   serial_port_ = open(device, 02);
 
@@ -56,10 +56,10 @@ CommSerial::CommSerial(const char *device,
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
 }
 
-void CommSerial::write_to_device(std::vector<unsigned char> msg) {
+void CommSerial::write_to_device(std::vector<uint8_t> msg) {
   serial_write_mutex_.lock();
   if (serial_port_ >= 0) {
-    unsigned char write_buffer[msg.size()];
+    uint8_t write_buffer[msg.size()];
     for (int x = 0; x < msg.size(); x++) {
       write_buffer[x] = msg[x];
     }
@@ -71,12 +71,12 @@ void CommSerial::write_to_device(std::vector<unsigned char> msg) {
 }
 
 void CommSerial::read_device_loop(
-    std::function<void(std::vector<unsigned char>)> parsefunction) {
+    std::function<void(std::vector<uint8_t>)> parsefunction) {
   std::chrono::milliseconds time_last =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
   while (true) {
-    unsigned char read_buf[read_size_];
+    uint8_t read_buf[read_size_];
     int num_bytes = read(serial_port_, &read_buf, read_size_);
     std::chrono::milliseconds time_now =
         std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -89,7 +89,7 @@ void CommSerial::read_device_loop(
     }
     is_connected_ = true;
     time_last = time_now;
-    static std::vector<unsigned char> output;
+    static std::vector<uint8_t> output;
     for (int x = 0; x < num_bytes; x++) {
       output.push_back(read_buf[x]);
     }
