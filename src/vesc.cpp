@@ -12,24 +12,25 @@ namespace vesc
   vescChannelStatus BridgedVescArray::parseReceivedMessage(
       std::vector<uint8_t> robotmsg)
   {
+    auto full_msg  = static_cast<uint32_t>((robotmsg[0] << 24) + (robotmsg[1] << 16) + (robotmsg[2] << 8) + robotmsg[3]);
     /* process valid RPM packets */
-    if ((robotmsg[0] & CONTENT_MASK) ==
-        (vescPacketFlags::PACKET_FLAG | vescPacketFlags::RPM))
+    if ((full_msg & CONTENT_MASK) == (vescPacketFlags::PACKET_FLAG | vescPacketFlags::RPM))
     {
-      uint8_t vescId = robotmsg[0] & ID_MASK;
+
+      uint8_t vescId = full_msg & ID_MASK;
 
       /* combine shifted byte values into a single rpm value */
-      int32_t rpm_scaled = ((uint8_t)robotmsg[2] << 24) |
-                           ((uint8_t)robotmsg[3] << 16) |
-                           ((uint8_t)robotmsg[4] << 8) | ((uint8_t)robotmsg[5]);
+      int32_t rpm_scaled = (robotmsg[5] << 24) |
+                           (robotmsg[6] << 16) |
+                           (robotmsg[7] << 8) | (robotmsg[8]);
 
       /* combine shifted byte values into a single current value */
       int16_t current_scaled =
-          ((uint8_t)robotmsg[6] << 8) | ((uint8_t)robotmsg[7]);
+          (robotmsg[9] << 8) | (robotmsg[10]);
 
       /* combine shifted byte values into a single duty value */
       int16_t duty_scaled =
-          (((uint8_t)robotmsg[8] << 8) | ((uint8_t)robotmsg[9]));
+          (robotmsg[11] << 8) | (robotmsg[12]);
 
       /* scale values per fixed-point vesc protocol */
       float rpm = ((float)rpm_scaled) * RPM_SCALING_FACTOR;
