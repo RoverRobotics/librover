@@ -46,11 +46,11 @@ namespace vesc
     }
   }
 
-  std::vector<unsigned char> BridgedVescArray::buildCommandMessage(
+  std::vector<uint8_t> BridgedVescArray::buildCommandMessage(
       vesc::vescChannelCommand command)
   {
     /* create a vector to hold the message */
-    std::vector<unsigned char> write_buffer;
+    std::vector<uint8_t> write_buffer;
 
     /* build the message */
     switch (command.commandType)
@@ -70,7 +70,7 @@ namespace vesc
     };
 
     auto casted_command = static_cast<int32_t>(command.commandValue);
-    auto full_id = command.vescId | vescPacketFlags::PACKET_FLAG | command.commandType;
+    auto full_id = static_cast<uint32_t>(command.vescId | vescPacketFlags::PACKET_FLAG | command.commandType);
 
     write_buffer = {
         static_cast<uint8_t>((full_id >> 24) &

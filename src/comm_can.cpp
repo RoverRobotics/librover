@@ -27,12 +27,12 @@ void CommCan::write_to_device(std::vector<uint8_t> msg) {
   Can_write_mutex_.lock();
   if (msg.size() == 9) {
     // convert msg to frame
-    frame.can_id = (msg[0] << 24) + (msg[1] << 16) + (msg[2] << 8) + msg[3];
-    frame.can_dlc = msg[1];
-    frame.data[0] = msg[2];
-    frame.data[1] = msg[3];
-    frame.data[2] = msg[4];
-    frame.data[3] = msg[5];
+    frame.can_id = static_cast<uint32_t>((msg[0] << 24) + (msg[1] << 16) + (msg[2] << 8) + msg[3]);
+    frame.can_dlc = msg[4];
+    frame.data[0] = msg[5];
+    frame.data[1] = msg[6];
+    frame.data[2] = msg[7];
+    frame.data[3] = msg[8];
     write(fd, &frame, sizeof(struct can_frame));
   }
   Can_write_mutex_.unlock();
