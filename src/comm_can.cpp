@@ -23,11 +23,11 @@ CommCan::CommCan(const char *device,
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
 }
 
-void CommCan::write_to_device(std::vector<unsigned char> msg) {
+void CommCan::write_to_device(std::vector<uint8_t> msg) {
   Can_write_mutex_.lock();
-  if (msg.size() == 6) {
+  if (msg.size() == 9) {
     // convert msg to frame
-    frame.can_id = msg[0];
+    frame.can_id = (msg[0] << 24) + (msg[1] << 16) + (msg[2] << 8) + msg[3];
     frame.can_dlc = msg[1];
     frame.data[0] = msg[2];
     frame.data[1] = msg[3];
