@@ -41,9 +41,11 @@ CommSerial::CommSerial(const char *device,
   tty.c_cc[VTIME] = 0;  // remove wait time
 
   // Set in/out baud rate
-  cfsetispeed(&tty, (int)setting[0]);
-  cfsetospeed(&tty, (int)setting[0]);
-  read_size_ = (int)setting[1];
+  int baud =
+      (setting[0] << 24) + (setting[1] << 16) + (setting[2] << 8) + setting[3];
+  cfsetispeed(&tty, baud);
+  cfsetospeed(&tty, baud);
+  read_size_ = (int)setting[4];
   // Save tty settings, also checking for error
   if (tcsetattr(serial_port_, TCSANOW, &tty) != 0) {
     std::cerr << "error saving tty settings";

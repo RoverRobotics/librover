@@ -159,8 +159,8 @@ void Zero2ProtocolObject::motors_control_loop(int sleeptime) {
       motors_speeds_[RIGHT_MOTOR] = duty_cycles.fr;
       robotstatus_.linear_vel = velocities.linear_velocity;
       robotstatus_.angular_vel = velocities.angular_velocity;
-      send_motors_commands();
       robotstatus_mutex_.unlock();
+      send_motors_commands();
     } else {
       /* COMMAND THE ROBOT TO STOP */
       auto duty_cycles = skid_control_->runMotionControl(
@@ -174,8 +174,8 @@ void Zero2ProtocolObject::motors_control_loop(int sleeptime) {
       motors_speeds_[RIGHT_MOTOR] = MOTOR_NEUTRAL_;
       robotstatus_.linear_vel = velocities.linear_velocity;
       robotstatus_.angular_vel = velocities.angular_velocity;
-      send_motors_commands();
       robotstatus_mutex_.unlock();
+      send_motors_commands();
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));
   }
@@ -395,7 +395,10 @@ int Zero2ProtocolObject::cycle_robot_mode() {
 void Zero2ProtocolObject::register_comm_base(const char *device) {
   if (comm_type_ == "serial") {
     std::vector<uint8_t> setting;
-    setting.push_back(termios_baud_code_);
+    setting.push_back(static_cast<uint8_t>(termios_baud_code_ >> 24));
+    setting.push_back(static_cast<uint8_t>(termios_baud_code_ >> 16));
+    setting.push_back(static_cast<uint8_t>(termios_baud_code_ >> 8));
+    setting.push_back(static_cast<uint8_t>(termios_baud_code_));
     setting.push_back(RECEIVE_MSG_LEN_);
     try {
       comm_base_ = std::make_unique<CommSerial>(
