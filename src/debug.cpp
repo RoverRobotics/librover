@@ -83,7 +83,6 @@ int main()
 
     auto info = robot_->info_request();
     print_status(info);
-    std::cout << info.angular_vel << std::endl;
     double controlarray[2] = {1, 0};
     robot_->set_robot_velocity(controlarray);
     // robot_->cycle_robot_mode();
@@ -91,6 +90,6 @@ int main()
     // robot_->send_estop(true);
 
     // robot_->update_drivetrim(0.01);
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
 }

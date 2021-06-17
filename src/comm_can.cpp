@@ -68,17 +68,17 @@ namespace RoverRobotics
       time_last = time_now;
       std::vector<uint8_t> msg;
 
-    msg.push_back(robot_frame.can_id >> 24);
-    msg.push_back(robot_frame.can_id >> 16);
-    msg.push_back(robot_frame.can_id >> 8);
-    msg.push_back(robot_frame.can_id);
-    msg.push_back(robot_frame.can_dlc);
-    for (int i = 0; i < sizeof(robot_frame); i++)
-    {
-      msg.push_back(robot_frame.data[i]);
-    }
-    parsefunction(msg);
-    msg.clear();
+      msg.push_back(robot_frame.can_id >> 24);
+      msg.push_back(robot_frame.can_id >> 16);
+      msg.push_back(robot_frame.can_id >> 8);
+      msg.push_back(robot_frame.can_id);
+      msg.push_back(robot_frame.can_dlc);
+      for (int i = 0; i < sizeof(robot_frame.data); i++)
+      {
+        msg.push_back(robot_frame.data[i]);
+      }
+      parsefunction(msg);
+      msg.clear();
     }
   }
 
