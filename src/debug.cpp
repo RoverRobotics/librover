@@ -1,14 +1,14 @@
 #include <stdio.h>
 
 #include <memory>
-#include "protocol_pro_2.hpp"
+
 #include "protocol_mini.hpp"
+#include "protocol_pro_2.hpp"
 #include "protocol_zero_2.hpp"
 #include "time.h"
 using namespace RoverRobotics;
 
-void print_status(RoverRobotics::robotData &robotdata)
-{
+void print_status(RoverRobotics::robotData &robotdata) {
   std::cerr << "Robot Data " << std::endl
             << "motor 1 id " << robotdata.motor1_id << std::endl
             << "motor1_rpm " << robotdata.motor1_rpm << std::endl
@@ -38,8 +38,10 @@ void print_status(RoverRobotics::robotData &robotdata)
             << "battery2_current " << robotdata.battery2_current << std::endl
             << "battery1_SOC " << robotdata.battery1_SOC << std::endl
             << "battery2_SOC " << robotdata.battery2_SOC << std::endl
-            << "battery1_fault_flag " << robotdata.battery1_fault_flag << std::endl
-            << "battery2_fault_flag " << robotdata.battery2_fault_flag << std::endl
+            << "battery1_fault_flag " << robotdata.battery1_fault_flag
+            << std::endl
+            << "battery2_fault_flag " << robotdata.battery2_fault_flag
+            << std::endl
             << "robot_guid " << robotdata.robot_guid << std::endl
             << "robot_firmware " << robotdata.robot_firmware << std::endl
             << "robot_fault_flag " << robotdata.robot_fault_flag << std::endl
@@ -54,27 +56,26 @@ void print_status(RoverRobotics::robotData &robotdata)
             << "cmd_angular_vel " << robotdata.cmd_angular_vel << std::endl;
 }
 
-int main()
-{
+int main() {
   // Control::pid_gains testgains_ = {0.0009, 0, 0.00007};
   Control::pid_gains testgains_ = {0, 0, 0};
 
   Control::robot_motion_mode_t robot_mode = Control::OPEN_LOOP;
   Control::angular_scaling_params angular_scaling_params_ = {0, 1, 0, 1, 1};
-  std::unique_ptr<BaseProtocolObject> robot_ =
-      std::make_unique<MiniProtocolObject>(
-          "can0", "can", robot_mode, testgains_,
-          angular_scaling_params_);
+  // std::unique_ptr<BaseProtocolObject> robot_ =
+  //     std::make_unique<MiniProtocolObject>(
+  //         "can0", "can", robot_mode, testgains_,
+  //         angular_scaling_params_);
   // std::make_unique<Pro2ProtocolObject>(
   //       "can0", "can", robot_mode, testgains_,
   //       angular_scaling_params_);
-  // std::unique_ptr<BaseProtocolObject> robot_ =
-  //     std::make_unique<Zero2ProtocolObject>("/dev/rover-zero-v2", "serial",
-  //                                           robot_mode, testgains_,angular_scaling_params_);
-  robot_->cycle_robot_mode();
+  std::unique_ptr<BaseProtocolObject> robot_ =
+      std::make_unique<Zero2ProtocolObject>("/dev/rover-zero-v2", "serial",
+                                            robot_mode, testgains_,
+                                            angular_scaling_params_);
+  // robot_->cycle_robot_mode();
 
-  while (true)
-  {
+  while (true) {
     auto status = robot_->status_request();
     // std::cout << status.angular_vel << std::endl;
 
