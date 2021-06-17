@@ -328,7 +328,10 @@ int ProProtocolObject::cycle_robot_mode() {
 void ProProtocolObject::register_comm_base(const char *device) {
   if (comm_type_ == "serial") {
     std::vector<uint8_t> setting;
-    setting.push_back(termios_baud_code_);
+    setting.push_back(static_cast<uint8_t>(termios_baud_code_ >> 24));
+    setting.push_back(static_cast<uint8_t>(termios_baud_code_ >> 16));
+    setting.push_back(static_cast<uint8_t>(termios_baud_code_ >> 8));
+    setting.push_back(static_cast<uint8_t>(termios_baud_code_));
     setting.push_back(RECEIVE_MSG_LEN_);
     try {
       comm_base_ = std::make_unique<CommSerial>(
