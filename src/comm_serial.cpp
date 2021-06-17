@@ -50,7 +50,6 @@ CommSerial::CommSerial(const char *device,
     throw(-1);
     return;
   }
-  std::cerr << "communication baudrate " << cfgetospeed(&tty);
   is_connected_ = false;
   serial_read_thread_ = std::thread(
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
