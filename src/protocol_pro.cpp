@@ -1,4 +1,6 @@
 #include "protocol_pro.hpp"
+#include <iostream>
+#include <fstream>
 
 namespace RoverRobotics {
 
@@ -50,7 +52,7 @@ void ProProtocolObject::send_estop(bool estop) {
   robotstatus_mutex_.unlock();
 }
 
-robotData ProProtocolObject::status_request() { std::cerr << robotstatus_.motor1_rpm << std::endl ; return robotstatus_; }
+robotData ProProtocolObject::status_request() { return robotstatus_; }
 
 robotData ProProtocolObject::info_request() { return robotstatus_; }
 
@@ -178,6 +180,17 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
     data2 = (unsigned char)msgqueue[3];
     checksum = 255 - (dataNO + data1 + data2) % 255;
     read_checksum = (unsigned char)msgqueue[4];
+    static std::ofstream rpmfile;
+    
+    /* current time */
+    std::chrono::steady_clock::time_point time_now =
+        std::chrono::steady_clock::now();
+
+    static std::chrono::steady_clock::time_point time_start =
+        std::chrono::steady_clock::now();
+    
+    if (!rpmfile.is_open()) rpmfile.open("/home/rover/rpm.txt", std::ofstream::app);
+
     if (checksum == read_checksum) {  // verify checksum
       int16_t b = (data1 << 8) + data2;
       switch (int(dataNO)) {
@@ -185,9 +198,13 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
           break;
         case REG_MOTOR_FB_RPM_LEFT:
           robotstatus_.motor1_rpm = b;
+          std::cerr << "LRPM: " << robotstatus_.motor1_rpm << std::endl;
+          rpmfile << "LRPM," << std::chrono::duration<float>(time_now - time_start).count() << "," << robotstatus_.motor1_rpm << std::endl;
           break;
         case REG_MOTOR_FB_RPM_RIGHT:  // motor2_rpm;
           robotstatus_.motor2_rpm = b;
+          std::cerr << "RRPM: " << robotstatus_.motor2_rpm << std::endl;
+          rpmfile << "RRPM," << std::chrono::duration<float>(time_now - time_start).count() <<  "," << robotstatus_.motor2_rpm << std::endl;
           break;
         case REG_FLIPPER_FB_POSITION_POT1:
           robotstatus_.motor3_sensor1 = b;
