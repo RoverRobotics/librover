@@ -8,3 +8,5 @@ liblibrover.so
 .vscode/*
 debug.out
 install_manifest.txt
+build/*
+
