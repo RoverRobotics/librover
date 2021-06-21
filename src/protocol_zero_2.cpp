@@ -59,7 +59,7 @@ Zero2ProtocolObject::Zero2ProtocolObject(
   /* create a dedicate thread to compute the desired robot motion, runs on fixed
    * interval */
   motor_speed_update_thread_ =
-      std::thread([this]() { this->motors_control_loop(10); });
+      std::thread([this]() { this->motors_control_loop(30); });
   std::cerr << "protocol is running..." << std::endl;
 }
 

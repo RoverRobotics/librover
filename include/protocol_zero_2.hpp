@@ -12,12 +12,12 @@ class RoverRobotics::Zero2ProtocolObject
 private:
   std::unique_ptr<Utilities::PersistentParams> persistent_params_;
   const std::string ROBOT_PARAM_PATH = strcat(std::getenv("HOME"), "/robot.config");
-  Control::robot_geometry robot_geometry_ = {.intra_axle_distance =0.2794,
-                                             .wheel_base = 0.36195,
-                                             .wheel_radius = 0.254,
+  Control::robot_geometry robot_geometry_ = {.intra_axle_distance = 0.2794,
+                                             .wheel_base = 0.3683,
+                                             .wheel_radius = 0.2667,
                                              .center_of_mass_x_offset = 0,
                                              .center_of_mass_y_offset = 0};
-  const float MOTOR_RPM_TO_WHEEL_RPM_RATIO_ = 96; 
+  const float MOTOR_RPM_TO_WHEEL_RPM_RATIO_ = 96 *2; 
   const float OPEN_LOOP_MAX_RPM_ = 17000 / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
   /* limit to the trim that can be applied; more than this means a robot issue*/
   const float MAX_CURVATURE_CORRECTION_ = .15;

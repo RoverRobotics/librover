@@ -60,7 +60,7 @@ int main() {
   // Control::pid_gains testgains_ = {0.0009, 0, 0.00007};
   Control::pid_gains testgains_ = {0, 0, 0};
 
-  Control::robot_motion_mode_t robot_mode = Control::OPEN_LOOP;
+  Control::robot_motion_mode_t robot_mode = Control::INDEPENDENT_WHEEL;
   Control::angular_scaling_params angular_scaling_params_ = {0, 1, 0, 1, 1};
   // std::unique_ptr<BaseProtocolObject> robot_ =
   //     std::make_unique<MiniProtocolObject>(
@@ -73,7 +73,7 @@ int main() {
       std::make_unique<Zero2ProtocolObject>("/dev/rover-zero-v2", "serial",
                                             robot_mode, testgains_,
                                             angular_scaling_params_);
-  // robot_->cycle_robot_mode();
+  //robot_->cycle_robot_mode();
 
   while (true) {
     auto status = robot_->status_request();
