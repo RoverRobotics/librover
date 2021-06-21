@@ -258,7 +258,7 @@ SkidRobotMotionController::SkidRobotMotionController() {}
 SkidRobotMotionController::SkidRobotMotionController(
     robot_motion_mode_t operating_mode, robot_geometry robot_geometry,
     float max_motor_duty, float min_motor_duty, float left_trim,
-    float right_trim, float open_loop_max_motor_rpm)
+    float right_trim, float open_loop_max_wheel_rpm)
     : log_folder_path_("~/Documents/"),
       duty_cycles_({0}),
       measured_velocities_({0}),
@@ -271,7 +271,7 @@ SkidRobotMotionController::SkidRobotMotionController(
       max_angular_acceleration_(std::numeric_limits<float>::max()),
       time_last_(std::chrono::steady_clock::now()),
       time_origin_(std::chrono::steady_clock::now()) {
-  open_loop_max_wheel_rpm_ = open_loop_max_motor_rpm;
+  open_loop_max_wheel_rpm_ = open_loop_max_wheel_rpm;
   min_motor_duty_ = min_motor_duty;
   max_motor_duty_ = max_motor_duty;
   left_trim_value_ = left_trim;
@@ -445,8 +445,8 @@ void SkidRobotMotionController::setOutputDecay(float geometric_decay) {
 float SkidRobotMotionController::getOutputDecay() { return geometric_decay_; }
 
 void SkidRobotMotionController::setOpenLoopMaxRpm(
-    float open_loop_max_motor_rpm) {
-  open_loop_max_wheel_rpm_ = open_loop_max_motor_rpm;
+    float open_loop_max_wheel_rpm) {
+  open_loop_max_wheel_rpm_ = open_loop_max_wheel_rpm;
 }
 float SkidRobotMotionController::getOpenLoopMaxRpm() {
   return open_loop_max_wheel_rpm_;
