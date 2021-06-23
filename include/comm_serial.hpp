@@ -17,21 +17,21 @@ class RoverRobotics::CommSerial : public RoverRobotics::CommBase {
    * @param callbackfunction
    * @param settings
    */
-  CommSerial(const char *device, std::function<void(std::vector<uint32_t>)>,
-             std::vector<uint32_t>);
+  CommSerial(const char *device, std::function<void(std::vector<uint8_t>)>,
+             std::vector<uint8_t>);
   /*
    * @brief Write data to Serial Device
    * by accepting a vector of unsigned int 32 and convert it to a byte stream
    * @param msg message to convert and write to device
    */
-  void write_to_device(std::vector<uint32_t> msg);
+  void write_to_device(std::vector<uint8_t> msg);
   /*
    * @brief Read data from Serial Device
    * by reading the current device buffer then convert to a vector of unsigned
    * int 32.
    * @param callback to process the unsigned int 32.
    */
-  void read_device_loop(std::function<void(std::vector<uint32_t>)>);
+  void read_device_loop(std::function<void(std::vector<uint8_t>)>);
   /*
    * @brief Check if Serial device is still connected by check the state of the
    * file descriptor

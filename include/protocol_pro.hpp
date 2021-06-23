@@ -54,7 +54,7 @@ class RoverRobotics::ProProtocolObject
    * @param std::vector<uin32_t> Bytes stream from the robot
    * @return structure of statusData
    */
-  void unpack_comm_response(std::vector<uint32_t>) override;
+  void unpack_comm_response(std::vector<uint8_t>) override;
   /*
    * @brief Check if Communication still exist
    * @return bool

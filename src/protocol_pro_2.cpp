@@ -139,7 +139,7 @@ void Pro2ProtocolObject::set_robot_velocity(double *control_array) {
   robotstatus_mutex_.unlock();
 }
 
-void Pro2ProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
+void Pro2ProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
   auto parsedMsg = vescArray_.parseReceivedMessage(robotmsg);
   if (parsedMsg.dataValid) {
     robotstatus_mutex_.lock();
@@ -174,11 +174,11 @@ void Pro2ProtocolObject::unpack_comm_response(std::vector<uint32_t> robotmsg) {
 bool Pro2ProtocolObject::is_connected() { return comm_base_->is_connected(); }
 
 void Pro2ProtocolObject::register_comm_base(const char *device) {
-  std::vector<uint32_t> setting;
+  std::vector<uint8_t> setting;
   if (comm_type_ == "can") {
     try {
       comm_base_ = std::make_unique<CommCan>(
-          device, [this](std::vector<uint32_t> c) { unpack_comm_response(c); },
+          device, [this](std::vector<uint8_t> c) { unpack_comm_response(c); },
           setting);
     } catch (int i) {
       throw(i);

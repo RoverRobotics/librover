@@ -258,7 +258,7 @@ SkidRobotMotionController::SkidRobotMotionController() {}
 SkidRobotMotionController::SkidRobotMotionController(
     robot_motion_mode_t operating_mode, robot_geometry robot_geometry,
     float max_motor_duty, float min_motor_duty, float left_trim,
-    float right_trim, float open_loop_max_motor_rpm)
+    float right_trim, float open_loop_max_wheel_rpm)
     : log_folder_path_("~/Documents/"),
       duty_cycles_({0}),
       measured_velocities_({0}),
@@ -271,7 +271,7 @@ SkidRobotMotionController::SkidRobotMotionController(
       max_angular_acceleration_(std::numeric_limits<float>::max()),
       time_last_(std::chrono::steady_clock::now()),
       time_origin_(std::chrono::steady_clock::now()) {
-  open_loop_max_motor_rpm_ = open_loop_max_motor_rpm;
+  open_loop_max_wheel_rpm_ = open_loop_max_wheel_rpm;
   min_motor_duty_ = min_motor_duty;
   max_motor_duty_ = max_motor_duty;
   left_trim_value_ = left_trim;
@@ -445,11 +445,11 @@ void SkidRobotMotionController::setOutputDecay(float geometric_decay) {
 float SkidRobotMotionController::getOutputDecay() { return geometric_decay_; }
 
 void SkidRobotMotionController::setOpenLoopMaxRpm(
-    float open_loop_max_motor_rpm) {
-  open_loop_max_motor_rpm_ = open_loop_max_motor_rpm;
+    float open_loop_max_wheel_rpm) {
+  open_loop_max_wheel_rpm_ = open_loop_max_wheel_rpm;
 }
 float SkidRobotMotionController::getOpenLoopMaxRpm() {
-  return open_loop_max_motor_rpm_;
+  return open_loop_max_wheel_rpm_;
 }
 
 void SkidRobotMotionController::setAngularScaling(
@@ -462,12 +462,12 @@ angular_scaling_params SkidRobotMotionController::getAngularScaling() {
 }
 
 motor_data SkidRobotMotionController::computeMotorCommandsDual_(
-    motor_data target_wheel_speeds, motor_data current_motor_speeds) {
+    motor_data target_wheel_speeds, motor_data current_wheel_speeds) {
   /* average front and rear wheels */
   float left_magnitude =
-      (current_motor_speeds.fl + current_motor_speeds.rl) / 2;
+      (current_wheel_speeds.fl + current_wheel_speeds.rl) / 2;
   float right_magnitude =
-      (current_motor_speeds.fr + current_motor_speeds.rr) / 2;
+      (current_wheel_speeds.fr + current_wheel_speeds.rr) / 2;
 
   /* run pid, 1 per side */
 
@@ -505,20 +505,20 @@ motor_data SkidRobotMotionController::computeMotorCommandsDual_(
 }
 
 motor_data SkidRobotMotionController::computeMotorCommandsQuad_(
-    motor_data target_wheel_speeds, motor_data current_motor_speeds) {
+    motor_data target_wheel_speeds, motor_data current_wheel_speeds) {
   /* run pid, 1 per wheel */
   pid_mutex_.lock();
   pid_outputs fl_pid_output = pid_controller_fl_->runControl(
-      target_wheel_speeds.fl, current_motor_speeds.fl);
+      target_wheel_speeds.fl, current_wheel_speeds.fl);
 
   pid_outputs fr_pid_output = pid_controller_fr_->runControl(
-      target_wheel_speeds.fr, current_motor_speeds.fr);
+      target_wheel_speeds.fr, current_wheel_speeds.fr);
 
   pid_outputs rl_pid_output = pid_controller_rl_->runControl(
-      target_wheel_speeds.rl, current_motor_speeds.rl);
+      target_wheel_speeds.rl, current_wheel_speeds.rl);
 
   pid_outputs rr_pid_output = pid_controller_rr_->runControl(
-      target_wheel_speeds.rr, current_motor_speeds.rr);
+      target_wheel_speeds.rr, current_wheel_speeds.rr);
   pid_mutex_.unlock();
 #ifdef DEBUG
   pid_controller_fl_->writePidDataToCsv(log_file_, fl_pid_output);
@@ -569,52 +569,52 @@ motor_data SkidRobotMotionController::clipDutyCycles_(
 }
 
 motor_data SkidRobotMotionController::computeTorqueDistribution_(
-    motor_data current_motor_speeds, motor_data power_proposals) {
+    motor_data current_wheel_speeds, motor_data power_proposals) {
   /* right side */
   /* if both wheels are moving then ... */
 
   /* if front wheel is spinning faster ... */
-  if (std::abs(current_motor_speeds.fr) >= std::abs(current_motor_speeds.rr)) {
+  if (std::abs(current_wheel_speeds.fr) >= std::abs(current_wheel_speeds.rr)) {
     /* scale down FRONT RIGHT power */
     power_proposals.fr *=
-        (isnan(std::abs(current_motor_speeds.rr / current_motor_speeds.fr))
+        (isnan(std::abs(current_wheel_speeds.rr / current_wheel_speeds.fr))
              ? 1.0
-             : std::abs(current_motor_speeds.rr / current_motor_speeds.fr));
+             : std::abs(current_wheel_speeds.rr / current_wheel_speeds.fr));
   } else {
     /* scale down REAR RIGHT power */
     power_proposals.rr *=
-        (isnan(std::abs(current_motor_speeds.fr / current_motor_speeds.rr))
+        (isnan(std::abs(current_wheel_speeds.fr / current_wheel_speeds.rr))
              ? 1.0
-             : std::abs(current_motor_speeds.fr / current_motor_speeds.rr));
+             : std::abs(current_wheel_speeds.fr / current_wheel_speeds.rr));
   }
 
   /* left side */
-  if (std::abs(current_motor_speeds.fl) >= std::abs(current_motor_speeds.rl)) {
+  if (std::abs(current_wheel_speeds.fl) >= std::abs(current_wheel_speeds.rl)) {
     /* scale down FRONT LEFT power */
     power_proposals.fl *=
-        (isnan(std::abs(current_motor_speeds.rl / current_motor_speeds.fl))
+        (isnan(std::abs(current_wheel_speeds.rl / current_wheel_speeds.fl))
              ? 1.0
-             : std::abs(current_motor_speeds.rl / current_motor_speeds.fl));
+             : std::abs(current_wheel_speeds.rl / current_wheel_speeds.fl));
   } else {
     /* scale down REAR LEFT power */
     power_proposals.rl *=
-        (isnan(std::abs(current_motor_speeds.fl / current_motor_speeds.rl))
+        (isnan(std::abs(current_wheel_speeds.fl / current_wheel_speeds.rl))
              ? 1.0
-             : std::abs(current_motor_speeds.fl / current_motor_speeds.rl));
+             : std::abs(current_wheel_speeds.fl / current_wheel_speeds.rl));
   }
 
   return power_proposals;
 }
 
 robot_velocities SkidRobotMotionController::getMeasuredVelocities(
-    motor_data current_motor_speeds) {
-  return computeVelocitiesFromWheelspeeds(current_motor_speeds,
+    motor_data current_wheel_speeds) {
+  return computeVelocitiesFromWheelspeeds(current_wheel_speeds,
                                           robot_geometry_);
 }
 
 motor_data SkidRobotMotionController::runMotionControl(
     robot_velocities velocity_targets, motor_data current_duty_cycles,
-    motor_data current_motor_speeds) {
+    motor_data current_wheel_speeds) {
   /* take the time*/
   std::chrono::steady_clock::time_point time_now =
       std::chrono::steady_clock::now();
@@ -630,7 +630,7 @@ motor_data SkidRobotMotionController::runMotionControl(
 
   /* get estimated robot velocities */
   measured_velocities_ =
-      computeVelocitiesFromWheelspeeds(current_motor_speeds, robot_geometry_);
+      computeVelocitiesFromWheelspeeds(current_wheel_speeds, robot_geometry_);
 
   /* limit acceleration */
   robot_velocities velocity_commands;
@@ -659,10 +659,10 @@ motor_data SkidRobotMotionController::runMotionControl(
   motor_data modified_duties;
   switch (operating_mode_) {
     case OPEN_LOOP:
-      duty_cycles_.fr = target_wheel_speeds.fr / open_loop_max_motor_rpm_;
-      duty_cycles_.fl = target_wheel_speeds.fl / open_loop_max_motor_rpm_;
-      duty_cycles_.rr = target_wheel_speeds.rr / open_loop_max_motor_rpm_;
-      duty_cycles_.rl = target_wheel_speeds.rl / open_loop_max_motor_rpm_;
+      duty_cycles_.fr = target_wheel_speeds.fr / open_loop_max_wheel_rpm_;
+      duty_cycles_.fl = target_wheel_speeds.fl / open_loop_max_wheel_rpm_;
+      duty_cycles_.rr = target_wheel_speeds.rr / open_loop_max_wheel_rpm_;
+      duty_cycles_.rl = target_wheel_speeds.rl / open_loop_max_wheel_rpm_;
 
       /* don't allow duties higher than the limits */
       modified_duties = clipDutyCycles_(duty_cycles_);
@@ -671,7 +671,7 @@ motor_data SkidRobotMotionController::runMotionControl(
 
     case INDEPENDENT_WHEEL:
       motor_duties_add =
-          computeMotorCommandsQuad_(target_wheel_speeds, current_motor_speeds);
+          computeMotorCommandsQuad_(target_wheel_speeds, current_wheel_speeds);
 
       /* add the change to the duty cycles */
       duty_cycles_.fl += motor_duties_add.fl;
@@ -693,7 +693,7 @@ motor_data SkidRobotMotionController::runMotionControl(
     case TRACTION_CONTROL:
       /* determine how much change is needed to the duty cycles */
       motor_duties_add =
-          computeMotorCommandsDual_(target_wheel_speeds, current_motor_speeds);
+          computeMotorCommandsDual_(target_wheel_speeds, current_wheel_speeds);
 
       /* add the change to the duty cycles */
       duty_cycles_.fl += motor_duties_add.fl;
@@ -709,7 +709,7 @@ motor_data SkidRobotMotionController::runMotionControl(
 
       /* run traction control */
       modified_duties =
-          computeTorqueDistribution_(current_motor_speeds, duty_cycles_);
+          computeTorqueDistribution_(current_wheel_speeds, duty_cycles_);
 
       /* don't allow duties higher or lower than the limits */
       modified_duties = clipDutyCycles_(modified_duties);
@@ -730,8 +730,8 @@ motor_data SkidRobotMotionController::runMotionControl(
             << velocity_commands.angular_velocity << ","
             << measured_velocities_.linear_velocity << ","
             << measured_velocities_.angular_velocity << ","
-            << current_motor_speeds.fl << "," << current_motor_speeds.fr << ","
-            << current_motor_speeds.rl << "," << current_motor_speeds.rr << ","
+            << current_wheel_speeds.fl << "," << current_wheel_speeds.fr << ","
+            << current_wheel_speeds.rl << "," << current_wheel_speeds.rr << ","
             << duty_cycles_.fl << "," << duty_cycles_.fr << ","
             << duty_cycles_.rr << "," << duty_cycles_.rl << "," << std::endl;
   log_file_.flush();
