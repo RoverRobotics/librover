@@ -47,6 +47,7 @@ class RoverRobotics::CommCan : public RoverRobotics::CommBase {
   int fd;
   int read_size_;
   int Can_port_;
+  const int CAN_MSG_SIZE_;
   std::atomic<bool> is_connected_;
   std::mutex Can_write_mutex_;
   std::thread Can_read_thread_;

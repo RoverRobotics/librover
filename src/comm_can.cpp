@@ -25,7 +25,7 @@ CommCan::CommCan(const char *device,
 
 void CommCan::write_to_device(std::vector<uint8_t> msg) {
   Can_write_mutex_.lock();
-  if (msg.size() == 9) {
+  if (msg.size() == CAN_MSG_SIZE_) {
     // convert msg to frame
     frame.can_id = static_cast<uint32_t>((msg[0] << 24) + (msg[1] << 16) +
                                          (msg[2] << 8) + msg[3]);
