@@ -33,7 +33,7 @@
 
 ## 🧐 About <a name = "about"></a>
 
-Some About
+C++ Library for communicating with all Rover Robotics Products including Rover Pro 1, Rover Zero v2, Rover Pro 2, and Rover Mini.
 
 ## 🏁 Installation <a name = "installation"></a>
 
@@ -47,58 +47,45 @@ make
 sudo make install
 ```
 
-<!-- ### Prerequisites
-
-What things you need to install the software and how to install them.
-
-```
-Some Example
-``` -->
-
-<!-- ### Installing
-
-A step by step series of examples that tell you how to get a development env running.
-
-Say what the step will be
-
-```
-Give the example
-```
-
-And repeat
-
-```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo. -->
-
-<!-- ## 🔧 Running the tests <a name = "tests"></a>
-
-Explain how to run the automated tests for this system.
-
-### Break down into end to end tests
-
-Explain what these tests test and why
-
-```
-Give an example
-``` -->
-
-<!-- ### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
-``` -->
-
 ## 🎈 Usage <a name="usage"></a>
 
-With the library installed. You can now start a new c++ project.
-Open a new c++ project and 
-`#include <librover/*>` 
-to start coding
+We are current have support for both Ros1 and Ros2 using this library.
+You can also use it as a part of your other Frameworks by including this library to your CMAKE files for C++ projects.
+
+This is an example on how to use this library in a c++ project
+```
+#include <librover/protocol_pro> //include robot specific library
+
+int main(int argc, char *argv[]){
+  //Initialize robot parameters
+  Control::pid_gains testgains_ = {0, 0, 0};
+
+  Control::robot_motion_mode_t robot_mode = Control::INDEPENDENT_WHEEL;
+  Control::angular_scaling_params angular_scaling_params_ = {0, 1, 0, 1, 1};
+  //Create a robot object with set parameters
+  std::unique_ptr<BaseProtocolObject> robot_ =
+      std::make_unique<Zero2ProtocolObject>("/dev/rover-zero-v2", "serial",
+                                            robot_mode, testgains_,
+                                            angular_scaling_params_);
+  //Robot Loop  
+  while (true) {
+    //request robot status
+    auto status = robot_->status_request();
+    print_status(status);
+    //set robot velocities
+    robot_->set_robot_velocity({1,0});
+    auto status = robot_->status_request();
+    // robot_->cycle_robot_mode();
+
+    // robot_->send_estop(true);
+
+    // robot_->update_drivetrim(0.01);
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }
+```
+
+
+
 
 
 <!-- ## 🚀 Deployment <a name = "deployment"></a>
