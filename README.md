@@ -1,6 +1,6 @@
 <p align="center">
   <a href="" rel="noopener">
- <img width=206px height=100px src="https://cdn.shopify.com/s/files/1/0055/0433/5925/files/rover_logo_1.png?v=1625525167" alt="Rover Logo"></a>
+ <img width=958px height=338px src="https://cdn.shopify.com/s/files/1/0055/0433/5925/files/rover_logo_1.png?v=1625525167" alt="Rover Logo"></a>
 </p>
 
 <h3 align="center">librover</h3>
