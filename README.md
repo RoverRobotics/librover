@@ -7,10 +7,6 @@
 
 <div align="center">
 
-[![Status](someimg)]()
-[![GitHub Issues](someimg)](https://github.com/roverrobotics/librover/issues)
-[![GitHub Pull Requests](someimg)](https://github.com/RoverRobotics/librover/pulls)
-[![License](someimg)](/LICENSE)
 
 </div>
 
@@ -23,10 +19,8 @@
 ## 📝 Table of Contents
 
 - [About](#about)
-- [Getting Started](#getting_started)
+- [Installation](#installation)
 - [Usage](#usage)
-- [TODO](../TODO.md)
-- [Contributing](../CONTRIBUTING.md)
 - [Authors](#authors)
 
 <!-- - [Deployment](#deployment) -->
@@ -49,7 +43,7 @@ sudo make install
 
 ## 🎈 Usage <a name="usage"></a>
 
-We are current have support for both Ros1 and Ros2 using this library.
+We are currently support both Ros1 and Ros2 using this library. 
 You can also use it as a part of your other Frameworks by including this library to your CMAKE files for C++ projects.
 
 This is an example on how to use this library in a c++ project
@@ -96,6 +90,3 @@ Add additional notes about how to deploy this on a live system. -->
 
 - [@william_rook](https://github.com/drhieu) - Main Maintenaner
 - [@roverrobotics](https://github.com/roverrobotics)
-
-
-See also the list of [contributors](https://github.com/RoverRobotics/librover/contributors) who participated in this project.
