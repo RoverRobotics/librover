@@ -50,7 +50,7 @@ void ProProtocolObject::send_estop(bool estop) {
   robotstatus_mutex_.unlock();
 }
 
-robotData ProProtocolObject::status_request() { std::cerr << robotstatus_.motor1_rpm << std::endl ; return robotstatus_; }
+robotData ProProtocolObject::status_request() { return robotstatus_; }
 
 robotData ProProtocolObject::info_request() { return robotstatus_; }
 
