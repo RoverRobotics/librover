@@ -503,7 +503,7 @@ void Zero2ProtocolObject::send_getvalues_command(int sleeptime) {
 
 void Zero2ProtocolObject::send_motors_commands() {
   robotstatus_mutex_.lock();
-  int32_t v = static_cast<int32_t>(motors_speeds_[FRONT_LEFT] * 100000.0);
+  int32_t v = static_cast<int32_t>(motors_speeds_[BACK_RIGHT] * 100000.0);
   unsigned char *payloadptr;
   uint8_t payload[5];
   payload[0] = COMM_SET_DUTY;
@@ -583,10 +583,10 @@ void Zero2ProtocolObject::send_motors_commands() {
   robotstatus_mutex_.unlock();
   write_buffer.clear();
   robotstatus_mutex_.lock();
-  v = static_cast<int32_t>(motors_speeds_[BACK_RIGHT] * 100000.0);
+  v = static_cast<int32_t>(motors_speeds_[FRONT_LEFT] * 100000.0);
   unsigned char payload4[7];
   payload4[0] = COMM_CAN_FORWARD;
-  payload4[1] = BACK_RIGHT;
+  payload4[1] = FRONT_LEFT;
   payload4[2] = COMM_SET_DUTY;
   payload4[3] = static_cast<uint8_t>((static_cast<uint32_t>(v) >> 24) & 0xFF);
   payload4[4] = static_cast<uint8_t>((static_cast<uint32_t>(v) >> 16) & 0xFF);
@@ -596,7 +596,7 @@ void Zero2ProtocolObject::send_motors_commands() {
   write_buffer = {PAYLOAD_BYTE_SIZE_,
                   FORWARD_MSG_SIZE_,
                   COMM_CAN_FORWARD,
-                  BACK_RIGHT,
+                  FRONT_LEFT,
                   COMM_SET_DUTY,
                   static_cast<uint8_t>((static_cast<uint32_t>(v) >> 24) & 0xFF),
                   static_cast<uint8_t>((static_cast<uint32_t>(v) >> 16) & 0xFF),
