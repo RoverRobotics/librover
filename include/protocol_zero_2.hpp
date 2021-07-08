@@ -81,8 +81,10 @@ private:
 
   enum robot_motors
   {
-    LEFT_MOTOR = 1,
-    RIGHT_MOTOR = 8
+    FRONT_LEFT = 0,
+    FRONT_RIGHT = 1,
+    BACK_LEFT = 2,
+    BACK_RIGHT =3,
   };
   /*
    * @brief Thread Driven function that will send commands to the robot at set

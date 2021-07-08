@@ -19,8 +19,10 @@ Zero2ProtocolObject::Zero2ProtocolObject(
   robotstatus_ = {0};
   /* clear estop and zero out all motors */
   estop_ = false;
-  motors_speeds_[LEFT_MOTOR] = MOTOR_NEUTRAL_;
-  motors_speeds_[RIGHT_MOTOR] = MOTOR_NEUTRAL_;
+  motors_speeds_[FRONT_LEFT] = MOTOR_NEUTRAL_;
+  motors_speeds_[FRONT_RIGHT] = MOTOR_NEUTRAL_;
+  motors_speeds_[BACK_LEFT] = MOTOR_NEUTRAL_;
+  motors_speeds_[BACK_RIGHT] = MOTOR_NEUTRAL_;
   /* register the pid gains for closed-loop modes */
   pid_ = pid;
 
@@ -132,8 +134,8 @@ void Zero2ProtocolObject::motors_control_loop(int sleeptime) {
      * ratio */
     rpm_FL = robotstatus_.motor1_rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
     rpm_FR = robotstatus_.motor2_rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
-    rpm_BL = robotstatus_.motor1_rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
-    rpm_BR = robotstatus_.motor2_rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
+    rpm_BL = robotstatus_.motor3_rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
+    rpm_BR = robotstatus_.motor4_rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
     time_from_msg = robotstatus_.cmd_ts;
     robotstatus_mutex_.unlock();
 
@@ -155,8 +157,10 @@ void Zero2ProtocolObject::motors_control_loop(int sleeptime) {
 
       /* update the main data structure with both commands and status */
       robotstatus_mutex_.lock();
-      motors_speeds_[LEFT_MOTOR] = duty_cycles.fl;
-      motors_speeds_[RIGHT_MOTOR] = duty_cycles.fr;
+      motors_speeds_[FRONT_LEFT] = duty_cycles.fl;
+      motors_speeds_[FRONT_RIGHT] = duty_cycles.fr;
+      motors_speeds_[BACK_LEFT] = duty_cycles.rl;
+      motors_speeds_[BACK_RIGHT] = duty_cycles.rr;
       robotstatus_.linear_vel = velocities.linear_velocity;
       robotstatus_.angular_vel = velocities.angular_velocity;
       robotstatus_mutex_.unlock();
@@ -170,8 +174,10 @@ void Zero2ProtocolObject::motors_control_loop(int sleeptime) {
 
       /* update the main data structure with both commands and status */
       robotstatus_mutex_.lock();
-      motors_speeds_[LEFT_MOTOR] = MOTOR_NEUTRAL_;
-      motors_speeds_[RIGHT_MOTOR] = MOTOR_NEUTRAL_;
+      motors_speeds_[FRONT_LEFT] = MOTOR_NEUTRAL_;
+  motors_speeds_[FRONT_RIGHT] = MOTOR_NEUTRAL_;
+  motors_speeds_[BACK_LEFT] = MOTOR_NEUTRAL_;
+  motors_speeds_[BACK_RIGHT] = MOTOR_NEUTRAL_;
       robotstatus_.linear_vel = velocities.linear_velocity;
       robotstatus_.angular_vel = velocities.angular_velocity;
       robotstatus_mutex_.unlock();
@@ -310,18 +316,32 @@ void Zero2ProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
     std::cerr << std::flush;
     msgqueue.clear();
     // msgqueue.resize(0);
-    if (vesc_dev_id_ == LEFT_MOTOR) {
+    if (vesc_dev_id_ == FRONT_LEFT) {
       robotstatus_.motor1_id = vesc_dev_id_;
       robotstatus_.motor1_current = vesc_all_input_current_;
       robotstatus_.motor1_rpm = vesc_rpm_;
       robotstatus_.motor1_temp = vesc_motor_temp_;
       robotstatus_.motor1_mos_temp = vesc_fet_temp_;
-    } else if (vesc_dev_id_ == RIGHT_MOTOR) {
+    } else if (vesc_dev_id_ == FRONT_RIGHT) {
       robotstatus_.motor2_id = vesc_dev_id_;
       robotstatus_.motor2_current = vesc_all_input_current_;
       robotstatus_.motor2_rpm = vesc_rpm_;
       robotstatus_.motor2_temp = vesc_motor_temp_;
       robotstatus_.motor2_mos_temp = vesc_fet_temp_;
+    }
+    else if (vesc_dev_id_ == BACK_LEFT) {
+      robotstatus_.motor3_id = vesc_dev_id_;
+      robotstatus_.motor3_current = vesc_all_input_current_;
+      robotstatus_.motor3_rpm = vesc_rpm_;
+      robotstatus_.motor3_temp = vesc_motor_temp_;
+      robotstatus_.motor3_mos_temp = vesc_fet_temp_;
+    }
+    else if (vesc_dev_id_ == BACK_RIGHT) {
+      robotstatus_.motor4_id = vesc_dev_id_;
+      robotstatus_.motor4_current = vesc_all_input_current_;
+      robotstatus_.motor4_rpm = vesc_rpm_;
+      robotstatus_.motor4_temp = vesc_motor_temp_;
+      robotstatus_.motor4_mos_temp = vesc_fet_temp_;
     }
     robotstatus_.battery1_voltage = vesc_v_in_;
     robotstatus_.battery1_fault_flag = 0;
@@ -334,15 +354,6 @@ void Zero2ProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
     robotstatus_.battery2_SOC = 0;
     robotstatus_.battery1_fault_flag = 0;
     robotstatus_.battery2_fault_flag = 0;
-    robotstatus_.motor3_rpm = 0;
-    robotstatus_.motor3_current = 0;
-    robotstatus_.motor3_temp = 0;
-    robotstatus_.motor3_mos_temp = 0;
-    robotstatus_.motor4_id = 0;
-    robotstatus_.motor4_rpm = 0;
-    robotstatus_.motor4_current = 0;
-    robotstatus_.motor4_temp = 0;
-    robotstatus_.motor4_mos_temp = 0;
     robotstatus_.robot_guid = 0;
     robotstatus_.robot_firmware = 0;
     robotstatus_.robot_fault_flag = vesc_fault_;
@@ -436,13 +447,45 @@ void Zero2ProtocolObject::send_getvalues_command(int sleeptime) {
       robotstatus_mutex_.lock();
       uint8_t payload2[3];
       payload2[0] = COMM_CAN_FORWARD;
-      payload2[1] = RIGHT_MOTOR;
+      payload2[1] = FRONT_RIGHT;
       payload2[2] = COMM_GET_VALUES;
       payloadptr = payload2;
       MSG_SIZE = 3;
       write_buffer.clear();
       write_buffer = {PAYLOAD_BYTE_SIZE_, MSG_SIZE, COMM_CAN_FORWARD,
-                      RIGHT_MOTOR, COMM_GET_VALUES};
+                      FRONT_RIGHT, COMM_GET_VALUES};
+      crc = crc16(payloadptr, MSG_SIZE);
+      write_buffer.push_back(static_cast<uint8_t>(crc >> 8));
+      write_buffer.push_back(static_cast<uint8_t>(crc & 0xFF));
+      write_buffer.push_back(STOP_BYTE_);
+      comm_base_->write_to_device(write_buffer);
+      robotstatus_mutex_.unlock();
+      robotstatus_mutex_.lock();
+      uint8_t payload3[3];
+      payload3[0] = COMM_CAN_FORWARD;
+      payload3[1] = BACK_LEFT;
+      payload3[2] = COMM_GET_VALUES;
+      payloadptr = payload3;
+      MSG_SIZE = 3;
+      write_buffer.clear();
+      write_buffer = {PAYLOAD_BYTE_SIZE_, MSG_SIZE, COMM_CAN_FORWARD,
+                      BACK_LEFT, COMM_GET_VALUES};
+      crc = crc16(payloadptr, MSG_SIZE);
+      write_buffer.push_back(static_cast<uint8_t>(crc >> 8));
+      write_buffer.push_back(static_cast<uint8_t>(crc & 0xFF));
+      write_buffer.push_back(STOP_BYTE_);
+      comm_base_->write_to_device(write_buffer);
+      robotstatus_mutex_.unlock();
+      robotstatus_mutex_.lock();
+      uint8_t payload4[3];
+      payload4[0] = COMM_CAN_FORWARD;
+      payload4[1] = BACK_RIGHT;
+      payload4[2] = COMM_GET_VALUES;
+      payloadptr = payload4;
+      MSG_SIZE = 3;
+      write_buffer.clear();
+      write_buffer = {PAYLOAD_BYTE_SIZE_, MSG_SIZE, COMM_CAN_FORWARD,
+                      BACK_RIGHT, COMM_GET_VALUES};
       crc = crc16(payloadptr, MSG_SIZE);
       write_buffer.push_back(static_cast<uint8_t>(crc >> 8));
       write_buffer.push_back(static_cast<uint8_t>(crc & 0xFF));
@@ -460,7 +503,7 @@ void Zero2ProtocolObject::send_getvalues_command(int sleeptime) {
 
 void Zero2ProtocolObject::send_motors_commands() {
   robotstatus_mutex_.lock();
-  int32_t v = static_cast<int32_t>(motors_speeds_[LEFT_MOTOR] * 100000.0);
+  int32_t v = static_cast<int32_t>(motors_speeds_[FRONT_LEFT] * 100000.0);
   unsigned char *payloadptr;
   uint8_t payload[5];
   payload[0] = COMM_SET_DUTY;
@@ -486,11 +529,10 @@ void Zero2ProtocolObject::send_motors_commands() {
   robotstatus_mutex_.unlock();
   write_buffer.clear();
   robotstatus_mutex_.lock();
-  // WIP
-  v = static_cast<int32_t>(motors_speeds_[RIGHT_MOTOR] * 100000.0);
+  v = static_cast<int32_t>(motors_speeds_[FRONT_RIGHT] * 100000.0);
   unsigned char payload2[7];
   payload2[0] = COMM_CAN_FORWARD;
-  payload2[1] = RIGHT_MOTOR;
+  payload2[1] = FRONT_RIGHT;
   payload2[2] = COMM_SET_DUTY;
   payload2[3] = static_cast<uint8_t>((static_cast<uint32_t>(v) >> 24) & 0xFF);
   payload2[4] = static_cast<uint8_t>((static_cast<uint32_t>(v) >> 16) & 0xFF);
@@ -500,13 +542,67 @@ void Zero2ProtocolObject::send_motors_commands() {
   write_buffer = {PAYLOAD_BYTE_SIZE_,
                   FORWARD_MSG_SIZE_,
                   COMM_CAN_FORWARD,
-                  RIGHT_MOTOR,
+                  FRONT_RIGHT,
                   COMM_SET_DUTY,
                   static_cast<uint8_t>((static_cast<uint32_t>(v) >> 24) & 0xFF),
                   static_cast<uint8_t>((static_cast<uint32_t>(v) >> 16) & 0xFF),
                   static_cast<uint8_t>((static_cast<uint32_t>(v) >> 8) & 0xFF),
                   static_cast<uint8_t>(static_cast<uint32_t>(v) & 0xFF)};
   crc = crc16(payload2, FORWARD_MSG_SIZE_);
+  write_buffer.push_back(static_cast<uint8_t>(crc >> 8));
+  write_buffer.push_back(static_cast<uint8_t>(crc & 0xFF));
+  write_buffer.push_back(STOP_BYTE_);
+  comm_base_->write_to_device(write_buffer);
+  robotstatus_mutex_.unlock();
+  write_buffer.clear();
+  robotstatus_mutex_.lock();
+  v = static_cast<int32_t>(motors_speeds_[BACK_LEFT] * 100000.0);
+  unsigned char payload3[7];
+  payload3[0] = COMM_CAN_FORWARD;
+  payload3[1] = BACK_LEFT;
+  payload3[2] = COMM_SET_DUTY;
+  payload3[3] = static_cast<uint8_t>((static_cast<uint32_t>(v) >> 24) & 0xFF);
+  payload3[4] = static_cast<uint8_t>((static_cast<uint32_t>(v) >> 16) & 0xFF);
+  payload3[5] = static_cast<uint8_t>((static_cast<uint32_t>(v) >> 8) & 0xFF);
+  payload3[6] = static_cast<uint8_t>((static_cast<uint32_t>(v)) & 0xFF);
+  payloadptr = payload3;
+  write_buffer = {PAYLOAD_BYTE_SIZE_,
+                  FORWARD_MSG_SIZE_,
+                  COMM_CAN_FORWARD,
+                  BACK_LEFT,
+                  COMM_SET_DUTY,
+                  static_cast<uint8_t>((static_cast<uint32_t>(v) >> 24) & 0xFF),
+                  static_cast<uint8_t>((static_cast<uint32_t>(v) >> 16) & 0xFF),
+                  static_cast<uint8_t>((static_cast<uint32_t>(v) >> 8) & 0xFF),
+                  static_cast<uint8_t>(static_cast<uint32_t>(v) & 0xFF)};
+  crc = crc16(payload3, FORWARD_MSG_SIZE_);
+  write_buffer.push_back(static_cast<uint8_t>(crc >> 8));
+  write_buffer.push_back(static_cast<uint8_t>(crc & 0xFF));
+  write_buffer.push_back(STOP_BYTE_);
+  comm_base_->write_to_device(write_buffer);
+  robotstatus_mutex_.unlock();
+  write_buffer.clear();
+  robotstatus_mutex_.lock();
+  v = static_cast<int32_t>(motors_speeds_[BACK_RIGHT] * 100000.0);
+  unsigned char payload4[7];
+  payload4[0] = COMM_CAN_FORWARD;
+  payload4[1] = BACK_RIGHT;
+  payload4[2] = COMM_SET_DUTY;
+  payload4[3] = static_cast<uint8_t>((static_cast<uint32_t>(v) >> 24) & 0xFF);
+  payload4[4] = static_cast<uint8_t>((static_cast<uint32_t>(v) >> 16) & 0xFF);
+  payload4[5] = static_cast<uint8_t>((static_cast<uint32_t>(v) >> 8) & 0xFF);
+  payload4[6] = static_cast<uint8_t>((static_cast<uint32_t>(v)) & 0xFF);
+  payloadptr = payload4;
+  write_buffer = {PAYLOAD_BYTE_SIZE_,
+                  FORWARD_MSG_SIZE_,
+                  COMM_CAN_FORWARD,
+                  BACK_RIGHT,
+                  COMM_SET_DUTY,
+                  static_cast<uint8_t>((static_cast<uint32_t>(v) >> 24) & 0xFF),
+                  static_cast<uint8_t>((static_cast<uint32_t>(v) >> 16) & 0xFF),
+                  static_cast<uint8_t>((static_cast<uint32_t>(v) >> 8) & 0xFF),
+                  static_cast<uint8_t>(static_cast<uint32_t>(v) & 0xFF)};
+  crc = crc16(payload4, FORWARD_MSG_SIZE_);
   write_buffer.push_back(static_cast<uint8_t>(crc >> 8));
   write_buffer.push_back(static_cast<uint8_t>(crc & 0xFF));
   write_buffer.push_back(STOP_BYTE_);
