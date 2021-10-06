@@ -184,10 +184,10 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
         case REG_PWR_TOTAL_CURRENT:
           break;
         case REG_MOTOR_FB_RPM_LEFT:
-          robotstatus_.motor1_rpm = b;
+          robotstatus_.motor1_rpm = b * 2;
           break;
         case REG_MOTOR_FB_RPM_RIGHT:  // motor2_rpm;
-          robotstatus_.motor2_rpm = b;
+          robotstatus_.motor2_rpm = b * 2;
           break;
         case REG_FLIPPER_FB_POSITION_POT1:
           robotstatus_.motor3_sensor1 = b;
