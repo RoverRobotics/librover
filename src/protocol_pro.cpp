@@ -119,6 +119,7 @@ void ProProtocolObject::motors_control_loop(int sleeptime) {
     double motor2_vel = linear_vel + 0.5 * angular_vel;
     if (motor1_vel == 0) motor1_control_.reset();
     if (motor2_vel == 0) motor2_control_.reset();
+    std::cerr << "Firmware V: " << firmware;
     if (firmware == OVF_FIXED_FIRM_VER_) {  // check firmware version
       rpm1 = rpm1 * 2;
       rpm2 = rpm2 * 2;
@@ -300,7 +301,7 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
       robotstatus_.motor4_mos_temp = 0;
       robotstatus_.robot_guid = 0;
       robotstatus_.robot_speed_limit = 0;
-      if (firmware == OVF_FIXED_FIRM_VER_) {  // check firmware version
+      if (robotstatus_.robot_firmware == OVF_FIXED_FIRM_VER_) {  // check firmware version
         robotstatus_.linear_vel =
             0.5 * (robotstatus_.motor1_rpm * 2 / MOTOR_RPM_TO_MPS_RATIO_ +
                    robotstatus_.motor2_rpm * 2 / MOTOR_RPM_TO_MPS_RATIO_);
