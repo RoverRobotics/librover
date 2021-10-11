@@ -120,7 +120,10 @@ void ProProtocolObject::motors_control_loop(int sleeptime) {
     double motor2_vel = linear_vel + 0.5 * angular_vel;
     if (motor1_vel == 0) motor1_control_.reset();
     if (motor2_vel == 0) motor2_control_.reset();
-    
+    if (firmware == OVF_FIXED_FIRM_VER_) { //check firmware version
+      rpm1 = rpm1 * 2;
+      rpm2 = rpm2 * 2;
+    }
     double motor1_measured_vel = rpm1 / MOTOR_RPM_TO_MPS_RATIO_;
     double motor2_measured_vel = rpm2 / MOTOR_RPM_TO_MPS_RATIO_;
     robotstatus_mutex_.lock();
