@@ -2,9 +2,10 @@
 
 namespace RoverRobotics {
 
-ProProtocolObject::ProProtocolObject(const char *device, std::string new_comm_type,
-                  Control::robot_motion_mode_t robot_mode,
-                  Control::pid_gains pid) {
+ProProtocolObject::ProProtocolObject(const char *device,
+                                     std::string new_comm_type,
+                                     Control::robot_motion_mode_t robot_mode,
+                                     Control::pid_gains pid) {
   comm_type_ = new_comm_type;
   robot_mode_ = robot_mode;
   robotstatus_ = {0};
@@ -21,7 +22,7 @@ ProProtocolObject::ProProtocolObject(const char *device, std::string new_comm_ty
       REG_MOTOR_CHARGER_STATE,   BuildNO,
       BATTERY_VOLTAGE_A};
   pid_ = pid;
-  PidGains oldgain = {pid_.kp, pid_.ki , pid_.kd};
+  PidGains oldgain = {pid_.kp, pid_.ki, pid_.kd};
   if (robot_mode_ != Control::OPEN_LOOP)
     closed_loop_ = true;
   else
@@ -50,7 +51,10 @@ void ProProtocolObject::send_estop(bool estop) {
   robotstatus_mutex_.unlock();
 }
 
-robotData ProProtocolObject::status_request() { std::cerr << robotstatus_.motor1_rpm << std::endl ; return robotstatus_; }
+robotData ProProtocolObject::status_request() {
+  std::cerr << robotstatus_.motor1_rpm << std::endl;
+  return robotstatus_;
+}
 
 robotData ProProtocolObject::info_request() { return robotstatus_; }
 
@@ -116,7 +120,7 @@ void ProProtocolObject::motors_control_loop(int sleeptime) {
     double motor2_vel = linear_vel + 0.5 * angular_vel;
     if (motor1_vel == 0) motor1_control_.reset();
     if (motor2_vel == 0) motor2_control_.reset();
-
+    
     double motor1_measured_vel = rpm1 / MOTOR_RPM_TO_MPS_RATIO_;
     double motor2_measured_vel = rpm2 / MOTOR_RPM_TO_MPS_RATIO_;
     robotstatus_mutex_.lock();
@@ -184,10 +188,10 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
         case REG_PWR_TOTAL_CURRENT:
           break;
         case REG_MOTOR_FB_RPM_LEFT:
-          robotstatus_.motor1_rpm = b * 2;
+          robotstatus_.motor1_rpm = b;
           break;
         case REG_MOTOR_FB_RPM_RIGHT:  // motor2_rpm;
-          robotstatus_.motor2_rpm = b * 2;
+          robotstatus_.motor2_rpm = b;
           break;
         case REG_FLIPPER_FB_POSITION_POT1:
           robotstatus_.motor3_sensor1 = b;
@@ -202,8 +206,9 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
           robotstatus_.motor2_current = b;
           break;
         case REG_MOTOR_ENCODER_COUNT_LEFT:
-
+          break;
         case REG_MOTOR_ENCODER_COUNT_RIGHT:
+          break;
         case REG_MOTOR_FAULT_FLAG_LEFT:
           robotstatus_.robot_fault_flag = b;
           break;
@@ -214,21 +219,29 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
           robotstatus_.motor2_temp = b;
           break;
         case REG_PWR_BAT_VOLTAGE_A:
-
+          break;
         case REG_PWR_BAT_VOLTAGE_B:
+          break;
         case EncoderInterval_0:
+          break;
         case EncoderInterval_1:
+          break;
         case EncoderInterval_2:
+          break;
         case REG_ROBOT_REL_SOC_A:
-        case REG_ROBOT_REL_SOC_B:
-        case REG_MOTOR_CHARGER_STATE:
           robotstatus_.battery1_SOC = b;
+          break;
+        case REG_ROBOT_REL_SOC_B:
+          break;
+        case REG_MOTOR_CHARGER_STATE:
           break;
         case BuildNO:
           robotstatus_.robot_firmware = b;
           break;
         case REG_PWR_A_CURRENT:
+          break;
         case REG_PWR_B_CURRENT:
+          break;
         case REG_MOTOR_FLIPPER_ANGLE:
           robotstatus_.motor3_angle = b;
           break;
@@ -236,8 +249,11 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
           robotstatus_.robot_fan_speed = b;
           break;
         case to_computer_REG_MOTOR_SLOW_SPEED:
+          break;
         case BATTERY_STATUS_A:
+          break;
         case BATTERY_STATUS_B:
+          break;
         case BATTERY_MODE_A:
           robotstatus_.battery1_fault_flag = b;
           break;
