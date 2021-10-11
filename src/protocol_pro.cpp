@@ -52,7 +52,6 @@ void ProProtocolObject::send_estop(bool estop) {
 }
 
 robotData ProProtocolObject::status_request() {
-  std::cerr << robotstatus_.motor1_rpm << std::endl;
   return robotstatus_;
 }
 
