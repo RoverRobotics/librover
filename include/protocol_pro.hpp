@@ -88,7 +88,7 @@ class RoverRobotics::ProProtocolObject
   const int MOTOR_NEUTRAL_ = 125;
   const int MOTOR_MAX_ = 250;
   const int MOTOR_MIN_ = 0;
-  const int OVF_FIXED_FIRM_VER_ = 100009; //based on aabbcc format
+  const int OVF_FIXED_FIRM_VER_ = 10009; //based on abbcc format
   const unsigned char startbyte_ = 253;
   const int requestbyte_ = 10;
   const int termios_baud_code_ = 4097;  // THIS = baudrate of 57600
