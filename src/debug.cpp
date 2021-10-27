@@ -4,6 +4,7 @@
 
 #include "protocol_mini.hpp"
 #include "protocol_pro_2.hpp"
+#include "protocol_pro.hpp"
 #include "protocol_zero_2.hpp"
 #include "time.h"
 using namespace RoverRobotics;
@@ -53,7 +54,8 @@ void print_status(RoverRobotics::robotData &robotdata) {
             << "linear_vel " << robotdata.linear_vel << std::endl
             << "angular_vel " << robotdata.angular_vel << std::endl
             << "cmd_linear_vel " << robotdata.cmd_linear_vel << std::endl
-            << "cmd_angular_vel " << robotdata.cmd_angular_vel << std::endl;
+            << "cmd_angular_vel " << robotdata.cmd_angular_vel << std::endl
+	    << "Firmware" << robotdata.robot_firmware << std::endl;
 }
 
 int main() {
@@ -70,9 +72,8 @@ int main() {
   //       "can0", "can", robot_mode, testgains_,
   //       angular_scaling_params_);
   std::unique_ptr<BaseProtocolObject> robot_ =
-      std::make_unique<Zero2ProtocolObject>("/dev/rover-zero-v2", "serial",
-                                            robot_mode, testgains_,
-                                            angular_scaling_params_);
+      std::make_unique<ProProtocolObject>("/dev/rover-pro", "serial",
+                                            robot_mode, testgains_);
   //robot_->cycle_robot_mode();
 
   while (true) {
@@ -84,8 +85,8 @@ int main() {
 
     auto info = robot_->info_request();
     print_status(info);
-    double controlarray[2] = {1, 0};
-    robot_->set_robot_velocity(controlarray);
+    //double controlarray[2] = {1, 0};
+    //robot_->set_robot_velocity(controlarray);
     // robot_->cycle_robot_mode();
 
     // robot_->send_estop(true);
