@@ -1,39 +1,29 @@
 <p align="center">
   <a href="" rel="noopener">
- <img width=206px height=68px src="https://cdn.shopify.com/s/files/1/0055/0433/5925/files/mark_and_word_black_68_206.png?v=1582592595" alt="Rover Logo"></a>
+ <img width=478px height=164px src="https://cdn.shopify.com/s/files/1/0055/0433/5925/files/rover_logo_1.png?v=1625525167" alt="Rover Logo"></a>
 </p>
 
 <h3 align="center">librover</h3>
 
 <div align="center">
 
-[![Status](someimg)]()
-[![GitHub Issues](someimg)](https://github.com/roverrobotics/librover/issues)
-[![GitHub Pull Requests](someimg)](https://github.com/RoverRobotics/librover/pulls)
-[![License](someimg)](/LICENSE)
 
 </div>
 
 ---
 
-<p align="center"> C++ Library for communicating with all Rover Robotics Products including Rover Pro 1, Rover Zero v2, Rover Pro 2, and Rover Mini.
-    <br> 
-</p>
-
 ## 📝 Table of Contents
 
 - [About](#about)
-- [Getting Started](#getting_started)
+- [Installation](#installation)
 - [Usage](#usage)
-- [TODO](../TODO.md)
-- [Contributing](../CONTRIBUTING.md)
 - [Authors](#authors)
 
 <!-- - [Deployment](#deployment) -->
 
 ## 🧐 About <a name = "about"></a>
 
-Some About
+C++ Library for communicating with a Rover Robotics Rover Pro or Rover Zero 2.
 
 ## 🏁 Installation <a name = "installation"></a>
 
@@ -47,58 +37,44 @@ make
 sudo make install
 ```
 
-<!-- ### Prerequisites
-
-What things you need to install the software and how to install them.
-
-```
-Some Example
-``` -->
-
-<!-- ### Installing
-
-A step by step series of examples that tell you how to get a development env running.
-
-Say what the step will be
-
-```
-Give the example
-```
-
-And repeat
-
-```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo. -->
-
-<!-- ## 🔧 Running the tests <a name = "tests"></a>
-
-Explain how to run the automated tests for this system.
-
-### Break down into end to end tests
-
-Explain what these tests test and why
-
-```
-Give an example
-``` -->
-
-<!-- ### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
-``` -->
-
 ## 🎈 Usage <a name="usage"></a>
 
-With the library installed. You can now start a new c++ project.
-Open a new c++ project and 
-`#include <librover/*>` 
-to start coding
+The main purpose of this library is to be a dependancy for our ROS1 and ROS2 drivers, but it can also be used if you are a hardcore C++ programmer, want to use ISAAC SDK, or if you want to create a C++ based GUI.
+
+Below is an example on how to use this library in a C++ project
+```
+#include <librover/protocol_pro> //include robot specific library
+
+int main(int argc, char *argv[]){
+  //Initialize robot parameters
+  Control::pid_gains testgains_ = {0, 0, 0};
+
+  Control::robot_motion_mode_t robot_mode = Control::INDEPENDENT_WHEEL;
+  Control::angular_scaling_params angular_scaling_params_ = {0, 1, 0, 1, 1};
+  //Create a robot object with set parameters
+  std::unique_ptr<BaseProtocolObject> robot_ =
+      std::make_unique<Zero2ProtocolObject>("/dev/rover-zero-v2", "serial",
+                                            robot_mode, testgains_,
+                                            angular_scaling_params_);
+  //Robot Loop  
+  while (true) {
+    //request robot status
+    auto status = robot_->status_request();
+    print_status(status);
+    //set robot velocities
+    robot_->set_robot_velocity({1,0});
+    auto status = robot_->status_request();
+    // robot_->cycle_robot_mode();
+
+    // robot_->send_estop(true);
+
+    // robot_->update_drivetrim(0.01);
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }
+```
+
+
+
 
 
 <!-- ## 🚀 Deployment <a name = "deployment"></a>
@@ -109,6 +85,3 @@ Add additional notes about how to deploy this on a live system. -->
 
 - [@william_rook](https://github.com/drhieu) - Main Maintenaner
 - [@roverrobotics](https://github.com/roverrobotics)
-
-
-See also the list of [contributors](https://github.com/RoverRobotics/librover/contributors) who participated in this project.
