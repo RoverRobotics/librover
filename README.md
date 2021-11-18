@@ -6,8 +6,8 @@
 <h3 align="center">librover</h3>
 
 <div align="center">
-<p>The following diagram shows how librover is used in the broader Rover Robotics Software stack. Most users should need to work directly with this libarary and can instead use the ROS1 and ROS2 drivers which expose its functionality. </p>
-<img width=478px height=164px src="https://raw.githubusercontent.com/RoverRobotics/librover/release/docs/librover_stack_diagram.PNG" alt="librover Stack Diagram"></a>
+<p>The following diagram shows how librover is used in the broader Rover Robotics Software stack. Most users should need to work directly with this library and can instead use the ROS1 and ROS2 drivers which expose its functionality. </p>
+<img width=478px height=200px src="https://raw.githubusercontent.com/RoverRobotics/librover/release/docs/librover_stack_diagram.PNG" alt="librover Stack Diagram"></a>
 
 </div>
 
