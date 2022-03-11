@@ -30,7 +30,7 @@ PersistentParams::read_params_from_file_() {
       return_data.push_back(std::pair<std::string, double>(key, value));
     }
   }else{
-    std::cout << "error reading persistent parameter file" << std::endl;
+    std::cout << "Warning: ~/robot.config file not found, persistent trim disabled" << std::endl;
   }
 
   file_rw_.close();
