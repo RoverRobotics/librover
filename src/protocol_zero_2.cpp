@@ -56,9 +56,13 @@ Zero2ProtocolObject::Zero2ProtocolObject(
   try{
   register_comm_base(device);
   }
+  /*
+  
   catch{
       std::cerr << "error establishing connection to Rover Zero, please check cabling and power to the motor controller (VESC)" << std::endl;
   }
+  
+  */
     
     
   /* create a dedicated write thread to send commands to the robot on fixed
