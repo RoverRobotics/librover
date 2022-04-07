@@ -67,7 +67,7 @@ Zero2ProtocolObject::Zero2ProtocolObject(
     
   /* create a dedicated write thread to send commands to the robot on fixed
    * interval */
-  std::cerr << "creating thread to communicate with rover zero..." << std::endl;
+ /* std::cerr << "creating thread to communicate with rover zero..." << std::endl; */
   write_to_robot_thread_ =
       std::thread([this]() { this->send_getvalues_command(10); });
     
