@@ -194,9 +194,9 @@ double OdomControl::boundMotorSpeed(double motor_speed, double max,
 
 double OdomControl::deadbandOffset(double motor_speed, double deadband_offset) {
   // Compensate for deadband
-  if (motor_speed > 0) {
+  if (motor_speed >= 0) {
     return (motor_speed + deadband_offset);
-  } else if (motor_speed < 0) {
+  } else {
     return (motor_speed - deadband_offset);
   }
 }
