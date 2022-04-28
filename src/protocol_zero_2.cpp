@@ -52,19 +52,30 @@ Zero2ProtocolObject::Zero2ProtocolObject(
   }
     
   /* set up the comm port */
+    
+  /*
+  
   std::cerr << "establishing connection to rover zero..." << std::endl;
   try{
+  
+  */
+    
   register_comm_base(device);
+    
+    /*
   }
   catch{
       std::cerr << "error establishing connection to Rover Zero, please check cabling and power to the motor controller (VESC)" << std::endl;
   }
+  
+  */
     
     
   /* create a dedicated write thread to send commands to the robot on fixed
    * interval */
-  std::cerr << "creating thread to communicate with rover zero..." << std::endl;
+ /* std::cerr << "creating thread to communicate with rover zero..." << std::endl; */
   write_to_robot_thread_ =
+  
       std::thread([this]() { this->send_getvalues_command(10); });
     
   /* create a dedicate thread to compute the desired robot motion, runs on fixed
