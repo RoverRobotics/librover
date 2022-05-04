@@ -93,8 +93,8 @@ class RoverRobotics::ProProtocolObject
   const int requestbyte_ = 10;
   const int termios_baud_code_ = 4097;  // THIS = baudrate of 57600
   const int RECEIVE_MSG_LEN_ = 5;
-  const double odom_angular_coef_ = 2.3;
-  const double odom_traction_factor_ = 0.7;
+  const double odom_angular_coef_ = 2.74;      // Note: this value is 1/l with l, center distance between the wheels, being 0.365
+  const double odom_traction_factor_ = 0.9877; // Default for 2WD is 0.9877, 4WD is 0.610, flipper is 0.98
   const double CONTROL_LOOP_TIMEOUT_MS_ = 200;
   std::unique_ptr<CommBase> comm_base_;
   std::string comm_type_;
