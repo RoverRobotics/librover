@@ -106,7 +106,6 @@ class RoverRobotics::ProProtocolObject
   std::thread fast_data_write_thread_;
   std::thread slow_data_write_thread_;
   std::thread motor_commands_update_thread_;
-  bool estop_;
   bool closed_loop_;
   // Motor PID variables
   OdomControl motor1_control_;

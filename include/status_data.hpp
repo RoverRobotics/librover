@@ -50,6 +50,6 @@ struct robotData {
   std::chrono::milliseconds cmd_ts;
 
   // estop info
-  bool estopOn;
+  bool estop;
 };
 }  // namespace RoverRobotics

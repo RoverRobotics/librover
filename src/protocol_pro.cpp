@@ -9,7 +9,6 @@ ProProtocolObject::ProProtocolObject(const char *device,
   comm_type_ = new_comm_type;
   robot_mode_ = robot_mode;
   robotstatus_ = {0};
-  estop_ = false;
   motors_speeds_[LEFT_MOTOR] = MOTOR_NEUTRAL_;
   motors_speeds_[RIGHT_MOTOR] = MOTOR_NEUTRAL_;
   motors_speeds_[FLIPPER_MOTOR] = MOTOR_NEUTRAL_;
@@ -47,7 +46,7 @@ void ProProtocolObject::update_drivetrim(double value) { trimvalue_ += value; }
 
 void ProProtocolObject::send_estop(bool estop) {
   robotstatus_mutex_.lock();
-  estop_ = estop;
+  robotstatus_.estop = estop;
   robotstatus_mutex_.unlock();
 }
 
@@ -95,7 +94,7 @@ void ProProtocolObject::motors_control_loop(int sleeptime) {
     float ctrl_update_elapsedtime = (time_now - time_from_msg).count();
     float pid_update_elapsedtime = (time_now - time_last).count();
 
-    if (ctrl_update_elapsedtime > CONTROL_LOOP_TIMEOUT_MS_ || estop_) {
+    if (ctrl_update_elapsedtime > CONTROL_LOOP_TIMEOUT_MS_ || robotstatus_.estop) {
       robotstatus_mutex_.lock();
       motors_speeds_[LEFT_MOTOR] = MOTOR_NEUTRAL_;
       motors_speeds_[RIGHT_MOTOR] = MOTOR_NEUTRAL_;
