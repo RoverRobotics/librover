@@ -88,8 +88,8 @@ void ProProtocolObject::motors_control_loop(int sleeptime) {
     int firmware = robotstatus_.robot_firmware;
     linear_vel = robotstatus_.cmd_linear_vel;
     angular_vel = robotstatus_.cmd_angular_vel;
-    rpm1 = robotstatus_.motor1_rpm;
-    rpm2 = robotstatus_.motor2_rpm;
+    rpm1 = robotstatus_.motor1.rpm;
+    rpm2 = robotstatus_.motor2.rpm;
     time_from_msg = robotstatus_.cmd_ts;
     robotstatus_mutex_.unlock();
     float ctrl_update_elapsedtime = (time_now - time_from_msg).count();
@@ -190,10 +190,10 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
         case REG_PWR_TOTAL_CURRENT:
           break;
         case REG_MOTOR_FB_RPM_LEFT:
-          robotstatus_.motor1_rpm = b;
+          robotstatus_.motor1.rpm = b;
           break;
         case REG_MOTOR_FB_RPM_RIGHT:  // motor2_rpm;
-          robotstatus_.motor2_rpm = b;
+          robotstatus_.motor2.rpm = b;
           break;
         case REG_FLIPPER_FB_POSITION_POT1:
           robotstatus_.motor3_sensor1 = b;
@@ -202,10 +202,10 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
           robotstatus_.motor3_sensor2 = b;
           break;
         case REG_MOTOR_FB_CURRENT_LEFT:
-          robotstatus_.motor1_current = b;
+          robotstatus_.motor1.current = b;
           break;
         case REG_MOTOR_FB_CURRENT_RIGHT:
-          robotstatus_.motor2_current = b;
+          robotstatus_.motor2.current = b;
           break;
         case REG_MOTOR_ENCODER_COUNT_LEFT:
           break;
@@ -215,10 +215,10 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
           robotstatus_.robot_fault_flag = b;
           break;
         case REG_MOTOR_TEMP_LEFT:
-          robotstatus_.motor1_temp = b;
+          robotstatus_.motor1.temp = b;
           break;
         case REG_MOTOR_TEMP_RIGHT:
-          robotstatus_.motor2_temp = b;
+          robotstatus_.motor2.temp = b;
           break;
         case REG_PWR_BAT_VOLTAGE_A:
           break;
@@ -231,7 +231,7 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
         case EncoderInterval_2:
           break;
         case REG_ROBOT_REL_SOC_A:
-          robotstatus_.battery1_SOC = b;
+          robotstatus_.battery1.SOC = b;
           break;
         case REG_ROBOT_REL_SOC_B:
           break;
@@ -257,66 +257,66 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
         case BATTERY_STATUS_B:
           break;
         case BATTERY_MODE_A:
-          robotstatus_.battery1_fault_flag = b;
+          robotstatus_.battery1.fault_flag = b;
           break;
         case BATTERY_MODE_B:
-          robotstatus_.battery2_fault_flag = b;
+          robotstatus_.battery2.fault_flag = b;
           break;
         case BATTERY_TEMP_A:
-          robotstatus_.battery1_temp = b;
+          robotstatus_.battery1.temp = b;
           break;
         case BATTERY_TEMP_B:
-          robotstatus_.battery2_temp = b;
+          robotstatus_.battery2.temp = b;
           break;
         case BATTERY_VOLTAGE_A:
-          robotstatus_.battery1_voltage = b;
+          robotstatus_.battery1.voltage = b;
           break;
         case BATTERY_VOLTAGE_B:
-          robotstatus_.battery2_voltage = b;
+          robotstatus_.battery2.voltage = b;
           break;
         case BATTERY_CURRENT_A:
-          robotstatus_.battery1_current = b;
+          robotstatus_.battery1.current = b;
           break;
         case BATTERY_CURRENT_B:
-          robotstatus_.battery2_current = b;
+          robotstatus_.battery2.current = b;
           break;
       }
       // !Same battery system for both A and B on this robot
-      robotstatus_.battery2_SOC = robotstatus_.battery1_SOC;
+      robotstatus_.battery2.SOC = robotstatus_.battery1.SOC;
       // !THESE VALUES ARE NOT AVAILABLE ON ROVER PRO
-      robotstatus_.motor1_id = 0;
-      robotstatus_.motor1_mos_temp = 0;
-      robotstatus_.motor2_id = 0;
-      robotstatus_.motor2_mos_temp = 0;
-      robotstatus_.motor3_id = 0;
-      robotstatus_.motor3_rpm = 0;
-      robotstatus_.motor3_current = 0;
-      robotstatus_.motor3_temp = 0;
-      robotstatus_.motor3_mos_temp = 0;
-      robotstatus_.motor4_id = 0;
-      robotstatus_.motor4_rpm = 0;
-      robotstatus_.motor4_current = 0;
-      robotstatus_.motor4_temp = 0;
-      robotstatus_.motor4_mos_temp = 0;
+      robotstatus_.motor1.id = 0;
+      robotstatus_.motor1.mos_temp = 0;
+      robotstatus_.motor2.id = 0;
+      robotstatus_.motor2.mos_temp = 0;
+      robotstatus_.motor3.id = 0;
+      robotstatus_.motor3.rpm = 0;
+      robotstatus_.motor3.current = 0;
+      robotstatus_.motor3.temp = 0;
+      robotstatus_.motor3.mos_temp = 0;
+      robotstatus_.motor4.id = 0;
+      robotstatus_.motor4.rpm = 0;
+      robotstatus_.motor4.current = 0;
+      robotstatus_.motor4.temp = 0;
+      robotstatus_.motor4.mos_temp = 0;
       robotstatus_.robot_guid = 0;
       robotstatus_.robot_speed_limit = 0;
       if (robotstatus_.robot_firmware == OVF_FIXED_FIRM_VER_) {  // check firmware version
         robotstatus_.linear_vel =
-            0.5 * (robotstatus_.motor1_rpm * 2 / MOTOR_RPM_TO_MPS_RATIO_ +
-                   robotstatus_.motor2_rpm * 2 / MOTOR_RPM_TO_MPS_RATIO_);
+            0.5 * (robotstatus_.motor1.rpm * 2 / MOTOR_RPM_TO_MPS_RATIO_ +
+                   robotstatus_.motor2.rpm * 2 / MOTOR_RPM_TO_MPS_RATIO_);
 
         robotstatus_.angular_vel =
-            ((robotstatus_.motor2_rpm * 2 / MOTOR_RPM_TO_MPS_RATIO_) -
-             (robotstatus_.motor1_rpm * 2 / MOTOR_RPM_TO_MPS_RATIO_)) *
+            ((robotstatus_.motor2.rpm * 2 / MOTOR_RPM_TO_MPS_RATIO_) -
+             (robotstatus_.motor1.rpm * 2 / MOTOR_RPM_TO_MPS_RATIO_)) *
             odom_angular_coef_ * odom_traction_factor_;
       } else {
         robotstatus_.linear_vel =
-            0.5 * (robotstatus_.motor1_rpm / MOTOR_RPM_TO_MPS_RATIO_ +
-                   robotstatus_.motor2_rpm / MOTOR_RPM_TO_MPS_RATIO_);
+            0.5 * (robotstatus_.motor1.rpm / MOTOR_RPM_TO_MPS_RATIO_ +
+                   robotstatus_.motor2.rpm / MOTOR_RPM_TO_MPS_RATIO_);
 
         robotstatus_.angular_vel =
-            ((robotstatus_.motor2_rpm / MOTOR_RPM_TO_MPS_RATIO_) -
-             (robotstatus_.motor1_rpm / MOTOR_RPM_TO_MPS_RATIO_)) *
+            ((robotstatus_.motor2.rpm / MOTOR_RPM_TO_MPS_RATIO_) -
+             (robotstatus_.motor1.rpm / MOTOR_RPM_TO_MPS_RATIO_)) *
             odom_angular_coef_ * odom_traction_factor_;
       }
 

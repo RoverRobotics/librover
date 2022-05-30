@@ -11,37 +11,37 @@ using namespace RoverRobotics;
 
 void print_status(RoverRobotics::robotData &robotdata) {
   std::cerr << "Robot Data " << std::endl
-            << "motor 1 id " << robotdata.motor1_id << std::endl
-            << "motor1_rpm " << robotdata.motor1_rpm << std::endl
-            << "motor1_current " << robotdata.motor1_current << std::endl
-            << "motor1_temp " << robotdata.motor1_temp << std::endl
-            << "motor1_mos_temp " << robotdata.motor1_mos_temp << std::endl
-            << "motor2_id " << robotdata.motor2_id << std::endl
-            << "motor2_rpm " << robotdata.motor2_rpm << std::endl
-            << "motor2_current " << robotdata.motor2_current << std::endl
-            << "motor2_temp " << robotdata.motor2_temp << std::endl
-            << "motor2_mos_temp " << robotdata.motor2_mos_temp << std::endl
-            << "motor3_id " << robotdata.motor3_id << std::endl
-            << "motor3_rpm " << robotdata.motor3_rpm << std::endl
-            << "motor3_current " << robotdata.motor3_current << std::endl
-            << "motor3_temp " << robotdata.motor3_temp << std::endl
-            << "motor3_mos_temp " << robotdata.motor3_mos_temp << std::endl
-            << "motor4_id " << robotdata.motor4_id << std::endl
-            << "motor4_rpm " << robotdata.motor4_rpm << std::endl
-            << "motor4_current " << robotdata.motor4_current << std::endl
-            << "motor4_temp " << robotdata.motor4_temp << std::endl
-            << "motor4_mos_temp " << robotdata.motor4_mos_temp << std::endl
-            << "battery1_voltage " << robotdata.battery1_voltage << std::endl
-            << "battery2_voltage " << robotdata.battery2_voltage << std::endl
-            << "battery1_temp " << robotdata.battery1_temp << std::endl
-            << "battery2_temp " << robotdata.battery2_temp << std::endl
-            << "battery1_current " << robotdata.battery1_current << std::endl
-            << "battery2_current " << robotdata.battery2_current << std::endl
-            << "battery1_SOC " << robotdata.battery1_SOC << std::endl
-            << "battery2_SOC " << robotdata.battery2_SOC << std::endl
-            << "battery1_fault_flag " << robotdata.battery1_fault_flag
+            << "motor 1 id " << robotdata.motor1.id << std::endl
+            << "motor1.rpm " << robotdata.motor1.rpm << std::endl
+            << "motor1.current " << robotdata.motor1.current << std::endl
+            << "motor1.temp " << robotdata.motor1.temp << std::endl
+            << "motor1.mos_temp " << robotdata.motor1.mos_temp << std::endl
+            << "motor2.id " << robotdata.motor2.id << std::endl
+            << "motor2.rpm " << robotdata.motor2.rpm << std::endl
+            << "motor2.current " << robotdata.motor2.current << std::endl
+            << "motor2.temp " << robotdata.motor2.temp << std::endl
+            << "motor2.mos_temp " << robotdata.motor2.mos_temp << std::endl
+            << "motor3.id " << robotdata.motor3.id << std::endl
+            << "motor3.rpm " << robotdata.motor3.rpm << std::endl
+            << "motor3.current " << robotdata.motor3.current << std::endl
+            << "motor3.temp " << robotdata.motor3.temp << std::endl
+            << "motor3.mos_temp " << robotdata.motor3.mos_temp << std::endl
+            << "motor4.id " << robotdata.motor4.id << std::endl
+            << "motor4.rpm " << robotdata.motor4.rpm << std::endl
+            << "motor4.current " << robotdata.motor4.current << std::endl
+            << "motor4.temp " << robotdata.motor4.temp << std::endl
+            << "motor4.mos_temp " << robotdata.motor4.mos_temp << std::endl
+            << "battery1.voltage " << robotdata.battery1.voltage << std::endl
+            << "battery2.voltage " << robotdata.battery2.voltage << std::endl
+            << "battery1.temp " << robotdata.battery1.temp << std::endl
+            << "battery2.temp " << robotdata.battery2.temp << std::endl
+            << "battery1.current " << robotdata.battery1.current << std::endl
+            << "battery2.current " << robotdata.battery2.current << std::endl
+            << "battery1.SOC " << robotdata.battery1.SOC << std::endl
+            << "battery2.SOC " << robotdata.battery2.SOC << std::endl
+            << "battery1.fault_flag " << robotdata.battery1.fault_flag
             << std::endl
-            << "battery2_fault_flag " << robotdata.battery2_fault_flag
+            << "battery2.fault_flag " << robotdata.battery2.fault_flag
             << std::endl
             << "robot_guid " << robotdata.robot_guid << std::endl
             << "robot_firmware " << robotdata.robot_firmware << std::endl

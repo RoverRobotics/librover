@@ -152,10 +152,10 @@ void Zero2ProtocolObject::motors_control_loop(int sleeptime) {
     angular_vel_target = robotstatus_.cmd_angular_vel;
     /* Convert from motors to wheels RPM based on the robot geometry and gear
      * ratio */
-    rpm_FL = robotstatus_.motor1_rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
-    rpm_FR = robotstatus_.motor2_rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
-    rpm_BL = robotstatus_.motor1_rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
-    rpm_BR = robotstatus_.motor2_rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
+    rpm_FL = robotstatus_.motor1.rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
+    rpm_FR = robotstatus_.motor2.rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
+    rpm_BL = robotstatus_.motor1.rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
+    rpm_BR = robotstatus_.motor2.rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
     time_from_msg = robotstatus_.cmd_ts;
     robotstatus_mutex_.unlock();
 
@@ -333,38 +333,38 @@ void Zero2ProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
     msgqueue.clear();
     // msgqueue.resize(0);
     if (vesc_dev_id_ == LEFT_MOTOR) {
-      robotstatus_.motor1_id = vesc_dev_id_;
-      robotstatus_.motor1_current = vesc_all_input_current_;
-      robotstatus_.motor1_rpm = vesc_rpm_;
-      robotstatus_.motor1_temp = vesc_motor_temp_;
-      robotstatus_.motor1_mos_temp = vesc_fet_temp_;
+      robotstatus_.motor1.id = vesc_dev_id_;
+      robotstatus_.motor1.current = vesc_all_input_current_;
+      robotstatus_.motor1.rpm = vesc_rpm_;
+      robotstatus_.motor1.temp = vesc_motor_temp_;
+      robotstatus_.motor1.mos_temp = vesc_fet_temp_;
     } else if (vesc_dev_id_ == RIGHT_MOTOR) {
-      robotstatus_.motor2_id = vesc_dev_id_;
-      robotstatus_.motor2_current = vesc_all_input_current_;
-      robotstatus_.motor2_rpm = vesc_rpm_;
-      robotstatus_.motor2_temp = vesc_motor_temp_;
-      robotstatus_.motor2_mos_temp = vesc_fet_temp_;
+      robotstatus_.motor2.id = vesc_dev_id_;
+      robotstatus_.motor2.current = vesc_all_input_current_;
+      robotstatus_.motor2.rpm = vesc_rpm_;
+      robotstatus_.motor2.temp = vesc_motor_temp_;
+      robotstatus_.motor2.mos_temp = vesc_fet_temp_;
     }
-    robotstatus_.battery1_voltage = vesc_v_in_;
-    robotstatus_.battery1_fault_flag = 0;
-    robotstatus_.battery2_voltage = 0;
-    robotstatus_.battery1_temp = 0;
-    robotstatus_.battery2_temp = 0;
-    robotstatus_.battery1_current = vesc_all_input_current_;
-    robotstatus_.battery2_current = 0;
-    robotstatus_.battery1_SOC = 0;
-    robotstatus_.battery2_SOC = 0;
-    robotstatus_.battery1_fault_flag = 0;
-    robotstatus_.battery2_fault_flag = 0;
-    robotstatus_.motor3_rpm = 0;
-    robotstatus_.motor3_current = 0;
-    robotstatus_.motor3_temp = 0;
-    robotstatus_.motor3_mos_temp = 0;
-    robotstatus_.motor4_id = 0;
-    robotstatus_.motor4_rpm = 0;
-    robotstatus_.motor4_current = 0;
-    robotstatus_.motor4_temp = 0;
-    robotstatus_.motor4_mos_temp = 0;
+    robotstatus_.battery1.voltage = vesc_v_in_;
+    robotstatus_.battery1.fault_flag = 0;
+    robotstatus_.battery2.voltage = 0;
+    robotstatus_.battery1.temp = 0;
+    robotstatus_.battery2.temp = 0;
+    robotstatus_.battery1.current = vesc_all_input_current_;
+    robotstatus_.battery2.current = 0;
+    robotstatus_.battery1.SOC = 0;
+    robotstatus_.battery2.SOC = 0;
+    robotstatus_.battery1.fault_flag = 0;
+    robotstatus_.battery2.fault_flag = 0;
+    robotstatus_.motor3.rpm = 0;
+    robotstatus_.motor3.current = 0;
+    robotstatus_.motor3.temp = 0;
+    robotstatus_.motor3.mos_temp = 0;
+    robotstatus_.motor4.id = 0;
+    robotstatus_.motor4.rpm = 0;
+    robotstatus_.motor4.current = 0;
+    robotstatus_.motor4.temp = 0;
+    robotstatus_.motor4.mos_temp = 0;
     robotstatus_.robot_guid = 0;
     robotstatus_.robot_firmware = 0;
     robotstatus_.robot_fault_flag = vesc_fault_;

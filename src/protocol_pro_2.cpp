@@ -145,24 +145,24 @@ void Pro2ProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
     robotstatus_mutex_.lock();
     switch (parsedMsg.vescId) {
       case (FRONT_LEFT):
-        robotstatus_.motor1_rpm = parsedMsg.rpm;
-        robotstatus_.motor1_id = parsedMsg.vescId;
-        robotstatus_.motor1_current = parsedMsg.current;
+        robotstatus_.motor1.rpm = parsedMsg.rpm;
+        robotstatus_.motor1.id = parsedMsg.vescId;
+        robotstatus_.motor1.current = parsedMsg.current;
         break;
       case (FRONT_RIGHT):
-        robotstatus_.motor2_rpm = parsedMsg.rpm;
-        robotstatus_.motor2_id = parsedMsg.vescId;
-        robotstatus_.motor2_current = parsedMsg.current;
+        robotstatus_.motor2.rpm = parsedMsg.rpm;
+        robotstatus_.motor2.id = parsedMsg.vescId;
+        robotstatus_.motor2.current = parsedMsg.current;
         break;
       case (BACK_LEFT):
-        robotstatus_.motor3_rpm = parsedMsg.rpm;
-        robotstatus_.motor3_id = parsedMsg.vescId;
-        robotstatus_.motor3_current = parsedMsg.current;
+        robotstatus_.motor3.rpm = parsedMsg.rpm;
+        robotstatus_.motor3.id = parsedMsg.vescId;
+        robotstatus_.motor3.current = parsedMsg.current;
         break;
       case (BACK_RIGHT):
-        robotstatus_.motor4_rpm = parsedMsg.rpm;
-        robotstatus_.motor4_id = parsedMsg.vescId;
-        robotstatus_.motor4_current = parsedMsg.current;
+        robotstatus_.motor4.rpm = parsedMsg.rpm;
+        robotstatus_.motor4.id = parsedMsg.vescId;
+        robotstatus_.motor4.current = parsedMsg.current;
         break;
       default:
         break;
@@ -259,10 +259,10 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
     robotstatus_mutex_.lock();
     linear_vel_target = robotstatus_.cmd_linear_vel;
     angular_vel_target = robotstatus_.cmd_angular_vel;
-    rpm_FL = robotstatus_.motor1_rpm;
-    rpm_FR = robotstatus_.motor2_rpm;
-    rpm_BL = robotstatus_.motor3_rpm;
-    rpm_BR = robotstatus_.motor4_rpm;
+    rpm_FL = robotstatus_.motor1.rpm;
+    rpm_FR = robotstatus_.motor2.rpm;
+    rpm_BL = robotstatus_.motor3.rpm;
+    rpm_BR = robotstatus_.motor4.rpm;
     time_from_msg = robotstatus_.cmd_ts;
     robotstatus_mutex_.unlock();
 
