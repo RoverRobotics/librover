@@ -22,10 +22,10 @@ Pro2ProtocolObject::Pro2ProtocolObject(
 
   /* clear estop and zero out all motors */
   estop_ = false;
-  motors_speeds_[FRONT_LEFT] = MOTOR_NEUTRAL_;
-  motors_speeds_[FRONT_RIGHT] = MOTOR_NEUTRAL_;
-  motors_speeds_[BACK_LEFT] = MOTOR_NEUTRAL_;
-  motors_speeds_[BACK_RIGHT] = MOTOR_NEUTRAL_;
+  motors_speeds_[PRO_FRONT_LEFT] = MOTOR_NEUTRAL_;
+  motors_speeds_[PRO_FRONT_RIGHT] = MOTOR_NEUTRAL_;
+  motors_speeds_[PRO_BACK_LEFT] = MOTOR_NEUTRAL_;
+  motors_speeds_[PRO_BACK_RIGHT] = MOTOR_NEUTRAL_;
 
   /* register the pid gains for closed-loop modes */
   pid_ = pid;
@@ -44,8 +44,8 @@ Pro2ProtocolObject::Pro2ProtocolObject(
 
   /* make an object to decode and encode motor controller messages*/
   vescArray_ = vesc::BridgedVescArray(
-      std::vector<uint8_t>{VESC_IDS::FRONT_LEFT, VESC_IDS::FRONT_RIGHT,
-                           VESC_IDS::BACK_LEFT, VESC_IDS::BACK_RIGHT});
+      std::vector<uint8_t>{PRO_VESC_IDS::PRO_FRONT_LEFT, PRO_VESC_IDS::PRO_FRONT_RIGHT,
+                           PRO_VESC_IDS::PRO_BACK_LEFT, PRO_VESC_IDS::PRO_BACK_RIGHT});
 
   /* set mode specific limits */
   switch (robot_mode_) {
@@ -144,22 +144,22 @@ void Pro2ProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
   if (parsedMsg.dataValid) {
     robotstatus_mutex_.lock();
     switch (parsedMsg.vescId) {
-      case (FRONT_LEFT):
+      case (PRO_FRONT_LEFT):
         robotstatus_.motor1_rpm = parsedMsg.rpm;
         robotstatus_.motor1_id = parsedMsg.vescId;
         robotstatus_.motor1_current = parsedMsg.current;
         break;
-      case (FRONT_RIGHT):
+      case (PRO_FRONT_RIGHT):
         robotstatus_.motor2_rpm = parsedMsg.rpm;
         robotstatus_.motor2_id = parsedMsg.vescId;
         robotstatus_.motor2_current = parsedMsg.current;
         break;
-      case (BACK_LEFT):
+      case (PRO_BACK_LEFT):
         robotstatus_.motor3_rpm = parsedMsg.rpm;
         robotstatus_.motor3_id = parsedMsg.vescId;
         robotstatus_.motor3_current = parsedMsg.current;
         break;
-      case (BACK_RIGHT):
+      case (PRO_BACK_RIGHT):
         robotstatus_.motor4_rpm = parsedMsg.rpm;
         robotstatus_.motor4_id = parsedMsg.vescId;
         robotstatus_.motor4_current = parsedMsg.current;
@@ -191,7 +191,7 @@ void Pro2ProtocolObject::send_command(int sleeptime) {
   while (true) {
 
     /* loop over the motors */
-    for (uint8_t vid = VESC_IDS::FRONT_LEFT; vid <= VESC_IDS::BACK_RIGHT;
+    for (uint8_t vid = PRO_VESC_IDS::PRO_FRONT_LEFT; vid <= PRO_VESC_IDS::PRO_BACK_RIGHT;
          vid++) {
 
       robotstatus_mutex_.lock();
@@ -287,10 +287,10 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
 
       /* update the main data structure with both commands and status */
       robotstatus_mutex_.lock();
-      motors_speeds_[FRONT_LEFT] = duty_cycles.fl;
-      motors_speeds_[FRONT_RIGHT] = duty_cycles.fr;
-      motors_speeds_[BACK_LEFT] = duty_cycles.rl;
-      motors_speeds_[BACK_RIGHT] = duty_cycles.rr;
+      motors_speeds_[PRO_FRONT_LEFT] = duty_cycles.fl;
+      motors_speeds_[PRO_FRONT_RIGHT] = duty_cycles.fr;
+      motors_speeds_[PRO_BACK_LEFT] = duty_cycles.rl;
+      motors_speeds_[PRO_BACK_RIGHT] = duty_cycles.rr;
       robotstatus_.linear_vel = velocities.linear_velocity;
       robotstatus_.angular_vel = velocities.angular_velocity;
       robotstatus_mutex_.unlock();
@@ -305,10 +305,10 @@ void Pro2ProtocolObject::motors_control_loop(int sleeptime) {
 
       /* update the main data structure with both commands and status */
       robotstatus_mutex_.lock();
-      motors_speeds_[FRONT_LEFT] = MOTOR_NEUTRAL_;
-      motors_speeds_[FRONT_RIGHT] = MOTOR_NEUTRAL_;
-      motors_speeds_[BACK_LEFT] = MOTOR_NEUTRAL_;
-      motors_speeds_[BACK_RIGHT] = MOTOR_NEUTRAL_;
+      motors_speeds_[PRO_FRONT_LEFT] = MOTOR_NEUTRAL_;
+      motors_speeds_[PRO_FRONT_RIGHT] = MOTOR_NEUTRAL_;
+      motors_speeds_[PRO_BACK_LEFT] = MOTOR_NEUTRAL_;
+      motors_speeds_[PRO_BACK_RIGHT] = MOTOR_NEUTRAL_;
       robotstatus_.linear_vel = velocities.linear_velocity;
       robotstatus_.angular_vel = velocities.angular_velocity;
       robotstatus_mutex_.unlock();

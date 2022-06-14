@@ -6,11 +6,11 @@
 namespace RoverRobotics {
 class Pro2ProtocolObject;
 
-enum VESC_IDS{
-  FRONT_LEFT = 0,
-  FRONT_RIGHT = 1,
-  BACK_LEFT = 2,
-  BACK_RIGHT = 3
+enum PRO_VESC_IDS{
+  PRO_FRONT_LEFT = 0,
+  PRO_FRONT_RIGHT = 1,
+  PRO_BACK_LEFT = 2,
+  PRO_BACK_RIGHT = 3
 };
 
 }
@@ -108,9 +108,9 @@ class RoverRobotics::Pro2ProtocolObject
   
 
   /* metric units (meters) */
-  Control::robot_geometry robot_geometry_ = {.intra_axle_distance = 0.4191,
-                                             .wheel_base = 0.46355,
-                                             .wheel_radius = 0.1397,
+  Control::robot_geometry robot_geometry_ = {.intra_axle_distance = 0.2159,
+                                             .wheel_base = 0.2794,
+                                             .wheel_radius = 0.08255,
                                              .center_of_mass_x_offset = 0,
                                              .center_of_mass_y_offset = 0};
   const float MOTOR_RPM_TO_MPS_RATIO_ = 13749 / 1.26 / 0.72;
