@@ -16,7 +16,8 @@ src/control.cpp
 src/protocol_mini.cpp
 src/vesc.cpp
 src/utilities.cpp
-src/protocol_zero_2.cpp)
+src/protocol_zero_2.cpp
+src/protocol_rosco_manual.cpp)
 
 # set_property(TARGET debug PROPERTY COMPILE_OPTIONS "-std=c++17;-pthread;-DDEBUG")
 

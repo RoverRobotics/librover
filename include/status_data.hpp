@@ -55,6 +55,9 @@ struct robotData {
   // Velocity Info
   double cmd_linear_vel;
   double cmd_angular_vel;
+  // Rosco Info
+  double cmd_left_hip_vel;
+  double cmd_right_hip_vel;
   std::chrono::milliseconds cmd_ts;
 };
 }  // namespace RoverRobotics
