@@ -108,9 +108,9 @@ class RoverRobotics::MegaProtocolObject
   
 
   /* metric units (meters) */
-  Control::robot_geometry robot_geometry_ = {.intra_axle_distance = 0.4191,
-                                             .wheel_base = 0.46355,
-                                             .wheel_radius = 0.1397,
+  Control::robot_geometry robot_geometry_ = {.intra_axle_distance = 0.28702,
+                                             .wheel_base = 0.43815,
+                                             .wheel_radius = 0.123825,
                                              .center_of_mass_x_offset = 0,
                                              .center_of_mass_y_offset = 0};
   const float MOTOR_RPM_TO_MPS_RATIO_ = 13749 / 1.26 / 0.72;
