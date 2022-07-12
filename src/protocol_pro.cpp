@@ -115,8 +115,6 @@ void ProProtocolObject::motors_control_loop(int sleeptime) {
       }
     }
     // !Applying some Skid-steer math
-    // double motor1_vel = linear_vel - 0.5 * angular_vel;
-    // double motor2_vel = linear_vel + 0.5 * angular_vel;
     double motor1_vel = linear_vel - 0.5 * wheel2wheelDistance * angular_vel;
     double motor2_vel = linear_vel + 0.5 * wheel2wheelDistance * angular_vel;
     if (motor1_vel == 0) motor1_control_.reset();
