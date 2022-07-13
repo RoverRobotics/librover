@@ -209,7 +209,7 @@ void Pro2ProtocolObject::send_command(int sleeptime) {
               .vescId = vid,
               .commandType = (useCurrentControl ? vesc::vescPacketFlags::CURRENT
                                                 : vesc::vescPacketFlags::DUTY),
-              .commandValue = (useCurrentControl ? (float)MOTOR_NEUTRAL_ : signedMotorCommand)});
+              .commandValue = (useCurrentControl ? (float)MOTOR_NEUTRAL_ : (float)signedMotorCommand)});
 
       comm_base_->write_to_device(msg);
     }
