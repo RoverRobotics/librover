@@ -115,8 +115,8 @@ void ProProtocolObject::motors_control_loop(int sleeptime) {
       }
     }
     // !Applying some Skid-steer math
-    double motor1_vel = linear_vel - 0.5 * angular_vel;
-    double motor2_vel = linear_vel + 0.5 * angular_vel;
+    double motor1_vel = linear_vel - 0.5 * wheel2wheelDistance * angular_vel;
+    double motor2_vel = linear_vel + 0.5 * wheel2wheelDistance * angular_vel;
     if (motor1_vel == 0) motor1_control_.reset();
     if (motor2_vel == 0) motor2_control_.reset();
     if (firmware == OVF_FIXED_FIRM_VER_) {  // check firmware version
@@ -306,8 +306,8 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
                    robotstatus_.motor2_rpm * 2 / MOTOR_RPM_TO_MPS_RATIO_);
 
         robotstatus_.angular_vel =
-            ((robotstatus_.motor1_rpm * 2 / MOTOR_RPM_TO_MPS_RATIO_) -
-             (robotstatus_.motor2_rpm * 2 / MOTOR_RPM_TO_MPS_RATIO_)) *
+            ((robotstatus_.motor2_rpm * 2 / MOTOR_RPM_TO_MPS_RATIO_) -
+             (robotstatus_.motor1_rpm * 2 / MOTOR_RPM_TO_MPS_RATIO_)) *
             odom_angular_coef_ * odom_traction_factor_;
       } else {
         robotstatus_.linear_vel =
@@ -315,8 +315,8 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
                    robotstatus_.motor2_rpm / MOTOR_RPM_TO_MPS_RATIO_);
 
         robotstatus_.angular_vel =
-            ((robotstatus_.motor1_rpm / MOTOR_RPM_TO_MPS_RATIO_) -
-             (robotstatus_.motor2_rpm / MOTOR_RPM_TO_MPS_RATIO_)) *
+            ((robotstatus_.motor2_rpm / MOTOR_RPM_TO_MPS_RATIO_) -
+             (robotstatus_.motor1_rpm / MOTOR_RPM_TO_MPS_RATIO_)) *
             odom_angular_coef_ * odom_traction_factor_;
       }
 
