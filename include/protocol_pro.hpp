@@ -95,7 +95,7 @@ class RoverRobotics::ProProtocolObject
   const int RECEIVE_MSG_LEN_ = 5;
   const double wheel2wheelDistance = 0.365; // center distance between the wheels
   const double odom_angular_coef_ = 1/wheel2wheelDistance;
-  const double odom_traction_factor_ = 0.9877; // Default for 2WD is 0.9877, 4WD is 0.610, flipper is 0.98
+  const double odom_traction_factor_ = 0.610; // Default for 2WD is 0.9877, 4WD is 0.610, flipper is 0.98
   const double CONTROL_LOOP_TIMEOUT_MS_ = 200;
   std::unique_ptr<CommBase> comm_base_;
   std::string comm_type_;
