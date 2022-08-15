@@ -2,10 +2,7 @@
 
 #include <memory>
 
-#include "protocol_mini.hpp"
-#include "protocol_pro_2.hpp"
-#include "protocol_pro.hpp"
-#include "protocol_zero_2.hpp"
+#include "protocol_rosco_manual.hpp"
 #include "time.h"
 using namespace RoverRobotics;
 
@@ -72,8 +69,9 @@ int main() {
   //       "can0", "can", robot_mode, testgains_,
   //       angular_scaling_params_);
   std::unique_ptr<BaseProtocolObject> robot_ =
-      std::make_unique<ProProtocolObject>("/dev/rover-pro", "serial",
-                                            robot_mode, testgains_);
+      std::make_unique<RMProtocolObject>("/dev/rover-rosco", "serial",
+                                            robot_mode, testgains_,
+                                            angular_scaling_params_);
   //robot_->cycle_robot_mode();
 
   while (true) {

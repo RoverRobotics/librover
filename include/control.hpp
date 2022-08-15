@@ -699,6 +699,7 @@ class Control::RoscoManualController {
    * speed, and current duty cycle
    */
   motor_data runMotionControl(robot_velocities velocity_targets,
+                              robot_hip_velocities hip_velocity_targets,
                               motor_data current_duty_cycles,
                               motor_data current_motor_speeds);
 

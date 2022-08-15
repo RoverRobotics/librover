@@ -7,16 +7,12 @@ add_compile_options(-std=c++17 -lpthread -g -O0)
 
 
 add_library(librover SHARED
-src/protocol_pro.cpp
 src/comm_serial.cpp
 src/utils.cpp
 src/comm_can.cpp
-src/protocol_pro_2.cpp
 src/control.cpp
-src/protocol_mini.cpp
 src/vesc.cpp
 src/utilities.cpp
-src/protocol_zero_2.cpp
 src/protocol_rosco_manual.cpp)
 
 # set_property(TARGET debug PROPERTY COMPILE_OPTIONS "-std=c++17;-pthread;-DDEBUG")

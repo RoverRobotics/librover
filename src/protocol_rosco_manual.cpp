@@ -279,6 +279,8 @@ void RMProtocolObject::motors_control_loop(int sleeptime) {
       auto duty_cycles = rosco_control_->runMotionControl(
           (Control::robot_velocities){.linear_velocity = linear_vel_target,
                                       .angular_velocity = angular_vel_target},
+          (Control::robot_hip_velocities){.left_hip_velocity = left_hip_vel_target,
+                                          .right_hip_velocity = right_hip_vel_target},
           (Control::motor_data){.fl = 0, .fr = 0, .rl = 0, .rr = 0},
           (Control::motor_data){
               .fl = rpm_FL, .fr = rpm_FR, .rl = rpm_BL, .rr = rpm_BR});
@@ -304,7 +306,7 @@ void RMProtocolObject::motors_control_loop(int sleeptime) {
 
       /* COMMAND THE ROBOT TO STOP */
       auto duty_cycles = rosco_control_->runMotionControl(
-          {0, 0}, {0, 0, 0, 0}, {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
+          {0, 0}, {0, 0}, {0, 0, 0, 0}, {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
       auto velocities = rosco_control_->getMeasuredVelocities(
           {rpm_FL, rpm_FR, rpm_BL, rpm_BR});
 

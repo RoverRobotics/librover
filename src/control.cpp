@@ -1097,7 +1097,8 @@ robot_velocities RoscoManualController::getMeasuredVelocities(
 }
 
 motor_data RoscoManualController::runMotionControl(
-    robot_velocities velocity_targets, motor_data current_duty_cycles,
+    robot_velocities velocity_targets, robot_hip_velocities hip_velocity_targets, 
+    motor_data current_duty_cycles,
     motor_data current_wheel_speeds) {
   /* take the time*/
   std::chrono::steady_clock::time_point time_now =
@@ -1118,13 +1119,20 @@ motor_data RoscoManualController::runMotionControl(
 
   /* limit acceleration */
   robot_velocities velocity_commands;
-  robot_hip_velocities hip_commands = {left_hip_velocity, // rosco hip
-                                   right_hip_velocity};
+  robot_hip_velocities hip_commands; // rosco hip
   robot_velocities acceleration_limits = {max_linear_acceleration_,
                                           max_angular_acceleration_};
 
+  /* TODO: add hips to limitAcceleration
+  add function to scale hip commands to limit hip joint speed
+  add hips to computeRoscoManualWheelSpeeds
+  check other functions for usefulness to hips and integrate as needed
+  i.e. PID */
+
   velocity_commands = limitAcceleration(velocity_targets, measured_velocities_,
                                         acceleration_limits, delta_time);
+
+  hip_commands = hip_velocity_targets;
 
   /* scale the angular command */
   velocity_commands = scaleAngularCommand(
