@@ -4,21 +4,21 @@
 #include "utilities.hpp"
 
 namespace RoverRobotics {
-class MiniProtocolObject;
+class MegaProtocolObject;
 
-enum MINI_VESC_IDS{
-  MINI_FRONT_LEFT = 1,
-  MINI_FRONT_RIGHT = 2,
-  MINI_BACK_LEFT = 3,
-  MINI_BACK_RIGHT = 4
+enum MEGA_VESC_IDS{
+  MEGA_FRONT_LEFT = 1,
+  MEGA_FRONT_RIGHT = 2,
+  MEGA_BACK_LEFT = 3,
+  MEGA_BACK_RIGHT = 4
 };
 
 }
 
-class RoverRobotics::MiniProtocolObject
+class RoverRobotics::MegaProtocolObject
     : public RoverRobotics::BaseProtocolObject {
  public:
-  MiniProtocolObject(const char *device, std::string new_comm_type,
+  MegaProtocolObject(const char *device, std::string new_comm_type,
                      Control::robot_motion_mode_t robot_mode,
                      Control::pid_gains pid,
                      Control::angular_scaling_params angular_scale);
@@ -108,9 +108,9 @@ class RoverRobotics::MiniProtocolObject
   
 
   /* metric units (meters) */
-  Control::robot_geometry robot_geometry_ = {.intra_axle_distance = 0.2159,
-                                             .wheel_base = 0.2794,
-                                             .wheel_radius = 0.08255,
+  Control::robot_geometry robot_geometry_ = {.intra_axle_distance = 0.28702,
+                                             .wheel_base = 0.43815,
+                                             .wheel_radius = 0.123825,
                                              .center_of_mass_x_offset = 0,
                                              .center_of_mass_y_offset = 0};
   const float MOTOR_RPM_TO_MPS_RATIO_ = 13749 / 1.26 / 0.72;

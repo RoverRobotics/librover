@@ -1,6 +1,6 @@
-#include "protocol_mini.hpp"
+#include "protocol_mega.hpp"
 namespace RoverRobotics {
-MiniProtocolObject::MiniProtocolObject(
+MegaProtocolObject::MegaProtocolObject(
     const char *device, std::string new_comm_type,
     Control::robot_motion_mode_t robot_mode, Control::pid_gains pid,
     Control::angular_scaling_params angular_scale) {
@@ -22,10 +22,10 @@ MiniProtocolObject::MiniProtocolObject(
 
   /* clear estop and zero out all motors */
   estop_ = false;
-  motors_speeds_[MINI_FRONT_LEFT] = MOTOR_NEUTRAL_;
-  motors_speeds_[MINI_FRONT_RIGHT] = MOTOR_NEUTRAL_;
-  motors_speeds_[MINI_BACK_LEFT] = MOTOR_NEUTRAL_;
-  motors_speeds_[MINI_BACK_RIGHT] = MOTOR_NEUTRAL_;
+  motors_speeds_[MEGA_FRONT_LEFT] = MOTOR_NEUTRAL_;
+  motors_speeds_[MEGA_FRONT_RIGHT] = MOTOR_NEUTRAL_;
+  motors_speeds_[MEGA_BACK_LEFT] = MOTOR_NEUTRAL_;
+  motors_speeds_[MEGA_BACK_RIGHT] = MOTOR_NEUTRAL_;
 
   /* register the pid gains for closed-loop modes */
   pid_ = pid;
@@ -44,8 +44,8 @@ MiniProtocolObject::MiniProtocolObject(
 
   /* make an object to decode and encode motor controller messages*/
   vescArray_ = vesc::BridgedVescArray(
-      std::vector<uint8_t>{MINI_VESC_IDS::MINI_FRONT_LEFT, MINI_VESC_IDS::MINI_FRONT_RIGHT,
-                           MINI_VESC_IDS::MINI_BACK_LEFT, MINI_VESC_IDS::MINI_BACK_RIGHT});
+      std::vector<uint8_t>{MEGA_VESC_IDS::MEGA_FRONT_LEFT, MEGA_VESC_IDS::MEGA_FRONT_RIGHT,
+                           MEGA_VESC_IDS::MEGA_BACK_LEFT, MEGA_VESC_IDS::MEGA_BACK_RIGHT});
 
   /* set mode specific limits */
   switch (robot_mode_) {
@@ -79,7 +79,7 @@ MiniProtocolObject::MiniProtocolObject(
       std::thread([this]() { this->motors_control_loop(30); });
 }
 
-void MiniProtocolObject::load_persistent_params() {
+void MegaProtocolObject::load_persistent_params() {
   
   /* trim (aka curvature correction) */
   if(auto param = persistent_params_->read_param("trim")){
@@ -88,7 +88,7 @@ void MiniProtocolObject::load_persistent_params() {
   }
 }
 
-void MiniProtocolObject::update_drivetrim(double delta) {
+void MegaProtocolObject::update_drivetrim(double delta) {
 
   if (-MAX_CURVATURE_CORRECTION_ < (trimvalue_ + delta) && (trimvalue_ + delta) < MAX_CURVATURE_CORRECTION_) {
     trimvalue_ += delta;
@@ -110,27 +110,27 @@ void MiniProtocolObject::update_drivetrim(double delta) {
   
 }
 
-void MiniProtocolObject::send_estop(bool estop) {
+void MegaProtocolObject::send_estop(bool estop) {
   robotstatus_mutex_.lock();
   estop_ = estop;
   robotstatus_mutex_.unlock();
 }
 
-robotData MiniProtocolObject::status_request() { 
+robotData MegaProtocolObject::status_request() { 
   robotstatus_mutex_.lock();
   auto returnData = robotstatus_;
   robotstatus_mutex_.unlock();
   return returnData; 
 }
 
-robotData MiniProtocolObject::info_request() { 
+robotData MegaProtocolObject::info_request() { 
   robotstatus_mutex_.lock();
   auto returnData = robotstatus_;
   robotstatus_mutex_.unlock();
   return returnData; 
 }
 
-void MiniProtocolObject::set_robot_velocity(double *control_array) {
+void MegaProtocolObject::set_robot_velocity(double *control_array) {
   robotstatus_mutex_.lock();
   robotstatus_.cmd_linear_vel = control_array[0];
   robotstatus_.cmd_angular_vel = control_array[1];
@@ -139,27 +139,27 @@ void MiniProtocolObject::set_robot_velocity(double *control_array) {
   robotstatus_mutex_.unlock();
 }
 
-void MiniProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
+void MegaProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
   auto parsedMsg = vescArray_.parseReceivedMessage(robotmsg);
   if (parsedMsg.dataValid) {
     robotstatus_mutex_.lock();
     switch (parsedMsg.vescId) {
-      case (MINI_FRONT_LEFT):
+      case (MEGA_FRONT_LEFT):
         robotstatus_.motor1_rpm = parsedMsg.rpm;
         robotstatus_.motor1_id = parsedMsg.vescId;
         robotstatus_.motor1_current = parsedMsg.current;
         break;
-      case (MINI_FRONT_RIGHT):
+      case (MEGA_FRONT_RIGHT):
         robotstatus_.motor2_rpm = parsedMsg.rpm;
         robotstatus_.motor2_id = parsedMsg.vescId;
         robotstatus_.motor2_current = parsedMsg.current;
         break;
-      case (MINI_BACK_LEFT):
+      case (MEGA_BACK_LEFT):
         robotstatus_.motor3_rpm = parsedMsg.rpm;
         robotstatus_.motor3_id = parsedMsg.vescId;
         robotstatus_.motor3_current = parsedMsg.current;
         break;
-      case (MINI_BACK_RIGHT):
+      case (MEGA_BACK_RIGHT):
         robotstatus_.motor4_rpm = parsedMsg.rpm;
         robotstatus_.motor4_id = parsedMsg.vescId;
         robotstatus_.motor4_current = parsedMsg.current;
@@ -171,9 +171,9 @@ void MiniProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
   }
 }
 
-bool MiniProtocolObject::is_connected() { return comm_base_->is_connected(); }
+bool MegaProtocolObject::is_connected() { return comm_base_->is_connected(); }
 
-void MiniProtocolObject::register_comm_base(const char *device) {
+void MegaProtocolObject::register_comm_base(const char *device) {
   std::vector<uint8_t> setting;
   if (comm_type_ == "can") {
     try {
@@ -187,11 +187,11 @@ void MiniProtocolObject::register_comm_base(const char *device) {
     throw(-2);
 }
 
-void MiniProtocolObject::send_command(int sleeptime) {
+void MegaProtocolObject::send_command(int sleeptime) {
   while (true) {
 
     /* loop over the motors */
-    for (uint8_t vid = MINI_VESC_IDS::MINI_FRONT_LEFT; vid <= MINI_VESC_IDS::MINI_BACK_RIGHT;
+    for (uint8_t vid = MEGA_VESC_IDS::MEGA_FRONT_LEFT; vid <= MEGA_VESC_IDS::MEGA_BACK_RIGHT;
          vid++) {
 
       robotstatus_mutex_.lock();
@@ -218,7 +218,7 @@ void MiniProtocolObject::send_command(int sleeptime) {
   }
 }
 
-int MiniProtocolObject::cycle_robot_mode() {
+int MegaProtocolObject::cycle_robot_mode() {
   
   robotmode_num_ = ++robotmode_num_ % (Control::NUM_MOTION_MODES);
  
@@ -243,7 +243,7 @@ int MiniProtocolObject::cycle_robot_mode() {
   return robotmode_num_;
 }
 
-void MiniProtocolObject::motors_control_loop(int sleeptime) {
+void MegaProtocolObject::motors_control_loop(int sleeptime) {
   float linear_vel_target, angular_vel_target, rpm_FL, rpm_FR, rpm_BL, rpm_BR;
   std::chrono::milliseconds time_last =
       std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -287,10 +287,10 @@ void MiniProtocolObject::motors_control_loop(int sleeptime) {
 
       /* update the main data structure with both commands and status */
       robotstatus_mutex_.lock();
-      motors_speeds_[MINI_FRONT_LEFT] = duty_cycles.fl;
-      motors_speeds_[MINI_FRONT_RIGHT] = duty_cycles.fr;
-      motors_speeds_[MINI_BACK_LEFT] = duty_cycles.rl;
-      motors_speeds_[MINI_BACK_RIGHT] = duty_cycles.rr;
+      motors_speeds_[MEGA_FRONT_LEFT] = duty_cycles.fl;
+      motors_speeds_[MEGA_FRONT_RIGHT] = duty_cycles.fr;
+      motors_speeds_[MEGA_BACK_LEFT] = duty_cycles.rl;
+      motors_speeds_[MEGA_BACK_RIGHT] = duty_cycles.rr;
       robotstatus_.linear_vel = velocities.linear_velocity;
       robotstatus_.angular_vel = velocities.angular_velocity;
       robotstatus_mutex_.unlock();
@@ -305,10 +305,10 @@ void MiniProtocolObject::motors_control_loop(int sleeptime) {
 
       /* update the main data structure with both commands and status */
       robotstatus_mutex_.lock();
-      motors_speeds_[MINI_FRONT_LEFT] = MOTOR_NEUTRAL_;
-      motors_speeds_[MINI_FRONT_RIGHT] = MOTOR_NEUTRAL_;
-      motors_speeds_[MINI_BACK_LEFT] = MOTOR_NEUTRAL_;
-      motors_speeds_[MINI_BACK_RIGHT] = MOTOR_NEUTRAL_;
+      motors_speeds_[MEGA_FRONT_LEFT] = MOTOR_NEUTRAL_;
+      motors_speeds_[MEGA_FRONT_RIGHT] = MOTOR_NEUTRAL_;
+      motors_speeds_[MEGA_BACK_LEFT] = MOTOR_NEUTRAL_;
+      motors_speeds_[MEGA_BACK_RIGHT] = MOTOR_NEUTRAL_;
       robotstatus_.linear_vel = velocities.linear_velocity;
       robotstatus_.angular_vel = velocities.angular_velocity;
       robotstatus_mutex_.unlock();
