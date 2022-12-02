@@ -84,9 +84,9 @@ class RoverRobotics::ProProtocolObject
    * @param sleeptime sleep time between each cycle
    */
   void motors_control_loop(int sleeptime);
-  const float MOTOR_RPM_TO_MPS_RATIO_ = 1 / (MOTOR_GEAR_RATIO_ * MOTOR_DIST_PER_ROT_ / 60.0); // Divided by 60 to convert from minutes to seconds. 
   const float MOTOR_GEAR_RATIO_ = 1.0 / 192.0; // Gear ratio from motor to wheel shaft including motor poles for converting from ERPM -> RPM
   const float MOTOR_DIST_PER_ROT_ = 0.8179; // 0.8179 Meters per rotation of wheel (wheel diameter of 10.25 inches / 0.26035 m)
+  const float MOTOR_RPM_TO_MPS_RATIO_ = 1 / (MOTOR_GEAR_RATIO_ * MOTOR_DIST_PER_ROT_ / 60.0); // Divided by 60 to convert from minutes to seconds. 
   const int MOTOR_NEUTRAL_ = 125;
   const int MOTOR_MAX_ = 250;
   const int MOTOR_MIN_ = 0;
