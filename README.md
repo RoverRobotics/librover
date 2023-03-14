@@ -84,5 +84,4 @@ Add additional notes about how to deploy this on a live system. -->
 
 ## ✍️ Authors <a name = "authors"></a>
 
-- [@william_rook](https://github.com/drhieu) - Main Maintenaner
 - [@roverrobotics](https://github.com/roverrobotics)
