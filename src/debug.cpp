@@ -74,7 +74,7 @@ int main() {
   std::unique_ptr<BaseProtocolObject> robot_;
   try{
     robot_ =
-      std::make_unique<ProProtocolObject>("ftdi://ftdi:2232:1:4/1", "spi_can",
+      std::make_unique<MiniProtocolObject>("ftdi://ftdi:2232:1:4/1", "spi_can",
                                             robot_mode, testgains_);
   } catch(int i) {
     std::cout << i << std::endl;
