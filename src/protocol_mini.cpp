@@ -185,6 +185,7 @@ void MiniProtocolObject::register_comm_base(const char *device) {
     }
   } else if (comm_type_ == "spi_can"){
     try {
+      std::cout << "Trying to make spi comm base" << std::endl;
       comm_base_ = std::make_unique<CommCanSPI>(
           device, [this](std::vector<uint8_t> c) { unpack_comm_response(c); },
           setting);
