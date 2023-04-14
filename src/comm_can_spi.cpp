@@ -13,15 +13,13 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
         throw(-1);
     }
     
-    // Open the device using the ftdi:// URL "ftdi://ftdi:2232:1:4/1"
+    // Open the device using ftdi desc
     ret = ftdi_usb_open_string(ftdi, "d:001/004");
     if (ret < 0) {
         std::cerr << "Failed to open FTDI device: " << ftdi_get_error_string(ftdi) << "\n";
         ftdi_free(ftdi);
         throw(-1);
     }
-    
-    // Do something with the device here...
     
     ftdi_usb_close(ftdi);
     ftdi_free(ftdi);
