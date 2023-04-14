@@ -10,7 +10,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
         fprintf(stderr, "ftdi_init failed: %d\n", ret);
         throw(-1);
     }
-    if ((ret = ftdi_usb_open_desc(&(ftdic.ftdi), 0x0403, 0x6010, "ftdi://ftdi:2232:1:4/1", NULL)) < 0) {
+    if ((ret = ftdi_usb_open_string(&(ftdic.ftdi), "ftdi://ftdi:2232:1:4/1")) < 0) {
         fprintf(stderr, "ftdi_usb_open_desc failed: %d (%s)\n", ret, ftdi_get_error_string(&(ftdic.ftdi)));
         ftdi_deinit(&(ftdic.ftdi));
         throw(-1);
