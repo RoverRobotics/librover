@@ -2,6 +2,7 @@
 
 #include "comm_base.hpp"
 #include "comm_can.hpp"
+#include "comm_can_spi.hpp"
 #include "comm_serial.hpp"
 #include "control.hpp"
 #include "utilities.hpp"

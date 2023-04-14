@@ -11,6 +11,7 @@ src/protocol_pro.cpp
 src/comm_serial.cpp
 src/utils.cpp
 src/comm_can.cpp
+src/comm_can_spi.cpp
 src/protocol_pro_2.cpp
 src/control.cpp
 src/protocol_mini.cpp
@@ -37,4 +38,4 @@ install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAM
 
 add_compile_options(-std=c++17 -DDEBUG -lpthread -g -O0)
 add_executable(debug.out src/debug.cpp)
-target_link_libraries(debug.out LINK_PUBLIC librover pthread)
+target_link_libraries(debug.out LINK_PUBLIC librover pthread mpsse)

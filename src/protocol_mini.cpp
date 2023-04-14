@@ -183,8 +183,17 @@ void MiniProtocolObject::register_comm_base(const char *device) {
     } catch (int i) {
       throw(i);
     }
-  } else
+  } else if (comm_type_ == "spi_can"){
+    try {
+      comm_base_ = std::make_unique<CommCanSPI>(
+          device, [this](std::vector<uint8_t> c) { unpack_comm_response(c); },
+          setting);
+    } catch (int i) {
+      throw(i);
+    }
+  } else {
     throw(-2);
+  }
 }
 
 void MiniProtocolObject::send_command(int sleeptime) {
