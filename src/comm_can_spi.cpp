@@ -6,17 +6,17 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   // Create mpsse context and check if successful
   struct mpsse_context *mpsse = MPSSE(SPI0, ONE_MHZ, MSB);
   if (!mpsse) { 
-    std::cerr << "Failed to initialize MPSSE context" << std::endl;
-    throw(-1);
+    std::cout << "Failed to initialize MPSSE context" << std::endl;
+    throw(-3);
   }
   
   // Open connection with device (For now: vid 0403, pid 6010, bus 001, device 004, spi freq 1MHz)
   if (ftdi_usb_open_string(&(mpsse->ftdi), device) != 1){
     std::cerr << "Failed to open " << device;
-    throw(-1);
+    throw(-4);
   }
 
-  std::cout << "Opened " << mpsse->ftdi.usb_dev;
+  std::cerr << "Opened " << mpsse->ftdi.usb_dev;
 
   // start read thread
   Can_read_thread_ = std::thread(
