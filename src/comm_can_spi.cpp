@@ -5,14 +5,16 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   
   // Create mpsse context and check if successful
   struct mpsse_context *mpsse = MPSSE(SPI0, ONE_MHZ, MSB);
+  std::cout << "Trying to initialize mpsse" << std::endl;
   if (!mpsse) { 
     std::cout << "Failed to initialize MPSSE context" << std::endl;
     throw(-3);
   }
   
   // Open connection with device (For now: vid 0403, pid 6010, bus 001, device 004, spi freq 1MHz)
+  std::cout << "Trying to open ftdi" << std::endl;
   if (ftdi_usb_open_string(&(mpsse->ftdi), device) != 1){
-    std::cerr << "Failed to open " << device;
+    std::cout << "Failed to open " << device;
     throw(-4);
   }
 
