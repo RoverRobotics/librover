@@ -1,6 +1,7 @@
 #pragma once
 #include "comm_base.hpp"
 #include <mpsse.h>
+#include <ftdi.h>
 
 namespace RoverRobotics {
 class CommCanSPI;

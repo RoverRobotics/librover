@@ -4,25 +4,26 @@ namespace RoverRobotics {
 CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_t>)> parsefunction, std::vector<uint8_t> setting) : is_connected_(false) {
   
   // Create mpsse context and check if successful
-  struct mpsse_context *mpsse = MPSSE(SPI0, ONE_MHZ, MSB);
-  std::cout << "Trying to initialize mpsse" << std::endl;
-  if (mpsse->open == 0) { 
-    std::cout << "Failed to initialize MPSSE context" << std::endl;
-    throw(-3);
-  }
-  
-  // Open connection with device (For now: vid 0403, pid 6010, bus 001, device 004, spi freq 1MHz)
-  std::cout << "Trying to open ftdi" << std::endl;
-  if (ftdi_usb_open_string(&(mpsse->ftdi), device) != 1){
-    std::cout << "Failed to open " << device;
-    throw(-4);
-  }
-
-  std::cerr << "Opened " << mpsse->ftdi.usb_dev;
-
+  struct mpsse_context ftdic;
+    int ret;
+    if ((ret = ftdi_init(&(ftdic.ftdi))) < 0) {
+        fprintf(stderr, "ftdi_init failed: %d\n", ret);
+        throw(-1);
+    }
+    if ((ret = ftdi_usb_open_desc(&(ftdic.ftdi), 0x0403, 0x6010, "ftdi://ftdi:2232:1:4/1", NULL)) < 0) {
+        fprintf(stderr, "ftdi_usb_open_desc failed: %d (%s)\n", ret, ftdi_get_error_string(&(ftdic.ftdi)));
+        ftdi_deinit(&(ftdic.ftdi));
+        throw(-1);
+    }
+    // MPSSE device is open, do something with it
+    ftdi_usb_close(&(ftdic.ftdi));
+    ftdi_deinit(&(ftdic.ftdi));
+    throw(-1);
   // start read thread
+  /*
   Can_read_thread_ = std::thread(
       [this, parsefunction, mpsse]() { this->read_device_loop(parsefunction); });
+      */
 }
 
 void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
