@@ -71,9 +71,14 @@ int main() {
   // std::make_unique<Pro2ProtocolObject>(
   //       "can0", "can", robot_mode, testgains_,
   //       angular_scaling_params_);
-  std::unique_ptr<BaseProtocolObject> robot_ =
+  std::unique_ptr<BaseProtocolObject> robot_;
+  try{
+    robot_ =
       std::make_unique<ProProtocolObject>("ftdi://ftdi:2232:1:4/1", "spi_can",
                                             robot_mode, testgains_);
+  } catch(int i) {
+    std::cout << i << std::endl;
+  }
   //robot_->cycle_robot_mode();
 
   while (true) {
