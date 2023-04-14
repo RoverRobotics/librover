@@ -6,7 +6,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   // Create mpsse context and check if successful
   struct mpsse_context *mpsse = MPSSE(SPI0, ONE_MHZ, MSB);
   std::cout << "Trying to initialize mpsse" << std::endl;
-  if (!mpsse) { 
+  if (mpsse->open == 0) { 
     std::cout << "Failed to initialize MPSSE context" << std::endl;
     throw(-3);
   }
