@@ -75,7 +75,7 @@ int main() {
   try{
     robot_ =
       std::make_unique<MiniProtocolObject>("ftdi://ftdi:2232:1:4/1", "spi_can",
-                                            robot_mode, testgains_);
+                                            Control::INDEPENDENT_WHEEL, testgains_);
   } catch(int i) {
     std::cout << i << std::endl;
   }
