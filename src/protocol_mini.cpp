@@ -69,14 +69,15 @@ MiniProtocolObject::MiniProtocolObject(
   /* set up the comm port */
   try {
     register_comm_base(device);
+
     /* create a dedicated write thread to send commands to the robot on fixed
     * interval */
-    write_to_robot_thread_ = std::thread([this]() { this->send_command(30); });
+    //write_to_robot_thread_ = std::thread([this]() { this->send_command(30); });
 
     /* create a dedicate thread to compute the desired robot motion, runs on fixed
     * interval */
-    motor_speed_update_thread_ =
-        std::thread([this]() { this->motors_control_loop(30); }); 
+    //motor_speed_update_thread_ = std::thread([this]() { this->motors_control_loop(30); }); 
+    
   } catch(int i) {
     throw(i);
   }
