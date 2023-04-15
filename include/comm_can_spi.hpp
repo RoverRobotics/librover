@@ -1,6 +1,5 @@
 #pragma once
 #include "comm_base.hpp"
-#include <mpsse.h>
 #include <ftdi.h>
 
 #define FTDI_CREATION_FAIL -1
@@ -36,14 +35,14 @@ class RoverRobotics::CommCanSPI : public RoverRobotics::CommBase {
    * by accepting a vector of unsigned int 32 and convert it to a byte stream
    * @param msg message to convert and write to device
    */
-  void write_to_device(ftdi_context* ftdi, std::vector<uint8_t> msg);
+  void write_to_device(std::vector<uint8_t> msg);
   /*
    * @brief Read data from Can Device
    * by reading the current device buffer then convert to a vector of unsigned
    * int 32.
    * @param callback to process the unsigned int 32.
    */
-  void read_device_loop(ftdi_context* ftdi, std::function<void(std::vector<uint8_t>)>);
+  void read_device_loop(std::function<void(std::vector<uint8_t>)>);
   /*
    * @brief Check if Can device is still connected by check the state of the
    * file descriptor
@@ -52,6 +51,7 @@ class RoverRobotics::CommCanSPI : public RoverRobotics::CommBase {
   bool is_connected();
 
  private:
+  struct ftdi_context *ftdi;
   struct sockaddr_can addr;  // CAN Address
   struct can_frame frame;
   struct can_frame robot_frame;

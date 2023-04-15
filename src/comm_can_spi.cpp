@@ -4,7 +4,6 @@ namespace RoverRobotics {
 CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_t>)> parsefunction, std::vector<uint8_t> setting) : is_connected_(false) {
   // Local Variables
   int ret;
-  struct ftdi_context *ftdi;
   struct ftdi_device_list *devlist;
 
   // Create FTDI Context
@@ -33,10 +32,10 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   unsigned char config[] = {0x8a, 0x97, 0x0b, 0x00, 0x00};
   // start read thread
   Can_read_thread_ = std::thread(
-      [this, parsefunction, ftdi]() { this->read_device_loop(ftdi, parsefunction); });
+      [this, parsefunction]() { this->read_device_loop(parsefunction); });
 }
 
-void CommCanSPI::write_to_device(ftdi_context* ftdi, std::vector<uint8_t> msg) {
+void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
   /*
   Can_write_mutex_.lock();
   if (msg.size() == CAN_MSG_SIZE_) {
@@ -54,7 +53,7 @@ void CommCanSPI::write_to_device(ftdi_context* ftdi, std::vector<uint8_t> msg) {
   */
 }
 
-void CommCanSPI::read_device_loop(ftdi_context* ftdi, std::function<void(std::vector<uint8_t>)> parsefunction) {
+void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> parsefunction) {
   /*
   std::chrono::milliseconds time_last =
       std::chrono::duration_cast<std::chrono::milliseconds>(

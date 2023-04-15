@@ -78,6 +78,7 @@ int main() {
                                                   Control::INDEPENDENT_WHEEL, testgains_, angular_scaling_params_);
   } catch(int i) {
     std::cout << i << std::endl;
+    return EXIT_FAILURE;
   }
   //robot_->cycle_robot_mode();
 
