@@ -76,9 +76,11 @@ int main() {
     std::cout << "Trying to make CommCanSPI object" << std::endl;
     //robot_ = std::make_unique<MiniProtocolObject>("ftdi://ftdi:2232:1:4/1", "spi_can", 
      //                                             Control::INDEPENDENT_WHEEL, testgains_, angular_scaling_params_);
-     std::unique_ptr<CommBase> comm_base_ = std::make_unique<CommCanSPI>(
+    
+    std::vector<uint8_t> setting;
+    std::unique_ptr<CommBase> comm_base_ = std::make_unique<CommCanSPI>(
           "", [](std::vector<uint8_t> c){ do_nothing_(c); },
-          0);
+          setting);
   } catch(int i) {
     std::cout << i << std::endl;
     return EXIT_FAILURE;
