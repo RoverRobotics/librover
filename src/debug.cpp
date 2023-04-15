@@ -58,6 +58,10 @@ void print_status(RoverRobotics::robotData &robotdata) {
 	    << "Firmware" << robotdata.robot_firmware << std::endl;
 }
 
+void do_nothing_(std::vector<uint8_t> robotmsg) {
+  
+}
+
 int main() {
   // Control::pid_gains testgains_ = {0.0009, 0, 0.00007};
   Control::pid_gains testgains_ = {0, 0, 0};
@@ -108,6 +112,3 @@ int main() {
   */
 }
 
-void do_nothing_(std::vector<uint8_t> robotmsg) {
-  
-}
