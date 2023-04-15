@@ -10,7 +10,6 @@
 #define MCP_CMD_WRITE 0x02
 #define MCP_CMD_READ 0x03
 #define MCP_REG_CANCNTRL 0x0F
-#define MCP_REG_
 
 namespace RoverRobotics {
 class CommCanSPI;
