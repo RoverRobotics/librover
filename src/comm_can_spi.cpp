@@ -2,41 +2,47 @@
 
 namespace RoverRobotics {
 CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_t>)> parsefunction, std::vector<uint8_t> setting) : is_connected_(false) {
-  
-  // Create mpsse context and check if successful
-  struct ftdi_context* ftdi;
-    int ret;
-    
-    ftdi = ftdi_new();
-    if (ftdi == nullptr) {
-        std::cerr << "Failed to initialize libftdi context\n";
-        throw(-1);
-    }
-    
-    // Open the device using ftdi desc
-    ret = ftdi_usb_open_string(ftdi, "d:001/004");
-    if (ret < 0) {
-        std::cerr << "Failed to open FTDI device: " << ftdi_get_error_string(ftdi) << "\n";
-        ftdi_free(ftdi);
-        throw(-1);
-    }
-    
-    ftdi_usb_close(ftdi);
+  // Local Variables
+  int ret;
+  struct ftdi_context *ftdi;
+  struct ftdi_device_list *devlist;
+
+  // Create FTDI Context
+  if ((ftdi = ftdi_new()) == 0) { 
+    fprintf(stderr, "Creating FTDI context failed [ftdi_new()]\n");
+    throw(FTDI_CREATION_FAIL); 
+  }
+
+  // Open FTDI Device and throw an error if it fails
+  if ((ret = ftdi_usb_open_desc_index(ftdi, 0x0403, 0x6010, NULL, NULL, 1)) < 0){
+    fprintf(stderr, "Unable to open ftdi device %d (%s)\n", ret, ftdi_get_error_string(ftdi));
     ftdi_free(ftdi);
+    throw(OPEN_DEVICE_FAIL);
+  }
+
+  // Select Interface A for can
+  printf("Selecting Channel A: %i\n", ftdi_set_interface(ftdi, INTERFACE_A));
+
+  // Set timeout
+  printf("Setting the latency timeout value: %i\n", ftdi_set_latency_timer(ftdi, 2));
+
+  // Enable MPSSE mode
+  printf("Setting to MPSSE Mode: %i\n", ftdi_set_bitmode(ftdi, 0, BITMODE_MPSSE));
+  
+  // configure SPI bus
+  unsigned char config[] = {0x8a, 0x97, 0x0b, 0x00, 0x00};
   // start read thread
-  /*
   Can_read_thread_ = std::thread(
-      [this, parsefunction, mpsse]() { this->read_device_loop(parsefunction); });
-      */
+      [this, parsefunction, ftdi]() { this->read_device_loop(ftdi, parsefunction); });
 }
 
-void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
+void CommCanSPI::write_to_device(ftdi_context* ftdi, std::vector<uint8_t> msg) {
   /*
   Can_write_mutex_.lock();
   if (msg.size() == CAN_MSG_SIZE_) {
     // convert msg to frame
-    frame.can_id = static_cast<uint32_t>((msg[0] << 24) + (msg[1] << 16) +
-                                         (msg[2] << 8) + msg[3]);
+    frame.can_id = static_cast<uint32_t>((msg[0] << 24) + (msg[1] << 16) + (msg[2] << 8) + msg[3]);
+    
     frame.can_dlc = msg[4];
     frame.data[0] = msg[5];
     frame.data[1] = msg[6];
@@ -48,8 +54,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
   */
 }
 
-void CommCanSPI::read_device_loop(
-    std::function<void(std::vector<uint8_t>)> parsefunction) {
+void CommCanSPI::read_device_loop(ftdi_context* ftdi, std::function<void(std::vector<uint8_t>)> parsefunction) {
   /*
   std::chrono::milliseconds time_last =
       std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -83,6 +88,13 @@ void CommCanSPI::read_device_loop(
   }
   */
 }
+
+/*
+int CommCanSPI::convert_frame_to_spi(const can_frame& frame, uint8_t* buf){
+  int len = 0;
+  buf[len++] = frame.can_id >> 24;
+}
+*/
 
 bool CommCanSPI::is_connected() { return (is_connected_); }
 
