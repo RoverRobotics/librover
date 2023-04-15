@@ -67,8 +67,11 @@ MiniProtocolObject::MiniProtocolObject(
   }
 
   /* set up the comm port */
-  register_comm_base(device);
-
+  try {
+    register_comm_base(device);
+  } catch(int i) {
+    throw(i);
+  }
   /* create a dedicated write thread to send commands to the robot on fixed
    * interval */
   write_to_robot_thread_ = std::thread([this]() { this->send_command(30); });
