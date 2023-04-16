@@ -30,6 +30,11 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   
   // configure SPI bus
   unsigned char config[] = {0x8a, 0x97, 0x0b, 0x00, 0x00};
+  if(ftdi_write_data(ftdi, config, 5) < 0){
+    fprintf(stderr, "Unable to configure ftdi device %d (%s)\n", ret, ftdi_get_error_string(ftdi));
+    ftdi_free(ftdi);
+    throw(OPEN_DEVICE_FAIL);
+  }
   // start read thread
   
   Can_read_thread_ = std::thread(
