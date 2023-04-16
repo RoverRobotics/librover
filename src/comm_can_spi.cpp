@@ -61,7 +61,6 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     };
 
     ftdi_write_data(ftdi, write_buffer, spi_msg_size);
-    delete[] write_buffer;
   }
   Can_write_mutex_.unlock();
 }
