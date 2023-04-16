@@ -5,7 +5,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   // Local Variables
   int ret;
   struct ftdi_device_list *devlist;
-
+  
   // Create FTDI Context
   if ((ftdi = ftdi_new()) == 0) { 
     fprintf(stderr, "Creating FTDI context failed [ftdi_new()]\n");
@@ -19,6 +19,20 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     throw(OPEN_DEVICE_FAIL);
   }
 
+  // Reset
+  if (ftdi_usb_reset(ftdi) < 0) {
+    fprintf(stderr, "Failed to reset USB device\n");
+    ftdi_deinit(ftdi);
+    throw(OPEN_DEVICE_FAIL);
+  }
+  
+  // Set baud
+  if (ftdi_set_baudrate(ftdi, 10000000) < 0) {
+    fprintf(stderr, "Failed to set FTDI SPI frequency\n");
+    ftdi_deinit(ftdi);
+    throw(OPEN_DEVICE_FAIL);
+  }
+
   // Select Interface A for can
   printf("Selecting Channel A: %i\n", ftdi_set_interface(ftdi, INTERFACE_A));
 
@@ -28,11 +42,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   // Enable MPSSE mode
   printf("Setting to MPSSE Mode: %i\n", ftdi_set_bitmode(ftdi, 0, BITMODE_MPSSE));
   
-  if (ftdi_usb_reset(ftdi) < 0) {
-    fprintf(stderr, "Failed to reset USB device\n");
-    ftdi_deinit(ftdi);
-    throw(OPEN_DEVICE_FAIL);
-  }
+
 
   // Read CANCTRL register
   unsigned char spi_read_canctrl[] = {
