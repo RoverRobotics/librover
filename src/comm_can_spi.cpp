@@ -13,7 +13,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   }
 
   // Open FTDI Device and throw an error if it fails
-  if ((ret = ftdi_usb_open_desc_index(ftdi, 0x0403, 0x6010, NULL, NULL, 1) < 0)){
+  if ((ret = ftdi_usb_open_desc_index(ftdi, 0x0403, 0x6010, NULL, NULL, 0) < 0)){
     fprintf(stderr, "Unable to open ftdi device %d (%s)\n", ret, ftdi_get_error_string(ftdi));
     ftdi_free(ftdi);
     throw(OPEN_DEVICE_FAIL);
