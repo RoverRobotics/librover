@@ -12,6 +12,10 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     throw(FTDI_CREATION_FAIL); 
   }
 
+  if ((ftdi_init(ftdi)) == NULL) { 
+    fprintf(stderr, "Init FTDI context failed [ftdi_init(ftdi)]\n");
+    throw(FTDI_CREATION_FAIL); 
+  }
   // Open FTDI Device and throw an error if it fails
   if ((ret = ftdi_usb_open_desc_index(ftdi, 0x0403, 0x6010, NULL, NULL, 1)) < 0){
     fprintf(stderr, "Unable to open ftdi device %d (%s)\n", ret, ftdi_get_error_string(ftdi));
