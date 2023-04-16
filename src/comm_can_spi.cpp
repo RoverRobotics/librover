@@ -45,15 +45,22 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     ftdi_write_data(ftdi, spi_settings, sizeof(spi_settings));
 
   // Read CANCTRL register
-  unsigned char spi_read_canctrl[] = {
-    MCP_CMD_READ,
-    0x0F
-  };
+  unsigned char spi_cs_low[] = { 0x80, 0x08 };
+  ftdi_write_data(ftdi, spi_cs_low, 2);
+
+  // Send the SPI read command for the CANCTRL register (address 0x0F)
+  unsigned char spi_read_canctrl[] = { 0x03, 0x0F, 0x00 };
   ftdi_write_data(ftdi, spi_read_canctrl, 3);
-  unsigned char spi_read_buffer[1] = {0};
-  int r = ftdi_read_data(ftdi, spi_read_buffer, 1);
+
+  // Read back the response from the device
+  unsigned char spi_read_buffer[1] = { 0x00 };
+  ftdi_read_data(ftdi, spi_read_buffer, 1);
+
+  // Set the chip select pin back to high
+  unsigned char spi_cs_high[] = { 0x80, 0x00 };
+  ftdi_write_data(ftdi, spi_cs_high, 2);
+
   printf("CANCTRL Register: 0x%02x\n", spi_read_buffer[0]);
-  printf("Read %d bytes from CANCTRL\n", r);
 
   unsigned char spi_read_can3[] = {
     MCP_CMD_READ,
