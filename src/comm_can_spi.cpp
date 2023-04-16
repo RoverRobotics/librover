@@ -69,9 +69,9 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
   std::chrono::milliseconds time_last =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
-  unsigned char read_buffer[15];
+  unsigned char read_buffer[13];
   while (true) {
-    int num_bytes = ftdi_read_data(ftdi, read_buffer, 15);
+    int num_bytes = ftdi_read_data(ftdi, read_buffer, 13);
     std::chrono::milliseconds time_now =
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch());
