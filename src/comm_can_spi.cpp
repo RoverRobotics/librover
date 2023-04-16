@@ -13,7 +13,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   }
 
   // Open FTDI Device and throw an error if it fails
-  if ((ret = ftdi_usb_open_desc_index(ftdi, 0x0403, 0x6010, NULL, NULL, 1) < 0)){
+  if ((ret = ftdi_usb_open_desc_index(ftdi, 0x0403, 0x6010, NULL, NULL, 1)) < 0){
     fprintf(stderr, "Unable to open ftdi device %d (%s)\n", ret, ftdi_get_error_string(ftdi));
     ftdi_free(ftdi);
     throw(OPEN_DEVICE_FAIL);
@@ -79,10 +79,10 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   }
   */
   // start read thread
-  
+  /*
   Can_read_thread_ = std::thread(
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
-  
+  */
 }
 
 void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
