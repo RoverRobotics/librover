@@ -31,37 +31,48 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   // configure SPI bus
   unsigned char config[] = {0x8a, 0x97, 0x0b, 0x00, 0x00};
   // start read thread
-  /*
+  
   Can_read_thread_ = std::thread(
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
-  */
+  
 }
 
 void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
-  /*
   Can_write_mutex_.lock();
   if (msg.size() == CAN_MSG_SIZE_) {
-    // convert msg to frame
-    frame.can_id = static_cast<uint32_t>((msg[0] << 24) + (msg[1] << 16) + (msg[2] << 8) + msg[3]);
-    
-    frame.can_dlc = msg[4];
-    frame.data[0] = msg[5];
-    frame.data[1] = msg[6];
-    frame.data[2] = msg[7];
-    frame.data[3] = msg[8];
-    write(fd, &frame, sizeof(struct can_frame));
+    // convert msg to spi frame
+    int spi_msg_size = msg.size() + 6; // msg size = 9 + 3 bytes for SPI write + 3 bytes for SPI frame
+    unsigned char write_buffer[] = {
+      0x80, // FTDI Chip Start Condition
+      spi_msg_size - 3, // SPI data length
+      MCP_CMD_WRITE, // Write to MCP
+      0x01, // Address high Byte
+      0x23, // Address Low Byte
+      msg[0],
+      msg[1],
+      msg[2],
+      msg[3],
+      msg[4],
+      msg[5],
+      msg[6],
+      msg[7],
+      msg[8],
+      0x00 // FTDI Chip end condition
+    };
+
+    ftdi_write_data(ftdi, write_buffer, spi_msg_size);
+    delete[] write_buffer;
   }
   Can_write_mutex_.unlock();
-  */
 }
 
 void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> parsefunction) {
-  /*
   std::chrono::milliseconds time_last =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
+  unsigned char read_buffer[15];
   while (true) {
-    int num_bytes = read(fd, &robot_frame, sizeof(robot_frame));
+    int num_bytes = ftdi_read_data(ftdi, read_buffer, 15);
     std::chrono::milliseconds time_now =
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch());
@@ -75,27 +86,15 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
     time_last = time_now;
     std::vector<uint8_t> msg;
 
-    msg.push_back(robot_frame.can_id >> 24);
-    msg.push_back(robot_frame.can_id >> 16);
-    msg.push_back(robot_frame.can_id >> 8);
-    msg.push_back(robot_frame.can_id);
-    msg.push_back(robot_frame.can_dlc);
-    for (int i = 0; i < sizeof(robot_frame.data); i++) {
-      msg.push_back(robot_frame.data[i]);
+    for (int i = 0; i < num_bytes; i++) {
+      msg.push_back(read_buffer[i]);
     }
     parsefunction(msg);
     msg.clear();
     
   }
-  */
 }
 
-/*
-int CommCanSPI::convert_frame_to_spi(const can_frame& frame, uint8_t* buf){
-  int len = 0;
-  buf[len++] = frame.can_id >> 24;
-}
-*/
 
 bool CommCanSPI::is_connected() { return (is_connected_); }
 

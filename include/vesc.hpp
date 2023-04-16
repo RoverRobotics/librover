@@ -47,10 +47,8 @@ const uint32_t SEND_MSG_LENGTH = 4;
 class vesc::BridgedVescArray {
  public:
   BridgedVescArray(std::vector<uint8_t> vescIds = std::vector<uint8_t>{0, 1, 2, 3});
-  vesc::vescChannelStatus parseReceivedMessage(
-      std::vector<uint8_t> robotmsg);
-  std::vector<uint8_t> buildCommandMessage(
-      vesc::vescChannelCommand command);
+  vesc::vescChannelStatus parseReceivedMessage(std::vector<uint8_t> robotmsg);
+  std::vector<uint8_t> buildCommandMessage(vesc::vescChannelCommand command);
 
  private:
   std::vector<uint8_t> vescIds_;
