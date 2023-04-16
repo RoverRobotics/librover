@@ -52,8 +52,8 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   unsigned char spi_read_canctrl[] = { 0x03, 0x0F, 0x00 };
   ftdi_write_data(ftdi, spi_read_canctrl, 3);
 
-  usleep(1000); // 1 ms
-  
+  usleep(10000); // 1 ms
+
   // Read back the response from the device
   unsigned char spi_read_buffer[1] = { 0x00 };
   ftdi_read_data(ftdi, spi_read_buffer, 1);
