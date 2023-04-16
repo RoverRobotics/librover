@@ -41,7 +41,6 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   ftdi_read_data(ftdi, spi_read_buffer, 3);
   printf("CANCTRL Register: 0x%x\n", spi_read_buffer[2]);
 
-  /*
   // configure SPI bus
   unsigned char config[] = {
   0x80,     // disable divide by 5 (0x80 | 0x08)
@@ -61,7 +60,6 @@ if (ret < 0) {
   ftdi_free(ftdi);
   throw(OPEN_DEVICE_FAIL);
 }
-*/
   // start read thread
   
   Can_read_thread_ = std::thread(
