@@ -78,6 +78,7 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
     if (num_bytes <= 0) {
       if ((time_now - time_last).count() > TIMEOUT_MS_) {
         is_connected_ = false;
+        ftdi_usb_close(ftdi);
       }
       continue;
     }

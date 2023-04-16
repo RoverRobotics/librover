@@ -102,13 +102,6 @@ int main() {
 
     auto info = robot_->info_request();
     print_status(info);
-    double controlarray[2] = {0.01, 0};
-    robot_->set_robot_velocity(controlarray);
-    info = robot_->info_request();
-    print_status(info);
-    controlarray[0] = 0;
-    controlarray[1] = 0;
-    robot_->set_robot_velocity(controlarray);
     // robot_->cycle_robot_mode();
 
     // robot_->send_estop(true);
