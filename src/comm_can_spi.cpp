@@ -82,6 +82,7 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
       }
       continue;
     }
+    printf("Number of Bytes Read in Device Loop: %d\n", num_bytes);
     is_connected_ = true;
     time_last = time_now;
     std::vector<uint8_t> msg;
