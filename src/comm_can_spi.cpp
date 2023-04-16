@@ -68,6 +68,11 @@ if (ret < 0) {
 }
 
 void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
+  std::cout << "Expected CAN message: ";
+  for (int i = 0; i < CAN_MSG_SIZE_; i++) {
+    std::cout << std::hex << static_cast<int>(msg[i]) << " ";
+  }
+  std::cout << std::endl;
   Can_write_mutex_.lock();
   if (msg.size() == CAN_MSG_SIZE_) {
     // convert msg to spi frame
