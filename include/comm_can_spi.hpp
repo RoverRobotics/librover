@@ -3,8 +3,8 @@
 #include <ftdi.h>
 
 #define FTDI_CREATION_FAIL -1
-#define OPEN_DEVICE_FAIL -2
-#define CLOSE_DEVICE_FAIL -3
+#define OPEN_DEVICE_FAIL -1
+#define CLOSE_DEVICE_FAIL -1
 
 // MCP25625 Commands and Registers
 #define MCP_CMD_WRITE 0x02
