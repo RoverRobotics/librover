@@ -114,13 +114,13 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
       }
       continue;
     }
-    printf("Number of Bytes Read in Device Loop: %d\n", num_bytes);
+    //printf("Number of Bytes Read in Device Loop: %d\n", num_bytes);
     is_connected_ = true;
     time_last = time_now;
     std::vector<uint8_t> msg;
 
     for (int i = 0; i < num_bytes; i++) {
-      printf("Read Byte[%d]: 0x%x\n", i, read_buffer[i]);
+      //printf("Read Byte[%d]: 0x%x\n", i, read_buffer[i]);
       msg.push_back(read_buffer[i]);
     }
     parsefunction(msg);
