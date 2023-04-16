@@ -128,6 +128,7 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
     
     try{
       parsefunction(msg);
+      is_connected_ = true;
     } catch(int i){
       if (i == -4){
         printf("Not a valid RPM packet. Connection = False\n");
