@@ -34,33 +34,18 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
 
   // Enable MPSSE mode
   printf("Setting to MPSSE Mode: %i\n", ftdi_set_bitmode(ftdi, 0, BITMODE_MPSSE));
-  
-  // Set SPI Settings
-    unsigned char spi_settings[] = {
-        0x80, // Disable clock divide-by-5
-        0x8A, // Enable 3-phase data clocking, active-high CS, and MSB first
-        0x04, 0x00, // Set clock divisor to 4 for 10 MHz clock
-        0x00 // Turn off loopback
-    };
-    ftdi_write_data(ftdi, spi_settings, sizeof(spi_settings));
 
   // Read CANCTRL register
-  unsigned char spi_cs_low[] = { 0x80, 0x08 };
-  ftdi_write_data(ftdi, spi_cs_low, 2);
 
   // Send the SPI read command for the CANCTRL register (address 0x0F)
   unsigned char spi_read_canctrl[] = { 0x03, 0x0F, 0x00 };
   ftdi_write_data(ftdi, spi_read_canctrl, 3);
 
-  usleep(10000); // 1 ms
 
   // Read back the response from the device
   unsigned char spi_read_buffer[1] = { 0x00 };
   ftdi_read_data(ftdi, spi_read_buffer, 1);
 
-  // Set the chip select pin back to high
-  unsigned char spi_cs_high[] = { 0x80, 0x00 };
-  ftdi_write_data(ftdi, spi_cs_high, 2);
 
   printf("CANCTRL Register: 0x%02x\n", spi_read_buffer[0]);
 
