@@ -77,22 +77,24 @@ int main() {
   //       angular_scaling_params_);
   std::unique_ptr<BaseProtocolObject> robot_;
   try{
-    std::cout << "Trying to make Mini Protocol object" << std::endl;
+    // std::cout << "Trying to make Mini Protocol object" << std::endl;
+    /*
     robot_ = std::make_unique<MiniProtocolObject>("ftdi://ftdi:2232:1:4/1", "spi_can", 
                                                  Control::INDEPENDENT_WHEEL, testgains_, angular_scaling_params_);
-    
+    */
     std::vector<uint8_t> setting;
-    /*
+    
     std::unique_ptr<CommBase> comm_base_ = std::make_unique<CommCanSPI>(
           "", [](std::vector<uint8_t> c){ do_nothing_(c); },
           setting);
-    */
+    
   } catch(int i) {
     std::cout << i << std::endl;
     return EXIT_FAILURE;
   }
   //robot_->cycle_robot_mode();
 
+  /*
   while (true) {
     auto status = robot_->status_request();
     // std::cout << status.angular_vel << std::endl;
@@ -109,5 +111,6 @@ int main() {
     // robot_->update_drivetrim(0.01);
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
+  */
 }
 
