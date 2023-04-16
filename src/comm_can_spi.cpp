@@ -38,7 +38,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   // Read CANCTRL register
 
   // Send SPI read command for CANCTRL register
-    unsigned char spi_read_cmd[] = { 0x02, 0x0F, 0x00 };
+    unsigned char spi_read_cmd[] = { 0x03, 0x0F, 0x00 };
     if (ftdi_write_data(ftdi, spi_read_cmd, sizeof(spi_read_cmd)) != sizeof(spi_read_cmd)) {
         fprintf(stderr, "Failed to send SPI read command: %s\n", ftdi_get_error_string(ftdi));
         ftdi_usb_close(ftdi);
@@ -54,16 +54,17 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
         throw(OPEN_DEVICE_FAIL);
     }
 
-    printf("CANCTRL Register: 0x%02x\n", spi_read_buffer[0]);
+    printf("CANCTRL Register: 0x%02x\n", spi_read_cmd[2]);
 
   unsigned char spi_read_can3[] = {
     MCP_CMD_READ,
-    0x28
+    0x28,
+    0x00
   };
   
   ftdi_write_data(ftdi, spi_read_can3, 3);
   ftdi_read_data(ftdi, spi_read_buffer, 1);
-  printf("CAN3 Register: 0x%02x\n", spi_read_buffer[0]);
+  printf("CAN3 Register: 0x%02x\n", spi_read_can3[2]);
 
   /*
   // configure SPI bus
