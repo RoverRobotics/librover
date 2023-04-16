@@ -28,6 +28,11 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   // Enable MPSSE mode
   printf("Setting to MPSSE Mode: %i\n", ftdi_set_bitmode(ftdi, 0, BITMODE_MPSSE));
   
+  if (ftdi_usb_reset(ftdi) < 0) {
+    fprintf(stderr, "Failed to reset USB device\n");
+    ftdi_deinit(ftdi);
+    throw(OPEN_DEVICE_FAIL);
+  }
 
   // Read CANCTRL register
   unsigned char spi_read_canctrl[] = {
