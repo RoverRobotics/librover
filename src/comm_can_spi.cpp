@@ -39,7 +39,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
 
   // Send SPI read command for CANCTRL register
     unsigned char spi_read_cmd[] = { 0x03, 0x0F, 0x00 };
-    if (ftdi_write_data(ftdi, spi_read_cmd, sizeof(spi_read_cmd)) != sizeof(spi_read_cmd)) {
+    if (ftdi_write_data(ftdi, spi_read_cmd, 2) != sizeof(spi_read_cmd)) {
         fprintf(stderr, "Failed to send SPI read command: %s\n", ftdi_get_error_string(ftdi));
         ftdi_usb_close(ftdi);
         throw(OPEN_DEVICE_FAIL);
