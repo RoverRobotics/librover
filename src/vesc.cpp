@@ -39,6 +39,8 @@ vescChannelStatus BridgedVescArray::parseReceivedMessage(
                                .duty = duty,
                                .dataValid = true};
   } else {
+    printf("Invalid Packets Received\n");
+    throw(-4); // -4 to catch invalid packets being sent.
     return (vescChannelStatus){
         .vescId = 0, .current = 0, .rpm = 0, .duty = 0, .dataValid = false};
   }
