@@ -37,6 +37,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   // Enable MPSSE mode
   printf("Setting to MPSSE Mode: %i\n", ftdi_set_bitmode(ftdi, 0, BITMODE_MPSSE));
 
+  /*
   // Configure SPI
   unsigned char spi_settings[] = {
       0x8A, // Enable 3-phase data clocking, active-high CS, and MSB first
@@ -46,60 +47,43 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
       0x00  // 8-bit data mode
   };
   ftdi_write_data(ftdi, spi_settings, sizeof(spi_settings));
+  */
   // Read CANCTRL register
 
   // Send SPI read command for CANCTRL register
-  unsigned char spi_read_cmd[] = { 0x03, 0x0F, 0x00 };
-  if (ftdi_write_data(ftdi, spi_read_cmd, 3) != 3) {
+  unsigned char spi_read_cmd[] = { 0x03, 0x0F };
+  if (ftdi_write_data(ftdi, spi_read_cmd, 2) != 2) {
       fprintf(stderr, "Failed to send SPI read command: %s\n", ftdi_get_error_string(ftdi));
       ftdi_usb_close(ftdi);
       throw(OPEN_DEVICE_FAIL);
   }
 
   // Read SPI response from device
-  unsigned char spi_read_buffer[14];
+  unsigned char spi_read_buffer[1];
+  int r = ftdi_read_data(ftdi, spi_read_buffer, sizeof(spi_read_buffer));
+  /*
   if (ftdi_read_data(ftdi, spi_read_buffer, sizeof(spi_read_buffer)) != sizeof(spi_read_buffer)) {
       fprintf(stderr, "Failed to read SPI response: %s\n", ftdi_get_error_string(ftdi));
       ftdi_usb_close(ftdi);
       ftdi_deinit(ftdi);
       throw(OPEN_DEVICE_FAIL);
   }
-
+  */
   printf("CANCTRL Register: 0x%02x\n", spi_read_buffer[0]);
-  for (int i = 0; i < 14; i++) {
-      printf("Read Byte[%d]: 0x%x\n", i, spi_read_buffer[i]);
-    }
+  /*
+  for (int i = 0; i < r; i++) {
+      printf("Read Byte[%d]: 0x%02x\n", i, spi_read_buffer[i]);
+  }
+  */
   unsigned char spi_read_can3[] = {
     MCP_CMD_READ,
-    0x28,
-    0x00
+    0x28
   };
   
-  ftdi_write_data(ftdi, spi_read_can3, 3);
+  ftdi_write_data(ftdi, spi_read_can3, 2);
   ftdi_read_data(ftdi, spi_read_buffer, 1);
   printf("CAN3 Register: 0x%02x\n", spi_read_buffer[0]);
 
-  /*
-  // configure SPI bus
-  unsigned char config[] = {
-  0x80,     // disable divide by 5 (0x80 | 0x08)
-  0x8A,     // disable adaptive clocking (0x8A)
-  0x86,     // enable 3-phase data clocking (0x86)
-  0x02,     // clock divisor (0x02 = 1 MHz)
-  0x00,     // delay between chip select and data (in microseconds)
-  0x00,     // delay between successive data bytes (in microseconds)
-  0x00      // mode flags (CPOL=0, CPHA=0)
-  };
-
-  // Send configuration to FTDI device
-  ret = ftdi_write_data(ftdi, config, sizeof(config));
-  if (ret < 0) {
-    fprintf(stderr, "Unable to send SPI configuration (%s)\n", ftdi_get_error_string(ftdi));
-    ftdi_usb_close(ftdi);
-    ftdi_free(ftdi);
-    throw(OPEN_DEVICE_FAIL);
-  }
-  */
   // start read thread
   /*
   Can_read_thread_ = std::thread(

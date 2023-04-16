@@ -81,7 +81,7 @@ int main() {
     
     robot_ = std::make_unique<MiniProtocolObject>("ftdi://ftdi:2232:1:4/1", "spi_can", 
                                                  Control::INDEPENDENT_WHEEL, testgains_, angular_scaling_params_);
-    std::vector<uint8_t> setting;
+    //std::vector<uint8_t> setting;
     /*
     std::unique_ptr<CommBase> comm_base_ = std::make_unique<CommCanSPI>(
           "", [](std::vector<uint8_t> c){ do_nothing_(c); },
