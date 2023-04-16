@@ -41,6 +41,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   ftdi_read_data(ftdi, spi_read_buffer, 3);
   printf("CANCTRL Register: 0x%x\n", spi_read_buffer[2]);
 
+  /*
   // configure SPI bus
   unsigned char config[] = {
   0x80,     // disable divide by 5 (0x80 | 0x08)
@@ -50,16 +51,17 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   0x00,     // delay between chip select and data (in microseconds)
   0x00,     // delay between successive data bytes (in microseconds)
   0x00      // mode flags (CPOL=0, CPHA=0)
-};
+  };
 
-// Send configuration to FTDI device
-ret = ftdi_write_data(ftdi, config, sizeof(config));
-if (ret < 0) {
-  fprintf(stderr, "Unable to send SPI configuration (%s)\n", ftdi_get_error_string(ftdi));
-  ftdi_usb_close(ftdi);
-  ftdi_free(ftdi);
-  throw(OPEN_DEVICE_FAIL);
-}
+  // Send configuration to FTDI device
+  ret = ftdi_write_data(ftdi, config, sizeof(config));
+  if (ret < 0) {
+    fprintf(stderr, "Unable to send SPI configuration (%s)\n", ftdi_get_error_string(ftdi));
+    ftdi_usb_close(ftdi);
+    ftdi_free(ftdi);
+    throw(OPEN_DEVICE_FAIL);
+  }
+  */
   // start read thread
   
   Can_read_thread_ = std::thread(
@@ -123,6 +125,7 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
       //printf("Read Byte[%d]: 0x%x\n", i, read_buffer[i]);
       msg.push_back(read_buffer[i]);
     }
+    
     parsefunction(msg);
     //msg.clear();
     
