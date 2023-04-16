@@ -28,6 +28,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   // Enable MPSSE mode
   printf("Setting to MPSSE Mode: %i\n", ftdi_set_bitmode(ftdi, 0, BITMODE_MPSSE));
   
+  /*
   // configure SPI bus
   unsigned char config[] = {
   0x80,     // disable divide by 5 (0x80 | 0x08)
@@ -47,6 +48,7 @@ if (ret < 0) {
   ftdi_free(ftdi);
   throw(OPEN_DEVICE_FAIL);
 }
+*/
   // start read thread
   
   Can_read_thread_ = std::thread(
@@ -58,10 +60,8 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
   Can_write_mutex_.lock();
   if (msg.size() == CAN_MSG_SIZE_) {
     // convert msg to spi frame
-    int spi_msg_size = msg.size() + 6; // msg size = 9 + 3 bytes for SPI write + 3 bytes for SPI frame
+    int spi_msg_size = msg.size() + 3; // msg size = 9 + 3 bytes for SPI write
     unsigned char write_buffer[] = {
-      0x80, // FTDI Chip Start Condition
-      spi_msg_size - 3, // SPI data length
       MCP_CMD_WRITE, // Write to MCP
       0x01, // Address high Byte
       0x23, // Address Low Byte
@@ -73,8 +73,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
       msg[5],
       msg[6],
       msg[7],
-      msg[8],
-      0x00 // FTDI Chip end condition
+      msg[8]
     };
 
     ftdi_write_data(ftdi, write_buffer, spi_msg_size);
