@@ -29,12 +29,24 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   printf("Setting to MPSSE Mode: %i\n", ftdi_set_bitmode(ftdi, 0, BITMODE_MPSSE));
   
   // configure SPI bus
-  unsigned char config[] = {0x8a, 0x97, 0x0b, 0x00, 0x00};
-  if(ftdi_write_data(ftdi, config, 5) < 0){
-    fprintf(stderr, "Unable to configure ftdi device %d (%s)\n", ret, ftdi_get_error_string(ftdi));
-    ftdi_free(ftdi);
-    throw(OPEN_DEVICE_FAIL);
-  }
+  unsigned char config[] = {
+  0x80,     // disable divide by 5 (0x80 | 0x08)
+  0x8A,     // disable adaptive clocking (0x8A)
+  0x86,     // enable 3-phase data clocking (0x86)
+  0x02,     // clock divisor (0x02 = 1 MHz)
+  0x00,     // delay between chip select and data (in microseconds)
+  0x00,     // delay between successive data bytes (in microseconds)
+  0x00      // mode flags (CPOL=0, CPHA=0)
+};
+
+// Send configuration to FTDI device
+ret = ftdi_write_data(ftdi, config, sizeof(config));
+if (ret < 0) {
+  fprintf(stderr, "Unable to send SPI configuration (%s)\n", ftdi_get_error_string(ftdi));
+  ftdi_usb_close(ftdi);
+  ftdi_free(ftdi);
+  throw(OPEN_DEVICE_FAIL);
+}
   // start read thread
   
   Can_read_thread_ = std::thread(
