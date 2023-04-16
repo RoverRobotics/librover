@@ -88,7 +88,7 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
     std::vector<uint8_t> msg;
 
     for (int i = 0; i < num_bytes; i++) {
-      printf("Read Byte[%d]: %x\n", i, read_buffer[i]);
+      printf("Read Byte[%d]: %s\n", i, read_buffer[i]);
       msg.push_back(read_buffer[i]);
     }
     parsefunction(msg);
