@@ -25,13 +25,6 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     ftdi_deinit(ftdi);
     throw(OPEN_DEVICE_FAIL);
   }
-  
-  // Set baud
-  if (ftdi_set_baudrate(ftdi, 10000000) < 0) {
-    fprintf(stderr, "Failed to set FTDI SPI frequency\n");
-    ftdi_deinit(ftdi);
-    throw(OPEN_DEVICE_FAIL);
-  }
 
   // Select Interface A for can
   printf("Selecting Channel A: %i\n", ftdi_set_interface(ftdi, INTERFACE_A));
@@ -42,7 +35,17 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   // Enable MPSSE mode
   printf("Setting to MPSSE Mode: %i\n", ftdi_set_bitmode(ftdi, 0, BITMODE_MPSSE));
   
-
+  // Set SPI settings
+  unsigned char spi_settings[] = {
+    0x3F,
+    0x86,
+    0x04, // Clock divisor (0x04 = 1 MHz)
+    0x80,
+    0x08, // Data bits to output (8 bits)
+    0x82,
+    0x00 // SPI mode 0 (CPOL=0, CPHA=0)
+  };
+  ftdi_write_data(ftdi, spi_settings, sizeof(spi_settings));
 
   // Read CANCTRL register
   unsigned char spi_read_canctrl[] = {
