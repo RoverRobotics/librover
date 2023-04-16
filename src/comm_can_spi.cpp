@@ -29,7 +29,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   }
 
   // Select Interface A for can
-  printf("Selecting Channel A: %i\n", ftdi_set_interface(ftdi, INTERFACE_B));
+  printf("Selecting Channel A: %i\n", ftdi_set_interface(ftdi, INTERFACE_A));
 
   // Set timeout
   printf("Setting the latency timeout value: %i\n", ftdi_set_latency_timer(ftdi, 2));
@@ -49,25 +49,23 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   // Read CANCTRL register
 
   // Send SPI read command for CANCTRL register
-    unsigned char spi_write_cmd[] = { 0x02, 0x0F, 0x87 };
-    ftdi_write_data(ftdi, spi_write_cmd, 3);
-    unsigned char spi_read_cmd[] = { 0x03, 0x0F, 0x00 };
-    if (ftdi_write_data(ftdi, spi_read_cmd, 3) != 3) {
-        fprintf(stderr, "Failed to send SPI read command: %s\n", ftdi_get_error_string(ftdi));
-        ftdi_usb_close(ftdi);
-        throw(OPEN_DEVICE_FAIL);
-    }
+  unsigned char spi_read_cmd[] = { 0x03, 0x0F, 0x00 };
+  if (ftdi_write_data(ftdi, spi_read_cmd, 3) != 3) {
+      fprintf(stderr, "Failed to send SPI read command: %s\n", ftdi_get_error_string(ftdi));
+      ftdi_usb_close(ftdi);
+      throw(OPEN_DEVICE_FAIL);
+  }
 
-    // Read SPI response from device
-    unsigned char spi_read_buffer[1];
-    if (ftdi_read_data(ftdi, spi_read_buffer, sizeof(spi_read_buffer)) != sizeof(spi_read_buffer)) {
-        fprintf(stderr, "Failed to read SPI response: %s\n", ftdi_get_error_string(ftdi));
-        ftdi_usb_close(ftdi);
-        ftdi_deinit(ftdi);
-        throw(OPEN_DEVICE_FAIL);
-    }
+  // Read SPI response from device
+  unsigned char spi_read_buffer[1];
+  if (ftdi_read_data(ftdi, spi_read_buffer, sizeof(spi_read_buffer)) != sizeof(spi_read_buffer)) {
+      fprintf(stderr, "Failed to read SPI response: %s\n", ftdi_get_error_string(ftdi));
+      ftdi_usb_close(ftdi);
+      ftdi_deinit(ftdi);
+      throw(OPEN_DEVICE_FAIL);
+  }
 
-    printf("CANCTRL Register: 0x%02x\n", spi_read_buffer[0]);
+  printf("CANCTRL Register: 0x%02x\n", spi_read_buffer[0]);
 
   unsigned char spi_read_can3[] = {
     MCP_CMD_READ,
