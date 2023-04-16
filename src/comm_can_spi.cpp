@@ -35,17 +35,14 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   // Enable MPSSE mode
   printf("Setting to MPSSE Mode: %i\n", ftdi_set_bitmode(ftdi, 0, BITMODE_MPSSE));
   
-  // Set SPI settings
-  unsigned char spi_settings[] = {
-    0x3F,
-    0x86,
-    0x04, // Clock divisor (0x04 = 1 MHz)
-    0x80,
-    0x08, // Data bits to output (8 bits)
-    0x82,
-    0x00 // SPI mode 0 (CPOL=0, CPHA=0)
-  };
-  ftdi_write_data(ftdi, spi_settings, sizeof(spi_settings));
+  // Set SPI Settings
+    unsigned char spi_settings[] = {
+        0x80, // Disable clock divide-by-5
+        0x8A, // Enable 3-phase data clocking, active-high CS, and MSB first
+        0x04, 0x00, // Set clock divisor to 4 for 10 MHz clock
+        0x00 // Turn off loopback
+    };
+    ftdi_write_data(ftdi, spi_settings, sizeof(spi_settings));
 
   // Read CANCTRL register
   unsigned char spi_read_canctrl[] = {
@@ -55,8 +52,9 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   };
   ftdi_write_data(ftdi, spi_read_canctrl, 3);
   unsigned char spi_read_buffer[3] = {0};
-  ftdi_read_data(ftdi, spi_read_buffer, 3);
+  int r = ftdi_read_data(ftdi, spi_read_buffer, 3);
   printf("CANCTRL Register: 0x%02x\n", spi_read_buffer[2]);
+  printf("Read %d bytes from CANCTRL", r);
 
   unsigned char spi_read_can3[] = {
     MCP_CMD_READ,
