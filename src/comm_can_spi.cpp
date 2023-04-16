@@ -49,7 +49,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   // Read CANCTRL register
 
   // Send SPI read command for CANCTRL register
-  unsigned char spi_read_cmd[] = { 0x03, 0x0F };
+  unsigned char spi_read_cmd[] = { 0x03, 0x0F, 0x00 };
   if (ftdi_write_data(ftdi, spi_read_cmd, 3) != 3) {
       fprintf(stderr, "Failed to send SPI read command: %s\n", ftdi_get_error_string(ftdi));
       ftdi_usb_close(ftdi);
@@ -92,7 +92,6 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   0x00,     // delay between successive data bytes (in microseconds)
   0x00      // mode flags (CPOL=0, CPHA=0)
   };
-
   // Send configuration to FTDI device
   ret = ftdi_write_data(ftdi, config, sizeof(config));
   if (ret < 0) {
