@@ -29,7 +29,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   }
 
   // Select Interface A for can
-  printf("Selecting Channel A: %i\n", ftdi_set_interface(ftdi, INTERFACE_A));
+  printf("Selecting Channel A: %i\n", ftdi_set_interface(ftdi, INTERFACE_B));
 
   // Set timeout
   printf("Setting the latency timeout value: %i\n", ftdi_set_latency_timer(ftdi, 2));
