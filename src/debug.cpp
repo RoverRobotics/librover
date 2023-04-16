@@ -98,7 +98,7 @@ int main() {
     // std::cout << status.angular_vel << std::endl;
 
     auto connected = robot_->is_connected();
-    std::cout << "connected:  " << (connected ? "True" : "False") << std::endl;
+    //std::cout << "connected:  " << (connected ? "True" : "False") << std::endl;
 
     auto info = robot_->info_request();
     // print_status(info);
