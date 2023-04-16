@@ -28,6 +28,19 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   // Enable MPSSE mode
   printf("Setting to MPSSE Mode: %i\n", ftdi_set_bitmode(ftdi, 0, BITMODE_MPSSE));
   
+
+  // Read CANCTRL register
+  unsigned char spi_read_canctrl[] = {
+    MCP_CMD_READ,
+    MCP_REG_CANCNTRL,
+    0x00
+  };
+  ftdi_write_data(ftdi, spi_read_canctrl, 3);
+
+  unsigned char spi_read_buffer[3];
+  ftdi_read_data(ftdi, spi_read_buffer, 3);
+  printf("CANCTRL Register: 0x%x", spi_read_buffer[3]);
+
   /*
   // configure SPI bus
   unsigned char config[] = {
@@ -85,9 +98,9 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
   std::chrono::milliseconds time_last =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
-  unsigned char read_buffer[13];
+  unsigned char read_buffer[14];
   while (true) {
-    int num_bytes = ftdi_read_data(ftdi, read_buffer, 13);
+    int num_bytes = ftdi_read_data(ftdi, read_buffer, 14);
     std::chrono::milliseconds time_now =
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch());
