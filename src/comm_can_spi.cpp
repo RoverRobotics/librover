@@ -69,7 +69,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   */
   printf("CANCTRL Register: 0x%02x\n", spi_read_buffer[0]);
   for (int i = 0; i < r; i++) {
-      printf("Read Byte[%d]: 0x%x\n", i, spi_read_buffer[i]);
+      printf("Read Byte[%d]: 0x%02x\n", i, spi_read_buffer[i]);
     }
   unsigned char spi_read_can3[] = {
     MCP_CMD_READ,
