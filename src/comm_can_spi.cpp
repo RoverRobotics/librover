@@ -39,7 +39,17 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   printf("Wrote read command for CANCTRL\n");
   unsigned char spi_read_buffer[3];
   ftdi_read_data(ftdi, spi_read_buffer, 3);
-  printf("CANCTRL Register: 0x%x\n", spi_read_buffer[2]);
+  printf("CANCTRL Register: 0x%x\n", spi_read_buffer[1]);
+
+  unsigned char spi_read_can3[] = {
+    MCP_CMD_READ,
+    0x28,
+    0x00
+  };
+  ftdi_write_data(ftdi, spi_read_can3, 3);
+  printf("Wrote read command for CANCTRL\n");
+  ftdi_read_data(ftdi, spi_read_buffer, 3);
+  printf("CANCTRL Register: 0x%x\n", spi_read_buffer[1]);
 
   /*
   // configure SPI bus
