@@ -65,7 +65,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   // Read SPI response from device
   unsigned char spi_read_buffer[1];
   //int r = ftdi_read_data(ftdi, spi_read_buffer, sizeof(spi_read_buffer));
-  if (ftdi_read_data(ftdi, spi_read_buffer, sizeof(spi_read_buffer)) != sizeof(spi_read_buffer)) {
+  if (ftdi_read_data(ftdi, spi_read_buffer, 1) != 1) {
       fprintf(stderr, "Failed to read SPI response: %s\n", ftdi_get_error_string(ftdi));
       ftdi_usb_close(ftdi);
       ftdi_deinit(ftdi);
