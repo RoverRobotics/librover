@@ -49,7 +49,7 @@ class RoverRobotics::CommCanSPI : public RoverRobotics::CommBase {
   bool is_connected();
 
  private:
-  struct ftdi_context *ftdi;
+  struct mpsse_context *ftdi;
   struct sockaddr_can addr;  // CAN Address
   struct can_frame frame;
   struct can_frame robot_frame;

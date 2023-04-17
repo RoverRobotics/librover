@@ -3,7 +3,7 @@
 namespace RoverRobotics {
 CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_t>)> parsefunction, std::vector<uint8_t> setting) : is_connected_(false) {
   // FTDI Setup for MPSSE Mode
-  struct mpsse_context *ftdi = NULL;
+  ftdi = NULL;
   char* data = NULL;
 
   char read_canctrl_cmd[] = {
