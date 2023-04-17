@@ -2,96 +2,30 @@
 
 namespace RoverRobotics {
 CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_t>)> parsefunction, std::vector<uint8_t> setting) : is_connected_(false) {
-  // Local Variables
-  int ret;
-  struct ftdi_device_list *devlist;
-  
-  // Create FTDI Context
-  
-  if ((ftdi = ftdi_new()) == NULL) { 
-    fprintf(stderr, "Creating FTDI context failed [ftdi_new()]\n");
-    throw(FTDI_CREATION_FAIL); 
-  }
-  
+  // FTDI Setup for MPSSE Mode
+  struct mpsse_context *ftdi = NULL;
+  char* data = NULL;
 
-  // Open FTDI Device and throw an error if it fails
-  if ((ret = ftdi_usb_open_desc_index(ftdi, 0x0403, 0x6010, NULL, NULL, 1)) < 0){
-    fprintf(stderr, "Unable to open ftdi device %d (%s)\n", ret, ftdi_get_error_string(ftdi));
-    ftdi_free(ftdi);
-    throw(OPEN_DEVICE_FAIL);
-  }
-
-  // Reset
-  if (ftdi_usb_reset(ftdi) < 0) {
-    fprintf(stderr, "Failed to reset USB device\n");
-    ftdi_deinit(ftdi);
-    throw(OPEN_DEVICE_FAIL);
-  }
-
-  // Select Interface A for can
-  printf("Selecting Channel A: %i\n", ftdi_set_interface(ftdi, INTERFACE_A));
-
-  // Set timeout
-  printf("Setting the latency timeout value: %i\n", ftdi_set_latency_timer(ftdi, 2));
-
-  // Enable MPSSE mode
-  printf("Setting to MPSSE Mode: %i\n", ftdi_set_bitmode(ftdi, 0, BITMODE_MPSSE));
-
-  usleep(50000);
-  /*
-  // Configure SPI
-  unsigned char spi_settings[] = {
-      0x8A, // Enable 3-phase data clocking, active-high CS, and MSB first
-      0x86, // Set clock divisor to 5 for 1 MHz clock
-      0x00, // Turn off loopback
-      0x00, // Chip select pin assignments (none)
-      0x00  // 8-bit data mode
-  };
-  ftdi_write_data(ftdi, spi_settings, sizeof(spi_settings));
-  */
-  // Read CANCTRL register
-
-  // Send SPI read command for CANCTRL register
-  unsigned char spi_read_cmd[] = { 0x03, 0x0F };
-  if (ftdi_write_data(ftdi, spi_read_cmd, 2) != 2) {
-      fprintf(stderr, "Failed to send SPI read command: %s\n", ftdi_get_error_string(ftdi));
-      ftdi_usb_close(ftdi);
-      throw(OPEN_DEVICE_FAIL);
-  }
-
-  if (ftdi_usb_purge_buffers(ftdi) < 0){
-      fprintf(stderr, "Failed to purge tx/rx buffer: %s\n", ftdi_get_error_string(ftdi));
-  }
-  // Read SPI response from device
-  unsigned char spi_read_buffer[1];
-  int r = ftdi_read_data(ftdi, spi_read_buffer, sizeof(spi_read_buffer));
-  printf("SPI Read Bytes: %d\n", r);
-  /*
-  if (ftdi_read_data(ftdi, spi_read_buffer, 1) != 1) {
-      fprintf(stderr, "Failed to read SPI response: %s\n", ftdi_get_error_string(ftdi));
-      ftdi_usb_close(ftdi);
-      ftdi_deinit(ftdi);
-      throw(OPEN_DEVICE_FAIL);
-  }
-  */
-  printf("CANCTRL Register: 0x%02x\n", spi_read_buffer[0]);
-  /*
-  for (int i = 0; i < r; i++) {
-      printf("Read Byte[%d]: 0x%02x\n", i, spi_read_buffer[i]);
-  }
-  */
-  unsigned char spi_read_can3[] = {
+  char read_canctrl_cmd[] = {
     MCP_CMD_READ,
-    0x28
+    MCP_REG_CANCNTRL
   };
-  
-  ftdi_write_data(ftdi, spi_read_can3, 2);
-  if (ftdi_usb_purge_buffers(ftdi) < 0){
-      fprintf(stderr, "Failed to purge tx/rx buffer: %s\n", ftdi_get_error_string(ftdi));
-  }
-  ftdi_read_data(ftdi, spi_read_buffer, 1);
-  printf("CAN3 Register: 0x%02x\n", spi_read_buffer[0]);
 
+  if(ftdi = OpenIndex(0x0403, 0x6010, SPI0, TEN_MHZ, MSB, IFACE_A, NULL, NULL, 0)){
+    printf("%s opened at %dHz (SPI Mode 0)", GetDescription(ftdi), GetClock(ftdi));
+
+    Start(ftdi);
+    Write(ftdi, read_canctrl_cmd, sizeof(read_canctrl_cmd));
+    data = Read(ftdi, 1);
+    Stop(ftdi);
+
+    printf("CANCTRL Data Received: 0x%02x\n", data[0]);
+  }
+  else {
+    printf("Failed to initialize MPSSE: %s\n", ErrorString(ftdi));
+  }
+
+  Close(ftdi);
   // start read thread
   /*
   Can_read_thread_ = std::thread(
