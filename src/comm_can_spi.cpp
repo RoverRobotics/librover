@@ -52,25 +52,26 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   // Read CANCTRL register
 
   // Send SPI read command for CANCTRL register
-  unsigned char spi_read_cmd[] = { 0x03, 0x0F };
-  if (ftdi_write_data(ftdi, spi_read_cmd, 2) != 2) {
+  unsigned char spi_read_cmd[] = { 0x03, 0x0F, 0x00 };
+  if (ftdi_write_data(ftdi, spi_read_cmd, 3) != 3) {
       fprintf(stderr, "Failed to send SPI read command: %s\n", ftdi_get_error_string(ftdi));
       ftdi_usb_close(ftdi);
       throw(OPEN_DEVICE_FAIL);
   }
 
-  ftdi_usb_purge_rx_buffer(ftdi);
+  if (ftdi_usb_purge_buffers(ftdi) < 0){
+      fprintf(stderr, "Failed to purge tx/rx buffer: %s\n", ftdi_get_error_string(ftdi));
+  }
   // Read SPI response from device
   unsigned char spi_read_buffer[1];
-  int r = ftdi_read_data(ftdi, spi_read_buffer, sizeof(spi_read_buffer));
-  /*
+  //int r = ftdi_read_data(ftdi, spi_read_buffer, sizeof(spi_read_buffer));
   if (ftdi_read_data(ftdi, spi_read_buffer, sizeof(spi_read_buffer)) != sizeof(spi_read_buffer)) {
       fprintf(stderr, "Failed to read SPI response: %s\n", ftdi_get_error_string(ftdi));
       ftdi_usb_close(ftdi);
       ftdi_deinit(ftdi);
       throw(OPEN_DEVICE_FAIL);
   }
-  */
+  
   printf("CANCTRL Register: 0x%02x\n", spi_read_buffer[0]);
   /*
   for (int i = 0; i < r; i++) {
@@ -83,7 +84,9 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   };
   
   ftdi_write_data(ftdi, spi_read_can3, 2);
-  ftdi_usb_purge_rx_buffer(ftdi);
+  if (ftdi_usb_purge_buffers(ftdi) < 0){
+      fprintf(stderr, "Failed to purge tx/rx buffer: %s\n", ftdi_get_error_string(ftdi));
+  }
   ftdi_read_data(ftdi, spi_read_buffer, 1);
   printf("CAN3 Register: 0x%02x\n", spi_read_buffer[0]);
 
