@@ -1,6 +1,6 @@
 #pragma once
 #include "comm_base.hpp"
-#include <mpsse.h>
+
 
 #define FTDI_CREATION_FAIL -1
 #define OPEN_DEVICE_FAIL -1
@@ -50,7 +50,6 @@ class RoverRobotics::CommCanSPI : public RoverRobotics::CommBase {
   bool is_connected();
 
  private:
-  struct mpsse_context *ftdi;
   struct sockaddr_can addr;  // CAN Address
   struct can_frame frame;
   struct can_frame robot_frame;
