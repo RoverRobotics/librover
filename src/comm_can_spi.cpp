@@ -58,7 +58,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
       msg[8]
     };
 
-    ftdi_write_data(ftdi, write_buffer, spi_msg_size);
+    //ftdi_write_data(ftdi, write_buffer, spi_msg_size);
   }
   Can_write_mutex_.unlock();
 }
@@ -69,14 +69,15 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
           std::chrono::system_clock::now().time_since_epoch());
   unsigned char read_buffer[14];
   while (true) {
-    int num_bytes = ftdi_read_data(ftdi, read_buffer, 14);
+    //int num_bytes = ftdi_read_data(ftdi, read_buffer, 14);
+    int num_bytes = 0; // to implement read
     std::chrono::milliseconds time_now =
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch());
     if (num_bytes <= 0) {
       if ((time_now - time_last).count() > TIMEOUT_MS_) {
         is_connected_ = false;
-        ftdi_usb_close(ftdi);
+        //ftdi_usb_close(ftdi);
       }
       continue;
     }
