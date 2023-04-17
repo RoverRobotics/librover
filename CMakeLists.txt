@@ -11,6 +11,7 @@ src/protocol_pro.cpp
 src/comm_serial.cpp
 src/utils.cpp
 src/comm_can.cpp
+src/comm_can_spi.cpp
 src/protocol_pro_2.cpp
 src/control.cpp
 src/protocol_mini.cpp
