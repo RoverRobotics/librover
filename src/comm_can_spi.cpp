@@ -59,7 +59,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
       throw(OPEN_DEVICE_FAIL);
   }
 
-  if (ftdi_usb_purge_buffers(ftdi) < 0){
+  if (ftdi_usb_purge_rx_buffer(ftdi) < 0){
       fprintf(stderr, "Failed to purge tx/rx buffer: %s\n", ftdi_get_error_string(ftdi));
   }
   // Read SPI response from device
