@@ -1,5 +1,7 @@
 #include "comm_can_spi.hpp"
+extern "C"{
 #include <mpsse.h>
+}
 namespace RoverRobotics {
 CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_t>)> parsefunction, std::vector<uint8_t> setting) : is_connected_(false) {
   // FTDI Setup for MPSSE Mode

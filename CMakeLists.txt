@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.8.0)
 project(librover LANGUAGES CXX DESCRIPTION "C++ Library for communicating with Rover Robotics products")
 
-add_compile_options(-std=c++17 -lpthread -g -O0)
+add_compile_options(-lmpsse -std=c++17 -lpthread -g -O0)
 #add_compile_options(-std=c++17 -DDEBUG -lpthread)
 
 
@@ -18,7 +18,8 @@ src/protocol_mini.cpp
 src/vesc.cpp
 src/utilities.cpp
 src/protocol_zero_2.cpp
-src/protocol_mega.cpp)
+src/protocol_mega.cpp
+)
 
 # set_property(TARGET debug PROPERTY COMPILE_OPTIONS "-std=c++17;-pthread;-DDEBUG")
 
@@ -29,6 +30,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     $<INSTALL_INTERFACE:include>
     PRIVATE src)
 
+link_directories(/usr/local/lib)
 install(TARGETS librover
    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
@@ -36,6 +38,6 @@ install(TARGETS librover
 
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 
-add_compile_options(-std=c++17 -DDEBUG -lpthread -g -O0 -Lmpsse)
+add_compile_options(-std=c++17 -DDEBUG -lpthread -g -O0)
 add_executable(debug.out src/debug.cpp)
-target_link_libraries(debug.out LINK_PUBLIC librover pthread mpsse ftdi1)
+target_link_libraries(debug.out LINK_PUBLIC librover pthread /usr/local/lib/libmpsse.so ftdi1)
