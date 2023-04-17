@@ -37,6 +37,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   // Enable MPSSE mode
   printf("Setting to MPSSE Mode: %i\n", ftdi_set_bitmode(ftdi, 0, BITMODE_MPSSE));
 
+  usleep(50000);
   /*
   // Configure SPI
   unsigned char spi_settings[] = {
@@ -58,6 +59,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
       throw(OPEN_DEVICE_FAIL);
   }
 
+  ftdi_usb_purge_rx_buffer(ftdi);
   // Read SPI response from device
   unsigned char spi_read_buffer[1];
   int r = ftdi_read_data(ftdi, spi_read_buffer, sizeof(spi_read_buffer));
@@ -81,6 +83,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   };
   
   ftdi_write_data(ftdi, spi_read_can3, 2);
+  ftdi_usb_purge_rx_buffer(ftdi);
   ftdi_read_data(ftdi, spi_read_buffer, 1);
   printf("CAN3 Register: 0x%02x\n", spi_read_buffer[0]);
 
