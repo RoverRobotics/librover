@@ -1,5 +1,6 @@
 #pragma once
 #include "comm_base.hpp"
+#include <mpsse.h>
 
 #define FTDI_CREATION_FAIL -1
 #define OPEN_DEVICE_FAIL -1
