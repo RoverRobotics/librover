@@ -23,34 +23,19 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     printf("Failed to initialize MPSSE: %s\n", ErrorString(ftdi));
   }
 
-  Close(ftdi);
-  // start read thread
-  Can_read_thread_ = std::thread(
-      [this, parsefunction]() { this->read_device_loop(parsefunction); });
-}
-
-void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
-  // std::cout << "Expected CAN message: ";
-  // for (int i = 0; i < CAN_MSG_SIZE_; i++) {
-  //   std::cout << std::hex << static_cast<int>(msg[i]) << " ";
-  // }
-  // std::cout << std::endl;
-  Can_write_mutex_.lock();
-  if (msg.size() == CAN_MSG_SIZE_) {
-    // convert msg to spi frame
-    char read_txb0_cmd[] = {
+  char read_txb0_cmd[] = {
       MCP_CMD_READ,
       0x30
     };
 
-    char dbg_txb0_cmd[] = {
+  char transmit_tx_buffer[] = {
       MCP_CMD_WRITE,
       0x30,
-      0x01
+      0x0B
     };
 
     char* data = NULL;
-    int spi_msg_size = msg.size() + 3; // msg size = 9 + 3 bytes for SPI write
+
     char load_tx_buffer[] = {
       MCP_CMD_WRITE,
       0x31,
@@ -74,30 +59,12 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     };
 
     Start(ftdi);
-    Write(ftdi, "\x02\x30\x01", sizeof("\x02\x30\x01") - 1);
+    Write(ftdi, load_tx_buffer, sizeof(load_tx_buffer));
     Stop(ftdi);
-
-    Start(ftdi);
-    Write(ftdi, "\x03\x30", sizeof("\x03\x30") - 1);
-    data = Read(ftdi, 1);
-    Stop(ftdi);
-
-    printf("TXB0CTRL Before Transmit: 0x%02x | ", data[0]);
-    for(int i = 0; i < 8; i++){
-      printf("%d", ((data[0] >> (7-i)) & 1));
-    }
-    printf("\n");
-
-    char transmit_tx_buffer[] = {
-      MCP_CMD_WRITE,
-      0x30,
-      0x08
-    };
 
     Start(ftdi);
     Write(ftdi, transmit_tx_buffer, sizeof(transmit_tx_buffer));
     Stop(ftdi);
-
 
 
     Start(ftdi);
@@ -105,11 +72,82 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     data = Read(ftdi, 1);
     Stop(ftdi);
 
-    printf("TXB0CTRL After Transmit: ");
+    printf("TXB0CTRL After Transmit: 0x%02x | ", data[0]);
     for(int i = 0; i < 8; i++){
-      printf("%d", ((*data >> (7-i)) & 1));
+      printf("%d", ((data[0] >> (7-i)) & 1));
     }
     printf("\n");
+
+  Close(ftdi);
+  // start read thread
+  Can_read_thread_ = std::thread(
+      [this, parsefunction]() { this->read_device_loop(parsefunction); });
+}
+
+void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
+  // std::cout << "Expected CAN message: ";
+  // for (int i = 0; i < CAN_MSG_SIZE_; i++) {
+  //   std::cout << std::hex << static_cast<int>(msg[i]) << " ";
+  // }
+  // std::cout << std::endl;
+  Can_write_mutex_.lock();
+  if (msg.size() == CAN_MSG_SIZE_) {
+    // convert msg to spi frame
+    char read_txb0_cmd[] = {
+      MCP_CMD_READ,
+      0x30
+    };
+
+    char transmit_tx_buffer[] = {
+      MCP_CMD_WRITE,
+      0x30,
+      0x0B
+    };
+
+    char* data = NULL;
+
+    char load_tx_buffer[] = {
+      MCP_CMD_WRITE,
+      0x31,
+      msg[0],
+      0x32,
+      msg[1],
+      0x33,
+      msg[2],
+      0x34,
+      msg[3],
+      0x35,
+      msg[4],
+      0x36,
+      msg[5],
+      0x37,
+      msg[6],
+      0x38,
+      msg[7],
+      0x39,
+      msg[8],
+    };
+
+    Start(ftdi);
+    Write(ftdi, load_tx_buffer, sizeof(load_tx_buffer));
+    Stop(ftdi);
+
+    Start(ftdi);
+    Write(ftdi, transmit_tx_buffer, sizeof(transmit_tx_buffer));
+    Stop(ftdi);
+
+
+    Start(ftdi);
+    Write(ftdi, read_txb0_cmd, sizeof(read_txb0_cmd));
+    data = Read(ftdi, 1);
+    Stop(ftdi);
+
+    printf("TXB0CTRL After Transmit: 0x%02x | ", data[0]);
+    for(int i = 0; i < 8; i++){
+      printf("%d", ((data[0] >> (7-i)) & 1));
+    }
+    printf("\n");
+
   }
   Can_write_mutex_.unlock();
 }
