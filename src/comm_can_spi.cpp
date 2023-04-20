@@ -38,7 +38,12 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
   Can_write_mutex_.lock();
   if (msg.size() == CAN_MSG_SIZE_) {
     // convert msg to spi frame
-    
+    char read_txb0_cmd[] = {
+      MCP_CMD_READ,
+      0x30
+    };
+
+    char* data = NULL;
     int spi_msg_size = msg.size() + 3; // msg size = 9 + 3 bytes for SPI write
     char load_tx_buffer[] = {
       MCP_CMD_WRITE,
@@ -66,6 +71,17 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     Write(ftdi, load_tx_buffer, sizeof(load_tx_buffer));
     Stop(ftdi);
 
+    Start(ftdi);
+    Write(ftdi, read_txb0_cmd, sizeof(read_txb0_cmd));
+    data = Read(ftdi, 1);
+    Stop(ftdi);
+
+    printf("TXB0CTRL Before Transmit: ");
+    for(int i = 0; i < 8; i++){
+      printf("%d", ((*data >> (7-i)) & 1));
+    }
+    printf("\n");
+
     char transmit_tx_buffer[] = {
       MCP_CMD_WRITE,
       0x30,
@@ -76,12 +92,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     Write(ftdi, transmit_tx_buffer, sizeof(transmit_tx_buffer));
     Stop(ftdi);
 
-    char read_txb0_cmd[] = {
-      MCP_CMD_READ,
-      0x3E
-    };
 
-    char* data = NULL;
 
     Start(ftdi);
     Write(ftdi, read_txb0_cmd, sizeof(read_txb0_cmd));
