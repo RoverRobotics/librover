@@ -60,7 +60,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
       0x38,
       msg[8],
       0x30,
-      0x08
+      0x30 | 0x08
     };
 
     Start(ftdi);
