@@ -60,13 +60,13 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     Start(ftdi);
     Write(ftdi, conf_can_cmd, sizeof(conf_can_cmd));
     Stop(ftdi);
-    
+
     Start(ftdi);
     Write(ftdi, "\x03\x28", 2);
-    data = Read(ftdi, 1);
+    data = Read(ftdi, 3);
     Stop(ftdi);
 
-    printf("CNF[3:1]: 0x%02x\n", data[0]);
+    printf("CNF[3:1]: 0x%02x, 0x%02x, 0x%02x\n", data[0], data[1], data[2]);
   }
   else {
     printf("Failed to initialize MPSSE: %s\n", ErrorString(ftdi));
