@@ -74,11 +74,11 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     };
 
     Start(ftdi);
-    Write(ftdi, dbg_txb0_cmd, sizeof(dbg_txb0_cmd));
+    Write(ftdi, "\x02\x30\x01", 2);
     Stop(ftdi);
 
     Start(ftdi);
-    Write(ftdi, read_txb0_cmd, sizeof(read_txb0_cmd));
+    Write(ftdi, "\x03\x30", 1);
     data = Read(ftdi, 1);
     Stop(ftdi);
 
