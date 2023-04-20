@@ -94,7 +94,6 @@ int main() {
     return EXIT_FAILURE;
   }
   //robot_->cycle_robot_mode();
-  /*
   while (true) {
     auto status = robot_->status_request();
     // std::cout << status.angular_vel << std::endl;
@@ -111,6 +110,5 @@ int main() {
     // robot_->update_drivetrim(0.01);
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
-  */
 }
 
