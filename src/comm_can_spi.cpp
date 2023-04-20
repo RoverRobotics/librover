@@ -43,6 +43,12 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
       0x30
     };
 
+    char dbg_txb0_cmd[] = {
+      MCP_CMD_WRITE,
+      0x30,
+      0x01
+    };
+
     char* data = NULL;
     int spi_msg_size = msg.size() + 3; // msg size = 9 + 3 bytes for SPI write
     char load_tx_buffer[] = {
@@ -72,7 +78,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     Stop(ftdi);
 
     Start(ftdi);
-    Write(ftdi, read_txb0_cmd, sizeof(read_txb0_cmd));
+    Write(ftdi, dbg_txb0_cmd, sizeof(dbg_txb0_cmd));
     data = Read(ftdi, 1);
     Stop(ftdi);
 
