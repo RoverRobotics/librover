@@ -82,7 +82,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     data = Read(ftdi, 1);
     Stop(ftdi);
 
-    printf("TXB0CTRL Before Transmit: ");
+    printf("TXB0CTRL Before Transmit: 0x%02x | ", data[0]);
     for(int i = 0; i < 8; i++){
       printf("%d", ((data[0] >> (7-i)) & 1));
     }
