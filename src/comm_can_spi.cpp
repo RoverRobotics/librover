@@ -30,19 +30,22 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
 }
 
 void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
-  std::cout << "Expected CAN message: ";
-  for (int i = 0; i < CAN_MSG_SIZE_; i++) {
-    std::cout << std::hex << static_cast<int>(msg[i]) << " ";
-  }
-  std::cout << std::endl;
+  // std::cout << "Expected CAN message: ";
+  // for (int i = 0; i < CAN_MSG_SIZE_; i++) {
+  //   std::cout << std::hex << static_cast<int>(msg[i]) << " ";
+  // }
+  // std::cout << std::endl;
   Can_write_mutex_.lock();
   if (msg.size() == CAN_MSG_SIZE_) {
     // convert msg to spi frame
+    
     int spi_msg_size = msg.size() + 3; // msg size = 9 + 3 bytes for SPI write
-    char write_buffer[] = {
-      MCP_CMD_WRITE, // Write to MCP
-      0x01, // Address high Byte
-      0x23, // Address Low Byte
+    char load_tx_buffer[] = {
+      0x40 | 0x01,
+      0x00,
+      0x00,
+      0x00,
+      0x09,
       msg[0],
       msg[1],
       msg[2],
@@ -55,7 +58,16 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     };
 
     Start(ftdi);
-    Write(ftdi, write_buffer, sizeof(write_buffer));
+    Write(ftdi, load_tx_buffer, sizeof(load_tx_buffer));
+    Stop(ftdi);
+
+    printf("Status: 0x%02x", load_tx_buffer[1]);
+    char transmit_tx_buffer[] = {
+      0x81
+    };
+
+    Start(ftdi);
+    Write(ftdi, transmit_tx_buffer, sizeof(transmit_tx_buffer));
     Stop(ftdi);
   }
   Can_write_mutex_.unlock();
