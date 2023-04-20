@@ -74,11 +74,11 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     };
 
     Start(ftdi);
-    Write(ftdi, "\x02\x30\x01", 2);
+    Write(ftdi, "\x02\x30\x01", sizeof("\x02\x30\x01") - 1);
     Stop(ftdi);
 
     Start(ftdi);
-    Write(ftdi, "\x03\x30", 1);
+    Write(ftdi, "\x03\x30", sizeof("\x03\x30") - 1);
     data = Read(ftdi, 1);
     Stop(ftdi);
 
