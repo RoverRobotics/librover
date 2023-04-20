@@ -1,11 +1,7 @@
 #include "comm_can_spi.hpp"
-extern "C"{
-#include <mpsse.h>
-}
 namespace RoverRobotics {
 CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_t>)> parsefunction, std::vector<uint8_t> setting) : is_connected_(false) {
   // FTDI Setup for MPSSE Mode
-  struct mpsse_context *ftdi = NULL;
   char* data = NULL;
 
   char read_canctrl_cmd[] = {
@@ -29,23 +25,21 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
 
   Close(ftdi);
   // start read thread
-  /*
   Can_read_thread_ = std::thread(
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
-  */
 }
 
 void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
-  // std::cout << "Expected CAN message: ";
-  // for (int i = 0; i < CAN_MSG_SIZE_; i++) {
-  //   std::cout << std::hex << static_cast<int>(msg[i]) << " ";
-  // }
-  //std::cout << std::endl;
+  std::cout << "Expected CAN message: ";
+  for (int i = 0; i < CAN_MSG_SIZE_; i++) {
+    std::cout << std::hex << static_cast<int>(msg[i]) << " ";
+  }
+  std::cout << std::endl;
   Can_write_mutex_.lock();
   if (msg.size() == CAN_MSG_SIZE_) {
     // convert msg to spi frame
     int spi_msg_size = msg.size() + 3; // msg size = 9 + 3 bytes for SPI write
-    unsigned char write_buffer[] = {
+    char write_buffer[] = {
       MCP_CMD_WRITE, // Write to MCP
       0x01, // Address high Byte
       0x23, // Address Low Byte
@@ -60,7 +54,9 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
       msg[8]
     };
 
-    //ftdi_write_data(ftdi, write_buffer, spi_msg_size);
+    Start(ftdi);
+    Write(ftdi, write_buffer, sizeof(write_buffer));
+    Stop(ftdi);
   }
   Can_write_mutex_.unlock();
 }
@@ -69,10 +65,17 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
   std::chrono::milliseconds time_last =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
-  unsigned char read_buffer[14];
+  char* read_buffer;
+  char read_cmd[1]{
+    MCP_CMD_READ
+  };
   while (true) {
+    Start(ftdi);
+    Write(ftdi, read_cmd, sizeof(read_cmd));
+    read_buffer = Read(ftdi, 14);
+    Stop(ftdi);
     //int num_bytes = ftdi_read_data(ftdi, read_buffer, 14);
-    int num_bytes = 0; // to implement read
+    int num_bytes = sizeof(read_buffer); // to implement read
     std::chrono::milliseconds time_now =
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch());
