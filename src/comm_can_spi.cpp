@@ -20,6 +20,12 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     0x40
   };
 
+  char conf_canctrl[] = {
+    MCP_CMD_WRITE,
+    0b00001111,
+    0b00011000
+  };
+
   if(ftdi = OpenIndex(0x0403, 0x6010, SPI0, TEN_MHZ, MSB, IFACE_A, NULL, NULL, 0)){
     printf("%s opened at %dHz (SPI Mode 0)\n", GetDescription(ftdi), GetClock(ftdi));
 
@@ -46,8 +52,9 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     printf("\n");
 
 
-    printf("Configuring CNF[3:1]\n");
+    printf("Configuring CANCTRL and CNF[3:1]\n");
     Start(ftdi);
+    Write(ftdi, conf_canctrl, sizeof(conf_canctrl));
     Write(ftdi, conf_can_cmd, sizeof(conf_can_cmd));
     Write(ftdi, "\x03\x28", 2);
     data = Read(ftdi, 3);
