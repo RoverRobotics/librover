@@ -40,7 +40,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     // convert msg to spi frame
     char read_txb0_cmd[] = {
       MCP_CMD_READ,
-      0x30
+      0x0E
     };
 
     char transmit_tx_buffer[] = {
