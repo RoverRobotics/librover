@@ -23,61 +23,6 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     printf("Failed to initialize MPSSE: %s\n", ErrorString(ftdi));
   }
 
-  char read_txb0_cmd[] = {
-      MCP_CMD_READ,
-      0x30
-    };
-
-  char transmit_tx_buffer[] = {
-      MCP_CMD_WRITE,
-      0x30,
-      0x0B
-    };
-
-    char* data = NULL;
-
-    char load_tx_buffer[] = {
-      MCP_CMD_WRITE,
-      0x31,
-      msg[0],
-      0x32,
-      msg[1],
-      0x33,
-      msg[2],
-      0x34,
-      msg[3],
-      0x35,
-      msg[4],
-      0x36,
-      msg[5],
-      0x37,
-      msg[6],
-      0x38,
-      msg[7],
-      0x39,
-      msg[8],
-    };
-
-    Start(ftdi);
-    Write(ftdi, load_tx_buffer, sizeof(load_tx_buffer));
-    Stop(ftdi);
-
-    Start(ftdi);
-    Write(ftdi, transmit_tx_buffer, sizeof(transmit_tx_buffer));
-    Stop(ftdi);
-
-
-    Start(ftdi);
-    Write(ftdi, read_txb0_cmd, sizeof(read_txb0_cmd));
-    data = Read(ftdi, 1);
-    Stop(ftdi);
-
-    printf("TXB0CTRL After Transmit: 0x%02x | ", data[0]);
-    for(int i = 0; i < 8; i++){
-      printf("%d", ((data[0] >> (7-i)) & 1));
-    }
-    printf("\n");
-
   Close(ftdi);
   // start read thread
   Can_read_thread_ = std::thread(
