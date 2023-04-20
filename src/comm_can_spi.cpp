@@ -57,14 +57,21 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
       msg[6],
       0x38,
       msg[7],
-      0x38,
+      0x39,
       msg[8],
+    };
+
+    Start(ftdi);
+    Write(ftdi, load_tx_buffer, sizeof(load_tx_buffer));
+    Stop(ftdi);
+
+    char transmit_tx_buffer[] = {
       0x30,
       0x30 | 0x08
     };
 
     Start(ftdi);
-    Write(ftdi, load_tx_buffer, sizeof(load_tx_buffer));
+    Write(ftdi, transmit_tx_buffer, sizeof(transmit_tx_buffer));
     Stop(ftdi);
   }
   Can_write_mutex_.unlock();
