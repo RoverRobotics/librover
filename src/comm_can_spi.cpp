@@ -23,13 +23,14 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   char conf_canctrl[] = {
     MCP_CMD_WRITE,
     0b00001111,
-    0b00011000
+    0b10011000
   };
 
   if(ftdi = OpenIndex(0x0403, 0x6010, SPI0, TEN_MHZ, MSB, IFACE_A, NULL, NULL, 0)){
     printf("%s opened at %dHz (SPI Mode 0)\n", GetDescription(ftdi), GetClock(ftdi));
 
     Start(ftdi);
+    Write(ftdi, conf_canctrl, sizeof(conf_canctrl));
     Write(ftdi, read_canctrl_cmd, sizeof(read_canctrl_cmd));
     data = Read(ftdi, 1);
     Stop(ftdi);
@@ -54,13 +55,12 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
 
     printf("Configuring CANCTRL and CNF[3:1]\n");
     Start(ftdi);
-    Write(ftdi, conf_canctrl, sizeof(conf_canctrl));
     Write(ftdi, conf_can_cmd, sizeof(conf_can_cmd));
     Write(ftdi, "\x03\x28", 2);
-    data = Read(ftdi, 3);
+    data = Read(ftdi, 1);
     Stop(ftdi);
 
-    printf("CNF[3:1]: 0x%02x, 0x%02x, 0x%02x", data[0], data[1], data[2]);
+    printf("CNF[3:1]: 0x%02x\n", data[0]);
   }
   else {
     printf("Failed to initialize MPSSE: %s\n", ErrorString(ftdi));
