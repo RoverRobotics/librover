@@ -67,6 +67,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     Stop(ftdi);
 
     char transmit_tx_buffer[] = {
+      MCP_CMD_WRITE,
       0x30,
       0x08
     };
