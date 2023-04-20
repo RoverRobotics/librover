@@ -78,7 +78,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
 
     char read_txb0_cmd[] = {
       MCP_CMD_READ,
-      0x30
+      0x3E
     };
 
     char* data = NULL;
@@ -88,7 +88,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     data = Read(ftdi, 1);
     Stop(ftdi);
 
-    printf("TXB0CTRL: ");
+    printf("TXB0CTRL After Transmit: ");
     for(int i = 0; i < 8; i++){
       printf("%d", ((*data >> (7-i)) & 1));
     }
