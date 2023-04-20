@@ -30,44 +30,41 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
 }
 
 void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
-  // std::cout << "Expected CAN message: ";
-  // for (int i = 0; i < CAN_MSG_SIZE_; i++) {
-  //   std::cout << std::hex << static_cast<int>(msg[i]) << " ";
-  // }
-  // std::cout << std::endl;
+  std::cout << "Expected CAN message: ";
+  for (int i = 0; i < CAN_MSG_SIZE_; i++) {
+    std::cout << std::hex << static_cast<int>(msg[i]) << " ";
+  }
+  std::cout << std::endl;
   Can_write_mutex_.lock();
   if (msg.size() == CAN_MSG_SIZE_) {
     // convert msg to spi frame
     
     int spi_msg_size = msg.size() + 3; // msg size = 9 + 3 bytes for SPI write
     char load_tx_buffer[] = {
-      0x40 | 0x01,
-      0x00,
-      0x00,
-      0x00,
-      0x09,
+      0x31,
       msg[0],
+      0x32,
       msg[1],
+      0x33,
       msg[2],
+      0x34,
       msg[3],
+      0x35,
       msg[4],
+      0x36,
       msg[5],
+      0x37,
       msg[6],
+      0x38,
       msg[7],
-      msg[8]
+      0x38,
+      msg[8],
+      0x30,
+      0x08
     };
 
     Start(ftdi);
     Write(ftdi, load_tx_buffer, sizeof(load_tx_buffer));
-    Stop(ftdi);
-
-    printf("Status: 0x%02x", load_tx_buffer[1]);
-    char transmit_tx_buffer[] = {
-      0x81
-    };
-
-    Start(ftdi);
-    Write(ftdi, transmit_tx_buffer, sizeof(transmit_tx_buffer));
     Stop(ftdi);
   }
   Can_write_mutex_.unlock();
@@ -82,12 +79,14 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
     MCP_CMD_READ
   };
   while (true) {
+    /*
     Start(ftdi);
     Write(ftdi, read_cmd, sizeof(read_cmd));
     read_buffer = Read(ftdi, 14);
     Stop(ftdi);
+    */
     //int num_bytes = ftdi_read_data(ftdi, read_buffer, 14);
-    int num_bytes = sizeof(read_buffer); // to implement read
+    int num_bytes = 0; // to implement read
     std::chrono::milliseconds time_now =
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch());
