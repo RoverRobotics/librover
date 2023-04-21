@@ -136,11 +136,11 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
 
 
     Start(ftdi);
-    Write(ftdi, "\x03\x30", 2);
+    Write(ftdi, "\x03\x2c", 2);
     data = Read(ftdi, 1);
     Stop(ftdi);
 
-    printf("TXB0 is now: 0x%02x | ", data[0]);
+    printf("CANTINF is now: 0x%02x | ", data[0]);
     for(int i = 0; i < 8; i++){
       printf("%d", ((data[0] >> (7-i)) & 1));
     }
