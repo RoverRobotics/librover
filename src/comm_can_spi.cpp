@@ -67,7 +67,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     Stop(ftdi);
 
     printf("CNF[3:1]: 0x%02x, 0x%02x, 0x%02x\n", data[0], data[1], data[2]);
-    printf("Setting normal mode...");
+    printf("Setting normal mode...\n");
     Start(ftdi);
     Write(ftdi, "\x02\x0F\x08", 3);
     Stop(ftdi);
@@ -87,18 +87,20 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     printf("Failed to initialize MPSSE: %s\n", ErrorString(ftdi));
   }
 
-  Close(ftdi);
+  //Close(ftdi);
   // start read thread
+  /*
   Can_read_thread_ = std::thread(
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
+  */
 }
 
 void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
-  // std::cout << "Expected CAN message: ";
-  // for (int i = 0; i < CAN_MSG_SIZE_; i++) {
-  //   std::cout << std::hex << static_cast<int>(msg[i]) << " ";
-  // }
-  // std::cout << std::endl;
+  std::cout << "Expected CAN message: ";
+  for (int i = 0; i < CAN_MSG_SIZE_; i++) {
+    std::cout << std::hex << static_cast<int>(msg[i]) << " ";
+  }
+  std::cout << std::endl;
   Can_write_mutex_.lock();
   if (msg.size() == CAN_MSG_SIZE_) {
     // convert msg to spi frame
@@ -137,18 +139,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     Write(ftdi, transmit_tx_buffer, sizeof(transmit_tx_buffer));
     Stop(ftdi);
 
-
-    Start(ftdi);
-    Write(ftdi, read_txb0_cmd, sizeof(read_txb0_cmd));
-    data = Read(ftdi, 1);
-    Stop(ftdi);
-
-    printf("TXB0CTRL After Transmit: 0x%02x | ", data[0]);
-    for(int i = 0; i < 8; i++){
-      printf("%d", ((data[0] >> (7-i)) & 1));
-    }
-    printf("\n");
-
+    Close(ftdi);
   }
   Can_write_mutex_.unlock();
 }

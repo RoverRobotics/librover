@@ -94,6 +94,7 @@ int main() {
     return EXIT_FAILURE;
   }
   //robot_->cycle_robot_mode();
+  auto status = robot_->status_request();
   /*
   while (true) {
     auto status = robot_->status_request();
