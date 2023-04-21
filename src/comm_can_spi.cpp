@@ -148,17 +148,17 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
 
     sleep(0.05);
 
-    printf("Reading one msg of data...\n");
+    printf("Reading TEC...\n");
     Start(ftdi);
-    Write(ftdi, "\x03\x61", 2);
-    data = Read(ftdi, 9);
+    Write(ftdi, "\x03\x1C", 2);
+    data = Read(ftdi, 1);
     Stop(ftdi);
 
-    std::cout << "Received CAN message: ";
-    for (int i = 0; i < CAN_MSG_SIZE_; i++) {
-      printf("0x%02x ", data[i]);
+    printf("TEC is now: 0x%02x | ", data[0]);
+    for(int i = 0; i < 8; i++){
+      printf("%d", ((data[0] >> (7-i)) & 1));
     }
-    std::cout << std::endl;
+    printf("\n");
 
   }
   else {
