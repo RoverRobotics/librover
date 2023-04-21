@@ -45,6 +45,12 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     0x04
   };
 
+  char conf_no_int[] = {
+    MCP_CMD_WRITE,
+    0b00101011,
+    0b00000100
+  };
+
   if(ftdi = OpenIndex(0x0403, 0x6010, SPI0, TEN_MHZ, MSB, IFACE_A, NULL, NULL, 0)){
     printf("%s opened at %dHz (SPI Mode 0)\n", GetDescription(ftdi), GetClock(ftdi));
 
@@ -119,6 +125,10 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
       printf("0x%02x ", data[i]);
     }
     std::cout << std::endl;
+
+    Start(ftdi);
+    Write(ftdi, conf_no_int, sizeof(conf_no_int));
+    Stop(ftdi);
 
     Start(ftdi);
     Write(ftdi, "\x30\x0B", 2);
