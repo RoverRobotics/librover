@@ -111,6 +111,17 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     Write(ftdi, "\x30\x0B", 2);
     Stop(ftdi);
 
+    Start(ftdi);
+    Write(ftdi, "\x03\x60", 2);
+    data = Read(ftdi, 1);
+    Stop(ftdi);
+
+    printf("RXB0 is now: 0x%02x | ", data[0]);
+    for(int i = 0; i < 8; i++){
+      printf("%d", ((data[0] >> (7-i)) & 1));
+    }
+    printf("\n");
+
     sleep(0.05);
 
     printf("Reading one msg of data...\n");
@@ -125,16 +136,6 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     }
     std::cout << std::endl;
 
-    Start(ftdi);
-    Write(ftdi, read_txb0_cmd, sizeof(read_txb0_cmd));
-    data = Read(ftdi, 1);
-    Stop(ftdi);
-
-    printf("TXB0 is now: 0x%02x | ", data[0]);
-    for(int i = 0; i < 8; i++){
-      printf("%d", ((data[0] >> (7-i)) & 1));
-    }
-    printf("\n");
   }
   else {
     printf("Failed to initialize MPSSE: %s\n", ErrorString(ftdi));
