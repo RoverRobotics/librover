@@ -165,7 +165,6 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     printf("Failed to initialize MPSSE: %s\n", ErrorString(ftdi));
   }
 
-  Close(ftdi);
   // start read thread
   /*
   Can_read_thread_ = std::thread(
@@ -217,7 +216,18 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     Write(ftdi, transmit_tx_buffer, sizeof(transmit_tx_buffer));
     Stop(ftdi);
 
-    Close(ftdi);
+    printf("Reading TEC...\n");
+    Start(ftdi);
+    Write(ftdi, "\x03\x1C", 2);
+    data = Read(ftdi, 1);
+    Stop(ftdi);
+
+    printf("TEC is now: 0x%02x | ", data[0]);
+    for(int i = 0; i < 8; i++){
+      printf("%d", ((data[0] >> (7-i)) & 1));
+    }
+    printf("\n");
+
   }
   Can_write_mutex_.unlock();
 }
