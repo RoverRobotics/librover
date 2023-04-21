@@ -28,7 +28,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
 
   char read_txb0_cmd[] = {
       MCP_CMD_READ,
-      0b00110000
+      0x30
     };
 
   char send_one_msg[] = {
@@ -86,9 +86,9 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     Stop(ftdi);
 
     printf("CNF[3:1]: 0x%02x, 0x%02x, 0x%02x\n", data[0], data[1], data[2]);
-    printf("Setting normal mode...\n");
+    printf("Setting loopback mode...\n");
     Start(ftdi);
-    Write(ftdi, "\x02\x0F\x08", 3);
+    Write(ftdi, "\x02\x0F\x68", 3);
     Stop(ftdi);
 
     Start(ftdi);
@@ -112,6 +112,18 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     Stop(ftdi);
 
     sleep(0.05);
+
+    printf("Reading one msg of data...\n");
+    Start(ftdi);
+    Write(ftdi, "\x03\x61", 2);
+    data = Read(ftdi, 9);
+    Stop(ftdi);
+
+    std::cout << "Received CAN message: ";
+    for (int i = 0; i < CAN_MSG_SIZE_; i++) {
+      printf("0x%02x ", data[i]);
+    }
+    std::cout << std::endl;
 
     Start(ftdi);
     Write(ftdi, read_txb0_cmd, sizeof(read_txb0_cmd));
