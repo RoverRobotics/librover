@@ -110,7 +110,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     printf("Failed to initialize MPSSE: %s\n", ErrorString(ftdi));
   }
 
-  //Close(ftdi);
+  Close(ftdi);
   // start read thread
   /*
   Can_read_thread_ = std::thread(
