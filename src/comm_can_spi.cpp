@@ -28,7 +28,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
 
   char read_txb0_cmd[] = {
       MCP_CMD_READ,
-      0b00001110
+      0b00110000
     };
 
   char send_one_msg[] = {
