@@ -101,6 +101,10 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
       printf("%d", ((data[0] >> (7-i)) & 1));
     }
     printf("\n");
+    
+    Start(ftdi);
+    Write(ftdi, "\x02\x60\x60", 3);
+    Stop(ftdi);
 
     printf("Sending one msg of data...\n");
     Start(ftdi);
@@ -110,6 +114,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     Start(ftdi);
     Write(ftdi, "\x30\x0B", 2);
     Stop(ftdi);
+
 
     Start(ftdi);
     Write(ftdi, "\x03\x60", 2);
