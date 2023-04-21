@@ -67,6 +67,21 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     Stop(ftdi);
 
     printf("CNF[3:1]: 0x%02x, 0x%02x, 0x%02x\n", data[0], data[1], data[2]);
+    printf("Setting normal mode...");
+    Start(ftdi);
+    Write(ftdi, "\x02\x0F\x08", 3);
+    Stop(ftdi);
+
+    Start(ftdi);
+    Write(ftdi, read_canctrl_cmd, sizeof(read_canctrl_cmd));
+    data = Read(ftdi, 1);
+    Stop(ftdi);
+
+    printf("CANCTRL is now: 0x%02x | ", data[0]);
+    for(int i = 0; i < 8; i++){
+      printf("%d", ((data[0] >> (7-i)) & 1));
+    }
+    printf("\n");
   }
   else {
     printf("Failed to initialize MPSSE: %s\n", ErrorString(ftdi));
