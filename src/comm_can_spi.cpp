@@ -30,7 +30,14 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     MCP_CMD_WRITE,
     0x31,
     0x80,
-    0x0,
+    0x00,
+    0x01,
+    0x01,
+    0x04,
+    0x01,
+    0x02,
+    0x03,
+    0x04
   };
 
   if(ftdi = OpenIndex(0x0403, 0x6010, SPI0, TEN_MHZ, MSB, IFACE_A, NULL, NULL, 0)){
@@ -89,6 +96,15 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
       printf("%d", ((data[0] >> (7-i)) & 1));
     }
     printf("\n");
+
+    printf("Sending one msg of data...\n");
+    Start(ftdi);
+    Write(ftdi, send_one_msg, sizeof(send_one_msg));
+    Stop(ftdi);
+
+    Start(ftdi);
+    Write(ftdi, "\x30\x0B", 2);
+    Stop(ftdi);
   }
   else {
     printf("Failed to initialize MPSSE: %s\n", ErrorString(ftdi));
