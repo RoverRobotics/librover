@@ -94,7 +94,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     printf("CNF[3:1]: 0x%02x, 0x%02x, 0x%02x\n", data[0], data[1], data[2]);
     printf("Setting loopback mode...\n");
     Start(ftdi);
-    Write(ftdi, "\x02\x0F\x68", 3);
+    Write(ftdi, "\x02\x0F\x40", 3);
     Stop(ftdi);
 
     Start(ftdi);
@@ -136,11 +136,11 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
 
 
     Start(ftdi);
-    Write(ftdi, "\x03\x2c", 2);
+    Write(ftdi, "\x03\x30", 2);
     data = Read(ftdi, 1);
     Stop(ftdi);
 
-    printf("CANTINF is now: 0x%02x | ", data[0]);
+    printf("TXB0 is now: 0x%02x | ", data[0]);
     for(int i = 0; i < 8; i++){
       printf("%d", ((data[0] >> (7-i)) & 1));
     }
