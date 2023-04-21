@@ -26,6 +26,13 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     0b10011000
   };
 
+  char send_one_msg[] = {
+    MCP_CMD_WRITE,
+    0x31,
+    0x80,
+    0x0,
+  };
+
   if(ftdi = OpenIndex(0x0403, 0x6010, SPI0, TEN_MHZ, MSB, IFACE_A, NULL, NULL, 0)){
     printf("%s opened at %dHz (SPI Mode 0)\n", GetDescription(ftdi), GetClock(ftdi));
 
@@ -98,7 +105,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
 void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
   std::cout << "Expected CAN message: ";
   for (int i = 0; i < CAN_MSG_SIZE_; i++) {
-    std::cout << std::hex << static_cast<int>(msg[i]) << " ";
+    printf("0x%02x ", msg[i]);
   }
   std::cout << std::endl;
   Can_write_mutex_.lock();
