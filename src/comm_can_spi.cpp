@@ -101,15 +101,24 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
       printf("%d", ((data[0] >> (7-i)) & 1));
     }
     printf("\n");
-    
-    Start(ftdi);
-    Write(ftdi, "\x02\x60\x60", 3);
-    Stop(ftdi);
+
 
     printf("Sending one msg of data...\n");
     Start(ftdi);
     Write(ftdi, send_one_msg, sizeof(send_one_msg));
     Stop(ftdi);
+
+    printf("Reading Buffer 0...\n");
+    Start(ftdi);
+    Write(ftdi, "\x03\x31", 2);
+    data = Read(ftdi, 9);
+    Stop(ftdi);
+
+    std::cout << "Buffer 0: ";
+    for (int i = 0; i < CAN_MSG_SIZE_; i++) {
+      printf("0x%02x ", data[i]);
+    }
+    std::cout << std::endl;
 
     Start(ftdi);
     Write(ftdi, "\x30\x0B", 2);
@@ -117,6 +126,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
 
 
     Start(ftdi);
+    Write(ftdi, "\x02\x60\x60", 3);
     Write(ftdi, "\x03\x60", 2);
     data = Read(ftdi, 1);
     Stop(ftdi);
