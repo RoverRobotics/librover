@@ -134,10 +134,13 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     Write(ftdi, conf_no_int, sizeof(conf_no_int));
     Stop(ftdi);
 
+    sleep(0.05);
+
     Start(ftdi);
     Write(ftdi, "\x81", 2);
     Stop(ftdi);
     
+    sleep(0.05);
 
     Start(ftdi);
     Write(ftdi, "\x03\x30", 2);
