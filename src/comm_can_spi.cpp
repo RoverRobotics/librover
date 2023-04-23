@@ -35,7 +35,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     MCP_CMD_WRITE,
     0x31,
     0x00,
-    0x08,
+    0x80,
     0x01,
     0x01,
     0x04,
