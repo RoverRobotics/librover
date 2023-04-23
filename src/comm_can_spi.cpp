@@ -53,7 +53,11 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
 
   if(ftdi = OpenIndex(0x0403, 0x6010, SPI0, TEN_MHZ, MSB, IFACE_A, NULL, NULL, 0)){
     printf("%s opened at %dHz (SPI Mode 0)\n", GetDescription(ftdi), GetClock(ftdi));
-
+    printf("Setting default settings...\n");
+    Start(ftdi);
+    Write(ftdi, "\xC0", 1);
+    Stop(ftdi);
+    
     Start(ftdi);
     Write(ftdi, read_canctrl_cmd, sizeof(read_canctrl_cmd));
     data = Read(ftdi, 1);
