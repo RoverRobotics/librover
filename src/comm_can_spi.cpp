@@ -131,7 +131,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     Stop(ftdi);
 
     Start(ftdi);
-    Write(ftdi, "\x02\x81", 2);
+    Write(ftdi, "\x81", 2);
     Stop(ftdi);
 
 
