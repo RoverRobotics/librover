@@ -166,10 +166,10 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   }
 
   // start read thread
-  /*
+  
   Can_read_thread_ = std::thread(
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
-  */
+  
 }
 
 void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
@@ -181,10 +181,10 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
   // Extract the TX0EID8 and TX0EID0 values from the CAN frame ID
   uint8_t tx0eid8 = static_cast<uint8_t>((can_id >> 8) & 0xFF);
   uint8_t tx0eid0 = static_cast<uint8_t>(can_id & 0xFF);
-  
+  /*
   std::cout << "Expected CAN message with ID: ";
   printf("0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",tx0sidh, tx0sidl, tx0eid8, tx0eid0, msg[4], msg[5], msg[6], msg[7], msg[8]);
-
+  
   Can_write_mutex_.lock();
   if (msg.size() == CAN_MSG_SIZE_) {
     // convert msg to spi frame
@@ -245,8 +245,9 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
       printf("%d", ((data[0] >> (7-i)) & 1));
     }
     printf("\n");
-
+    
   }
+  */
   Can_write_mutex_.unlock();
 }
 
@@ -294,7 +295,7 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
         printf("Not a valid RPM packet. Connection = False\n");
       }
     }
-    //msg.clear();
+    msg.clear();
     
   }
 }
