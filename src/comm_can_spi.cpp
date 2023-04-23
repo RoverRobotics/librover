@@ -112,7 +112,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     }
     printf("\n");
 
-    /*
+    
     printf("Sending one msg of data...\n");
     Start(ftdi);
     Write(ftdi, send_one_msg, sizeof(send_one_msg));
@@ -137,7 +137,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     Start(ftdi);
     Write(ftdi, "\x81", 2);
     Stop(ftdi);
-    */
+    
 
     Start(ftdi);
     Write(ftdi, "\x03\x30", 2);
@@ -170,10 +170,10 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   }
 
   // start read thread
-  
+  /*
   Can_read_thread_ = std::thread(
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
-  
+  */
 }
 
 void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
