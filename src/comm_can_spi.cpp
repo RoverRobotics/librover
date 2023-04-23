@@ -15,9 +15,9 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   char conf_can_cmd[] = {
     MCP_CMD_WRITE,
     0b00101000,
-    0x40,
+    0x84,
     0xF6,
-    0x84
+    0x40
   };
 
   char conf_canctrl[] = {
@@ -63,6 +63,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     data = Read(ftdi, 1);
     Stop(ftdi);
 
+    // Check data 
     printf("CANCTRL Data Received: 0x%02x | ", data[0]);
     for(int i = 0; i < 8; i++){
       printf("%d", ((data[0] >> (7-i)) & 1));
@@ -81,6 +82,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     printf("\n");
 
 
+    // Configure CANCTRl and baud rate settings
     printf("Configuring CANCTRL and CNF[3:1]\n");
     Start(ftdi);
     Write(ftdi, conf_canctrl, sizeof(conf_canctrl));
@@ -90,12 +92,18 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     Write(ftdi, conf_can_cmd, sizeof(conf_can_cmd));
     Stop(ftdi);
 
+
+    // Clear CANINTF
+    Start(ftdi);
+    Write(ftdi, "\x02\x2C\x00", 3);
+    Stop(ftdi);
+
     Start(ftdi);
     Write(ftdi, "\x03\x28", 2);
     data = Read(ftdi, 3);
     Stop(ftdi);
-
     printf("CNF[3:1]: 0x%02x, 0x%02x, 0x%02x\n", data[0], data[1], data[2]);
+    
     printf("Setting normal one shot mode...\n");
     Start(ftdi);
     Write(ftdi, "\x02\x0F\x00", 3);
