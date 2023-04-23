@@ -255,7 +255,6 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
 }
 
 void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> parsefunction) {
-  Can_write_mutex_.lock();
   std::chrono::milliseconds time_last =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
@@ -265,10 +264,12 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
     0x61
   };
   while (true) {
+    Can_write_mutex_.lock();
     Start(ftdi);
     Write(ftdi, read_cmd, sizeof(read_cmd));
     read_buffer = Read(ftdi, 14);
     Stop(ftdi);
+    Can_write_mutex_.unlock();
     int num_bytes = sizeof(read_buffer);
     //int num_bytes = 0; // to implement read
     std::chrono::milliseconds time_now =
@@ -300,7 +301,6 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
       }
     }
     msg.clear();
-    Can_write_mutex_.unlock();
   }
 }
 
