@@ -53,7 +53,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     MCP_CMD_WRITE,
     0x31,
     0x00,
-    0x80,
+    0x08,
     0x01,
     0x01,
     0x04,
@@ -234,12 +234,24 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
 void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
   Can_write_mutex_.lock();
   uint32_t can_id = static_cast<uint32_t>((msg[0] << 24) + (msg[1] << 16) + (msg[2] << 8) + msg[3]);
+
+  uint8_t tbufdata[4];
+
+  uint16_t canid = (uint16_t)(can_id & 0x0FFFF);
+
+  tbufdata[3] = (uint8_t) (canid & 0xFF);
+  tbufdata[2] = (uint8_t) (canid >> 8);
+  canid = (uint16_t)(can_id >> 16);
+  tbufdata[1] = (uint8_t) (canid & 0x03);
+  tbufdata[1] += (uint8_t) ((canid & 0x1C) << 3);
+  tbufdata[1] |= 0x08;
+  tbufdata[0] = (uint8_t) (canid >> 5 );
   // Extract the TX0SIDH and TX0SIDL values from the CAN frame ID
-  uint8_t tx0sidh = static_cast<uint8_t>((can_id >> 21) & 0x07);
-  uint8_t tx0sidl = static_cast<uint8_t>((can_id >> 18) & 0xFF);
+  uint8_t tx0sidh = tbufdata[0];
+  uint8_t tx0sidl = tbufdata[1];
   // Extract the TX0EID8 and TX0EID0 values from the CAN frame ID
-  uint8_t tx0eid8 = static_cast<uint8_t>((can_id >> 8) & 0xFF);
-  uint8_t tx0eid0 = static_cast<uint8_t>(can_id & 0xFF);
+  uint8_t tx0eid8 = tbufdata[2];
+  uint8_t tx0eid0 = tbufdata[3];
   
   std::cout << "Expected CAN message with ID: ";
   printf("0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",tx0sidh, tx0sidl, tx0eid8, tx0eid0, msg[4], msg[5], msg[6], msg[7], msg[8]);
