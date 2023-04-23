@@ -34,15 +34,15 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   char send_one_msg[] = {
     MCP_CMD_WRITE,
     0x31,
-    0x01,
-    0x23,
-    0x1f,
     0x00,
+    0x00,
+    0x01,
+    0x01,
     0x04,
-    0xaa,
-    0xbb,
-    0xcc,
-    0xdd
+    0x00,
+    0x00,
+    0x00,
+    0x00
   };
 
   char conf_no_int[] = {
