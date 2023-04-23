@@ -263,7 +263,7 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
   while (true) {
     Start(ftdi);
     Write(ftdi, read_cmd, sizeof(read_cmd));
-    read_buffer = Read(ftdi, 13);
+    read_buffer = Read(ftdi, 14);
     Stop(ftdi);
     int num_bytes = sizeof(read_buffer);
     //int num_bytes = 0; // to implement read
