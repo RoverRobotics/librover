@@ -177,7 +177,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
 }
 
 void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
-
+  Can_write_mutex_.lock();
   uint32_t can_id = static_cast<uint32_t>((msg[0] << 24) + (msg[1] << 16) + (msg[2] << 8) + msg[3]);
   // Extract the TX0SIDH and TX0SIDL values from the CAN frame ID
   uint8_t tx0sidh = static_cast<uint8_t>((can_id >> 21) & 0x07);
@@ -188,8 +188,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
   
   std::cout << "Expected CAN message with ID: ";
   printf("0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",tx0sidh, tx0sidl, tx0eid8, tx0eid0, msg[4], msg[5], msg[6], msg[7], msg[8]);
-  
-  Can_write_mutex_.lock();
+
   if (msg.size() == CAN_MSG_SIZE_) {
     // convert msg to spi frame
     char read_txb0_cmd[] = {
@@ -256,6 +255,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
 }
 
 void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> parsefunction) {
+  Can_write_mutex_.lock();
   std::chrono::milliseconds time_last =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
@@ -300,7 +300,7 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
       }
     }
     msg.clear();
-    
+    Can_write_mutex_.unlock();
   }
 }
 
