@@ -1,5 +1,23 @@
 #include "comm_can_spi.hpp"
 namespace RoverRobotics {
+
+void convert_id(const uint32_t id)
+{
+    uint16_t canid;
+    uint8_t tbufdata[4];
+
+    canid = (uint16_t)(id & 0x0FFFF);
+
+    tbufdata[3] = (uint8_t) (canid & 0xFF);
+    tbufdata[2] = (uint8_t) (canid >> 8);
+    canid = (uint16_t)(id >> 16);
+    tbufdata[1] = (uint8_t) (canid & 0x03);
+    tbufdata[1] += (uint8_t) ((canid & 0x1C) << 3);
+    tbufdata[1] |= 0x08;
+    tbufdata[0] = (uint8_t) (canid >> 5 );
+
+    printf("0x%x converted => TX0SIDH: 0x%02x TX0SIDL: 0x%02x TX0EID8: 0x%02x TX0EID0: 0x%02x\n", id, tbufdata[0], tbufdata[1], tbufdata[2], tbufdata[3]);
+}
 CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_t>)> parsefunction, std::vector<uint8_t> setting) : is_connected_(false) {
   // FTDI Setup for MPSSE Mode
   char* data = NULL;
@@ -341,23 +359,6 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
   }
 }
 
-void convert_id(const uint32_t id)
-{
-    uint16_t canid;
-    uint8_t tbufdata[4];
-
-    canid = (uint16_t)(id & 0x0FFFF);
-
-    tbufdata[3] = (uint8_t) (canid & 0xFF);
-    tbufdata[2] = (uint8_t) (canid >> 8);
-    canid = (uint16_t)(id >> 16);
-    tbufdata[1] = (uint8_t) (canid & 0x03);
-    tbufdata[1] += (uint8_t) ((canid & 0x1C) << 3);
-    tbufdata[1] |= 0x08;
-    tbufdata[0] = (uint8_t) (canid >> 5 );
-
-    printf("0x%x converted => TX0SIDH: 0x%02x TX0SIDL: 0x%02x TX0EID8: 0x%02x TX0EID0: 0x%02x\n", id, tbufdata[0], tbufdata[1], tbufdata[2], tbufdata[3]);
-}
 
 
 bool CommCanSPI::is_connected() { return (is_connected_); }
