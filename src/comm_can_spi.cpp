@@ -108,7 +108,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     }
     printf("\n");
 
-
+    /*
     printf("Sending one msg of data...\n");
     Start(ftdi);
     Write(ftdi, send_one_msg, sizeof(send_one_msg));
@@ -133,7 +133,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     Start(ftdi);
     Write(ftdi, "\x81", 2);
     Stop(ftdi);
-
+    */
 
     Start(ftdi);
     Write(ftdi, "\x03\x30", 2);
@@ -166,10 +166,10 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   }
 
   // start read thread
-  /*
+  
   Can_read_thread_ = std::thread(
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
-  */
+  
 }
 
 void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
@@ -218,7 +218,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     Start(ftdi);
     Write(ftdi, load_tx_buffer, sizeof(load_tx_buffer));
     Stop(ftdi);
-
+    
     Start(ftdi);
     Write(ftdi, transmit_tx_buffer, sizeof(transmit_tx_buffer));
     Stop(ftdi);
@@ -244,18 +244,17 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
   char* read_buffer;
-  char read_cmd[1]{
-    MCP_CMD_READ
+  char read_cmd[2]{
+    MCP_CMD_READ,
+    0x61
   };
   while (true) {
-    /*
     Start(ftdi);
     Write(ftdi, read_cmd, sizeof(read_cmd));
-    read_buffer = Read(ftdi, 14);
+    read_buffer = Read(ftdi, 13);
     Stop(ftdi);
-    */
-    //int num_bytes = ftdi_read_data(ftdi, read_buffer, 14);
-    int num_bytes = 0; // to implement read
+    int num_bytes = sizeof(read_buffer);
+    //int num_bytes = 0; // to implement read
     std::chrono::milliseconds time_now =
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch());
@@ -281,8 +280,7 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
       is_connected_ = true;
     } catch(int i){
       if (i == -4){
-        //printf("Not a valid RPM packet. Connection = False\n");
-        is_connected_ = false;
+        printf("Not a valid RPM packet. Connection = False\n");
       }
     }
     //msg.clear();
