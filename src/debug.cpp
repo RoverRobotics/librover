@@ -102,7 +102,7 @@ int main() {
     std::cout << "connected:  " << (connected ? "True" : "False") << std::endl;
 
     auto info = robot_->info_request();
-    print_status(info);
+    // print_status(info);
     // robot_->cycle_robot_mode();
 
     // robot_->send_estop(true);
