@@ -98,7 +98,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     printf("CNF[3:1]: 0x%02x, 0x%02x, 0x%02x\n", data[0], data[1], data[2]);
     printf("Setting normal one shot mode...\n");
     Start(ftdi);
-    Write(ftdi, "\x02\x0F\x08", 3);
+    Write(ftdi, "\x02\x0F\x00", 3);
     Stop(ftdi);
 
     Start(ftdi);
