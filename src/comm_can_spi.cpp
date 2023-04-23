@@ -15,9 +15,9 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   char conf_can_cmd[] = {
     MCP_CMD_WRITE,
     0b00101000,
-    0x04,
-    0xBA,
-    0x01
+    0x84,
+    0xF6,
+    0x41
   };
 
   char conf_canctrl[] = {
