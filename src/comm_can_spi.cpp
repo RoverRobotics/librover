@@ -166,10 +166,10 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   }
 
   // start read thread
-  
+  /*
   Can_read_thread_ = std::thread(
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
-  
+  */
 }
 
 void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
@@ -233,7 +233,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
       printf("%d", ((data[0] >> (7-i)) & 1));
     }
     printf("\n");
-    
+
     printf("Reading TEC...\n");
     Start(ftdi);
     Write(ftdi, "\x03\x1C", 2);
