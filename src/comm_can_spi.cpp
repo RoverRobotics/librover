@@ -18,7 +18,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     0b00101000,
     0x05,
     0xB5,
-    0x40
+    0x41
   };
 
   char conf_canctrl[] = {
