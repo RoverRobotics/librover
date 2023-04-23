@@ -121,8 +121,6 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     }
     printf("\n");
 
-    sleep(0.1); // sleep 100ms
-
     printf("Sending one msg of data...\n");
     Start(ftdi);
     Write(ftdi, send_one_msg, sizeof(send_one_msg));
@@ -144,7 +142,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     Write(ftdi, conf_no_int, sizeof(conf_no_int));
     Stop(ftdi);
 
-    sleep(0.05);
+    sleep(0.100);
 
     Start(ftdi);
     Write(ftdi, "\x81", 2);
