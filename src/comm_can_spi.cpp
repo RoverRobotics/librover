@@ -57,7 +57,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     Start(ftdi);
     Write(ftdi, "\xC0", 1);
     Stop(ftdi);
-
+    
     Start(ftdi);
     Write(ftdi, read_canctrl_cmd, sizeof(read_canctrl_cmd));
     data = Read(ftdi, 1);
@@ -112,7 +112,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     }
     printf("\n");
 
-    
+    /*
     printf("Sending one msg of data...\n");
     Start(ftdi);
     Write(ftdi, send_one_msg, sizeof(send_one_msg));
@@ -137,7 +137,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     Start(ftdi);
     Write(ftdi, "\x81", 2);
     Stop(ftdi);
-    
+    */
 
     Start(ftdi);
     Write(ftdi, "\x03\x30", 2);
@@ -185,7 +185,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
   // Extract the TX0EID8 and TX0EID0 values from the CAN frame ID
   uint8_t tx0eid8 = static_cast<uint8_t>((can_id >> 8) & 0xFF);
   uint8_t tx0eid0 = static_cast<uint8_t>(can_id & 0xFF);
-  /*
+  
   std::cout << "Expected CAN message with ID: ";
   printf("0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",tx0sidh, tx0sidl, tx0eid8, tx0eid0, msg[4], msg[5], msg[6], msg[7], msg[8]);
   
@@ -251,7 +251,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     printf("\n");
     
   }
-  */
+  
   Can_write_mutex_.unlock();
 }
 
