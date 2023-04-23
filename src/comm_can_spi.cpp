@@ -220,7 +220,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     Stop(ftdi);
     
     Start(ftdi);
-    Write(ftdi, transmit_tx_buffer, sizeof(transmit_tx_buffer));
+    Write(ftdi, "\x81", 1);
     Stop(ftdi);
 
     Start(ftdi);
