@@ -205,10 +205,10 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   }
 
   // start read thread
-  
+  /*
   Can_read_thread_ = std::thread(
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
-  
+  */
 }
 
 void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
