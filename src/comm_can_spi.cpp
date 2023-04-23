@@ -187,6 +187,18 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     }
     printf("\n");
 
+    printf("Reading EFLG...\n");
+    Start(ftdi);
+    Write(ftdi, "\x03\x2D", 2);
+    data = Read(ftdi, 1);
+    Stop(ftdi);
+
+    printf("EFLG is now: 0x%02x | ", data[0]);
+    for(int i = 0; i < 8; i++){
+      printf("%d", ((data[0] >> (7-i)) & 1));
+    }
+    printf("\n");
+
   }
   else {
     printf("Failed to initialize MPSSE: %s\n", ErrorString(ftdi));
