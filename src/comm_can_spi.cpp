@@ -1,6 +1,37 @@
 #include "comm_can_spi.hpp"
 namespace RoverRobotics {
 
+
+void spin_one_wheel(mpsse_context* ftdi){
+  char send_one_msg[] = {
+    MCP_CMD_WRITE,
+    0x31,
+    0x00,
+    0x08,
+    0x01,
+    0x01,
+    0x04,
+    0x00,
+    0x00,
+    0x01,
+    0x68
+  };
+  printf("Sending 360 erpm...\n");
+  Start(ftdi);
+  Write(ftdi, send_one_msg, sizeof(send_one_msg));
+  Stop(ftdi);
+
+  Start(ftdi);
+  Write(ftdi, "\x81", 1);
+  Stop(ftdi);
+
+  sleep(0.05);
+
+  Start(ftdi);
+  Write(ftdi, "\x02\x2C\x00", 1);
+  Stop(ftdi);
+}
+
 CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_t>)> parsefunction, std::vector<uint8_t> setting) : is_connected_(false) {
   // FTDI Setup for MPSSE Mode
   char* data = NULL;
@@ -229,35 +260,6 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   */
 }
 
-void spin_one_wheel(mpsse_context* ftdi){
-  char send_one_msg[] = {
-    MCP_CMD_WRITE,
-    0x31,
-    0x00,
-    0x08,
-    0x01,
-    0x01,
-    0x04,
-    0x00,
-    0x00,
-    0x01,
-    0x68
-  };
-  printf("Sending 360 erpm...\n");
-  Start(ftdi);
-  Write(ftdi, send_one_msg, sizeof(send_one_msg));
-  Stop(ftdi);
-
-  Start(ftdi);
-  Write(ftdi, "\x81", 1);
-  Stop(ftdi);
-
-  sleep(0.05);
-
-  Start(ftdi);
-  Write(ftdi, "\x02\x2C\x00", 1);
-  Stop(ftdi);
-}
 
 void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
   Can_write_mutex_.lock();
