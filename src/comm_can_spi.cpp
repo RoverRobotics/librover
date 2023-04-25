@@ -175,6 +175,18 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     }
     printf("\n");
 
+    printf("Reading REC...\n");
+    Start(ftdi);
+    Write(ftdi, "\x03\x1D", 2);
+    data = Read(ftdi, 1);
+    Stop(ftdi);
+
+    printf("REC is now: 0x%02x | ", data[0]);
+    for(int i = 0; i < 8; i++){
+      printf("%d", ((data[0] >> (7-i)) & 1));
+    }
+    printf("\n");
+
     printf("Reading CANINTF...\n");
     Start(ftdi);
     Write(ftdi, "\x03\x2C", 2);
@@ -204,10 +216,13 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   }
 
   // start read thread
-  /*
+  Start(ftdi);
+  Write(ftdi, "\x02\x2C\x00", 3);
+  Stop(ftdi);
+  
   Can_read_thread_ = std::thread(
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
-  */
+  
 }
 
 void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
@@ -305,6 +320,7 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
   char* read_buffer;
+  char* data;
   char read_cmd[2]{
     MCP_CMD_READ,
     0x61
@@ -316,6 +332,23 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
     read_buffer = Read(ftdi, 14);
     Stop(ftdi);
     Can_write_mutex_.unlock();
+    
+    Start(ftdi);
+    Write(ftdi, "\x02\x2C\x00", 3);
+    Stop(ftdi);
+
+
+    printf("Reading CANINTF...\n");
+    Start(ftdi);
+    Write(ftdi, "\x03\x2C", 2);
+    data = Read(ftdi, 1);
+    Stop(ftdi);
+
+    printf("CANINTF is now: 0x%02x | ", data[0]);
+    for(int i = 0; i < 8; i++){
+      printf("%d", ((data[0] >> (7-i)) & 1));
+    }
+    printf("\n");
     int num_bytes = sizeof(read_buffer);
     //int num_bytes = 0; // to implement read
     std::chrono::milliseconds time_now =
@@ -323,7 +356,7 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
             std::chrono::system_clock::now().time_since_epoch());
     if (num_bytes <= 0) {
       if ((time_now - time_last).count() > TIMEOUT_MS_) {
-        is_connected_ = false;
+        //is_connected_ = false;
         //ftdi_usb_close(ftdi);
       }
       continue;
@@ -334,7 +367,7 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
     std::vector<uint8_t> msg;
 
     for (int i = 0; i < num_bytes; i++) {
-      printf("Read Byte[%d/%d]: 0x%x\n", i + 1, num_bytes, read_buffer[i]);
+      printf("Read Byte[%d/%d]: 0x%02x\n", i + 1, num_bytes, read_buffer[i]);
       msg.push_back(read_buffer[i]);
     }
     

@@ -94,14 +94,15 @@ int main() {
   }
   //robot_->cycle_robot_mode();
   //auto status = robot_->status_request();
-  /*
+  
   while (true) {
     auto status = robot_->status_request();
     // std::cout << status.angular_vel << std::endl;
 
     auto connected = robot_->is_connected();
     //std::cout << "connected:  " << (connected ? "True" : "False") << std::endl;
-
+    double control_array[2] = {0.2, 0};
+    robot_->set_robot_velocity(control_array);
     auto info = robot_->info_request();
     // print_status(info);
     // robot_->cycle_robot_mode();
@@ -111,6 +112,6 @@ int main() {
     // robot_->update_drivetrim(0.01);
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
-  */
+  
 }
 
