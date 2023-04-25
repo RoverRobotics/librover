@@ -331,7 +331,6 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
     Write(ftdi, read_cmd, sizeof(read_cmd));
     read_buffer = Read(ftdi, 14);
     Stop(ftdi);
-    Can_write_mutex_.unlock();
     
     Start(ftdi);
     Write(ftdi, "\x02\x2C\x00", 3);
@@ -344,6 +343,7 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
     data = Read(ftdi, 1);
     Stop(ftdi);
 
+    Can_write_mutex_.unlock();
     printf("CANINTF is now: 0x%02x | ", data[0]);
     for(int i = 0; i < 8; i++){
       printf("%d", ((data[0] >> (7-i)) & 1));
