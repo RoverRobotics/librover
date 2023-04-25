@@ -319,7 +319,7 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
   std::chrono::milliseconds time_last =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
-  char read_buffer[14];
+  char* read_buffer;
   char* data;
   char read_cmd[2]{
     MCP_CMD_READ,
@@ -329,7 +329,7 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
     Can_write_mutex_.lock();
     Start(ftdi);
     Write(ftdi, read_cmd, sizeof(read_cmd));
-    read_buffer = Read(ftdi, 14);
+    read_buffer = Read(ftdi, 13);
     Stop(ftdi);
     
     Start(ftdi);
