@@ -2,40 +2,63 @@
 namespace RoverRobotics {
 
 
-void spin_one_wheel(mpsse_context* ftdi){
-  char send_one_msg[] = {
-    MCP_CMD_WRITE,
-    0x31,
-    0x00,
-    0x08,
-    0x01,
-    0x01,
-    0x04,
-    0x00,
-    0x00,
-    0x01,
-    0x68
-  };
-  printf("Sending 360 erpm...\n");
-  Start(ftdi);
-  Write(ftdi, send_one_msg, sizeof(send_one_msg));
-  Stop(ftdi);
+/*
+HELPER FUNCTIONS - Only used in this class
+*/
 
-  Start(ftdi);
-  Write(ftdi, "\x81", 1);
-  Stop(ftdi);
+static void _print_bits(char* data){
+  for(int i = 0; i < 8; i++){
+    printf("%d", ((data[0] >> (7-i)) & 1));
+  }
+  printf("\n");
+}
 
-  sleep(0.05);
-
+static void _clear_can_int(mpsse_context* ftdi){
   Start(ftdi);
-  Write(ftdi, "\x02\x2C\x00", 1);
+  Write(ftdi, "\x02\x2C\x00", 3);
   Stop(ftdi);
 }
 
-CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_t>)> parsefunction, std::vector<uint8_t> setting) : is_connected_(false) {
-  // FTDI Setup for MPSSE Mode
-  char* data = NULL;
+static char* _get_rec(mpsse_context* ftdi){
+  Start(ftdi);
+  Write(ftdi, "\x03\x1D", 2);
+  char* data = Read(ftdi, 1);
+  Stop(ftdi);
+  return data;
+}
 
+static char* _get_tec(mpsse_context* ftdi){
+  Start(ftdi);
+  Write(ftdi, "\x03\x1D", 2);
+  char* data = Read(ftdi, 1);
+  Stop(ftdi);
+  return data;
+}
+
+static char* _get_eflg(mpsse_context* ftdi){
+  Start(ftdi);
+  Write(ftdi, "\x03\x2D", 2);
+  char* data = Read(ftdi, 1);
+  Stop(ftdi);
+  return data;
+}
+
+static char* _get_canintf(mpsse_context* ftdi){
+  Start(ftdi);
+  Write(ftdi, "\x03\x2D", 2);
+  char* data = Read(ftdi, 1);
+  Stop(ftdi);
+  return data;
+}
+
+static void _transmit_message(mpsse_context* ftdi){
+  Start(ftdi);
+  Write(ftdi, "\x81", 1);
+  Stop(ftdi);
+}
+
+// Configures MPSSE | returns 1 on success & returns 0 on failure
+static int _configure_mpsse_context(mpsse_context* ftdi){
   char read_canctrl_cmd[] = {
     MCP_CMD_READ,
     MCP_REG_CANCNTRL
@@ -83,6 +106,8 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     0b00000100
   };
 
+  char* data = NULL;
+
   if(ftdi = OpenIndex(0x0403, 0x6010, SPI0, TEN_MHZ, MSB, IFACE_A, NULL, NULL, 0)){
     printf("%s opened at %dHz (SPI Mode 0)\n", GetDescription(ftdi), GetClock(ftdi));
     printf("Setting default settings...\n");
@@ -97,10 +122,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
 
     // Check data 
     printf("CANCTRL Data Received: 0x%02x | ", data[0]);
-    for(int i = 0; i < 8; i++){
-      printf("%d", ((data[0] >> (7-i)) & 1));
-    }
-    printf("\n");
+    _print_bits(data);
 
     Start(ftdi);
     Write(ftdi, read_canstat_cmd, sizeof(read_canstat_cmd));
@@ -126,9 +148,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
 
 
     // Clear CANINTF
-    Start(ftdi);
-    Write(ftdi, "\x02\x2C\x00", 3);
-    Stop(ftdi);
+    _clear_can_int(ftdi);
 
     Start(ftdi);
     Write(ftdi, "\x03\x28", 2);
@@ -147,10 +167,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     Stop(ftdi);
 
     printf("CANCTRL is now: 0x%02x | ", data[0]);
-    for(int i = 0; i < 8; i++){
-      printf("%d", ((data[0] >> (7-i)) & 1));
-    }
-    printf("\n");
+    _print_bits(data);
 
     printf("Sending one msg of data...\n");
     Start(ftdi);
@@ -164,7 +181,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     Stop(ftdi);
 
     std::cout << "Buffer 0: ";
-    for (int i = 0; i < CAN_MSG_SIZE_; i++) {
+    for (int i = 0; i < 9; i++) {
       printf("0x%02x ", data[i]);
     }
     std::cout << std::endl;
@@ -187,73 +204,77 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
     Stop(ftdi);
 
     printf("TXB0 is now: 0x%02x | ", data[0]);
-    for(int i = 0; i < 8; i++){
-      printf("%d", ((data[0] >> (7-i)) & 1));
-    }
-    printf("\n");
+    _print_bits(data);
 
     sleep(0.05);
 
     printf("Reading TEC...\n");
-    Start(ftdi);
-    Write(ftdi, "\x03\x1C", 2);
-    data = Read(ftdi, 1);
-    Stop(ftdi);
+    data = _get_tec(ftdi);
 
     printf("TEC is now: 0x%02x | ", data[0]);
-    for(int i = 0; i < 8; i++){
-      printf("%d", ((data[0] >> (7-i)) & 1));
-    }
-    printf("\n");
+    _print_bits(data);
 
     printf("Reading REC...\n");
-    Start(ftdi);
-    Write(ftdi, "\x03\x1D", 2);
-    data = Read(ftdi, 1);
-    Stop(ftdi);
+    data = _get_rec(ftdi);
 
     printf("REC is now: 0x%02x | ", data[0]);
-    for(int i = 0; i < 8; i++){
-      printf("%d", ((data[0] >> (7-i)) & 1));
-    }
-    printf("\n");
+    _print_bits(data);
 
     printf("Reading CANINTF...\n");
-    Start(ftdi);
-    Write(ftdi, "\x03\x2C", 2);
-    data = Read(ftdi, 1);
-    Stop(ftdi);
+    data = _get_canintf(ftdi);
 
     printf("CANINTF is now: 0x%02x | ", data[0]);
-    for(int i = 0; i < 8; i++){
-      printf("%d", ((data[0] >> (7-i)) & 1));
-    }
-    printf("\n");
+    _print_bits(data);
 
     printf("Reading EFLG...\n");
-    Start(ftdi);
-    Write(ftdi, "\x03\x2D", 2);
-    data = Read(ftdi, 1);
-    Stop(ftdi);
+    data = _get_eflg(ftdi);
 
     printf("EFLG is now: 0x%02x | ", data[0]);
-    for(int i = 0; i < 8; i++){
-      printf("%d", ((data[0] >> (7-i)) & 1));
-    }
-    printf("\n");
+    _print_bits(data);
+
+    return 1;
   }
   else {
     printf("Failed to initialize MPSSE: %s\n", ErrorString(ftdi));
+    return 0;
   }
+}
 
-  // start read thread
+void spin_one_wheel(mpsse_context* ftdi){
+  char send_one_msg[] = {
+    MCP_CMD_WRITE,
+    0x31,
+    0x00,
+    0x08,
+    0x01,
+    0x01,
+    0x04,
+    0x00,
+    0x00,
+    0x01,
+    0x68
+  };
+  printf("Sending 360 erpm...\n");
   Start(ftdi);
-  Write(ftdi, "\x02\x2C\x00", 3);
+  Write(ftdi, send_one_msg, sizeof(send_one_msg));
   Stop(ftdi);
 
-  while(true){
-    spin_one_wheel(ftdi);
-  }
+  Start(ftdi);
+  Write(ftdi, "\x81", 1);
+  Stop(ftdi);
+
+  sleep(0.05);
+
+  _clear_can_int(ftdi);
+}
+
+CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_t>)> parsefunction, std::vector<uint8_t> setting) : is_connected_(false) {
+  // FTDI Setup for MPSSE Mode
+  char* data = NULL;
+
+  _configure_mpsse_context(ftdi);  
+
+  // start read thread
   /*
   Can_read_thread_ = std::thread(
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
@@ -288,17 +309,6 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
 
   if (msg.size() == CAN_MSG_SIZE_) {
     // convert msg to spi frame
-    char read_txb0_cmd[] = {
-      MCP_CMD_READ,
-      0b00001110
-    };
-
-    char transmit_tx_buffer[] = {
-      MCP_CMD_WRITE,
-      0x30,
-      0x0B
-    };
-
     char* data = NULL;
 
     char load_tx_buffer[] = {
@@ -319,9 +329,7 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     Write(ftdi, load_tx_buffer, sizeof(load_tx_buffer));
     Stop(ftdi);
     
-    Start(ftdi);
-    Write(ftdi, "\x81", 1);
-    Stop(ftdi);
+    _transmit_message(ftdi);
 
     Start(ftdi);
     Write(ftdi, "\x03\x30", 2);
@@ -329,25 +337,14 @@ void CommCanSPI::write_to_device(std::vector<uint8_t> msg) {
     Stop(ftdi);
 
     printf("TXB0 is now: 0x%02x | ", data[0]);
-    for(int i = 0; i < 8; i++){
-      printf("%d", ((data[0] >> (7-i)) & 1));
-    }
-    printf("\n");
+    _print_bits(data);
 
     printf("Reading TEC...\n");
-    Start(ftdi);
-    Write(ftdi, "\x03\x1C", 2);
-    data = Read(ftdi, 1);
-    Stop(ftdi);
+    data = _get_tec(ftdi);
 
     printf("TEC is now: 0x%02x | ", data[0]);
-    for(int i = 0; i < 8; i++){
-      printf("%d", ((data[0] >> (7-i)) & 1));
-    }
-    printf("\n");
-    
-  }
-  
+    _print_bits(data);
+  }  
   Can_write_mutex_.unlock();
 }
 
@@ -368,23 +365,15 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
     read_buffer = Read(ftdi, 13);
     Stop(ftdi);
     
-    Start(ftdi);
-    Write(ftdi, "\x02\x2C\x00", 3);
-    Stop(ftdi);
-
+    _clear_can_int(ftdi);
 
     printf("Reading CANINTF...\n");
-    Start(ftdi);
-    Write(ftdi, "\x03\x2C", 2);
-    data = Read(ftdi, 1);
-    Stop(ftdi);
+    data = _get_canintf(ftdi);
 
     Can_write_mutex_.unlock();
     printf("CANINTF is now: 0x%02x | ", data[0]);
-    for(int i = 0; i < 8; i++){
-      printf("%d", ((data[0] >> (7-i)) & 1));
-    }
-    printf("\n");
+    _print_bits(data);
+
     int num_bytes = sizeof(read_buffer);
     //int num_bytes = 0; // to implement read
     std::chrono::milliseconds time_now =

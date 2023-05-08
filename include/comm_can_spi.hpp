@@ -13,6 +13,11 @@ extern "C"{
 #define MCP_CMD_WRITE 0x02
 #define MCP_CMD_READ 0x03
 #define MCP_REG_CANCNTRL 0x0F
+#define MCP_REG_CANSTAT 0x0E
+#define MCP_REG_REC 0x1D
+#define MCP_REG_TEC 0x1C
+#define MCP_REG_EFLG 0x2D
+#define MCP_REG_TXB0 0x30
 
 namespace RoverRobotics {
 class CommCanSPI;
@@ -51,12 +56,12 @@ class RoverRobotics::CommCanSPI : public RoverRobotics::CommBase {
    * @return bool file descriptor state
    */
   bool is_connected();
+  struct mpsse_context *ftdi = NULL;
 
  private:
   struct sockaddr_can addr;  // CAN Address
   struct can_frame frame;
   struct can_frame robot_frame;
-  struct mpsse_context *ftdi = NULL;
   struct ifreq ifr;
   int fd;
   int read_size_;
