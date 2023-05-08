@@ -352,17 +352,28 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
   std::chrono::milliseconds time_last =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
-  char* read_buffer;
+  char* read_buffer_id;
+  char* read_buffer_dlc;
+  char* read_dlc_size;
   char* data;
-  char read_cmd[2]{
-    MCP_CMD_READ,
-    0x61
-  };
+
   while (true) {
     Can_write_mutex_.lock();
     Start(ftdi);
-    Write(ftdi, read_cmd, sizeof(read_cmd));
-    read_buffer = Read(ftdi, 13);
+    Write(ftdi, "\x03\x61", 2);
+    read_buffer_id = Read(ftdi, 4);
+    Stop(ftdi);
+
+    Start(ftdi);
+    Write(ftdi, "\x03\x65", 2);
+    read_dlc_size = Read(ftdi, 1);
+    Stop(ftdi);
+
+    int dlc_size = (short) strtol(read_dlc_size, NULL, 16);
+
+    Start(ftdi);
+    Write(ftdi, "\x03\x66", 2);
+    read_buffer_dlc = Read(ftdi, dlc_size);
     Stop(ftdi);
     
     _clear_can_int(ftdi);
@@ -371,29 +382,29 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
     data = _get_canintf(ftdi);
 
     Can_write_mutex_.unlock();
+
     printf("CANINTF is now: 0x%02x | ", data[0]);
     _print_bits(data);
 
-    int num_bytes = sizeof(read_buffer);
-    //int num_bytes = 0; // to implement read
-    std::chrono::milliseconds time_now =
-        std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch());
-    if (num_bytes <= 0) {
-      if ((time_now - time_last).count() > TIMEOUT_MS_) {
-        //is_connected_ = false;
-        //ftdi_usb_close(ftdi);
-      }
-      continue;
-    }
-    //printf("Number of Bytes Read in Device Loop: %d\n", num_bytes);
-    is_connected_ = true;
-    time_last = time_now;
-    std::vector<uint8_t> msg;
+    uint32_t can_id = (read_buffer_id[0] << 3) + (read_buffer_id[1] << 5);
+    can_id = (can_id << 2) + (read_buffer_id[1] & 0x03);
+    can_id = (can_id << 8) + (read_buffer_id[2]);
+    can_id = (can_id << 8) + (read_buffer_id[3]);
+    printf("Read CAN ID: 0x%x\n", can_id);
+    int num_bytes = dlc_size;
 
-    for (int i = 0; i < num_bytes; i++) {
-      printf("Read Byte[%d/%d]: 0x%02x\n", i + 1, num_bytes, read_buffer[i]);
-      msg.push_back(read_buffer[i]);
+    is_connected_ = true;
+
+    std::vector<uint8_t> msg;
+    msg.push_back((static_cast<uint8_t>((can_id >> 24) & 0xFF)));
+    msg.push_back((static_cast<uint8_t>((can_id >> 16) & 0xFF)));
+    msg.push_back((static_cast<uint8_t>((can_id >> 8) & 0xFF)));
+    msg.push_back((static_cast<uint8_t>(can_id & 0xFF)));
+    msg.push_back(read_dlc_size[0]);
+
+    for (int i = 0; i < dlc_size; i++) {
+      printf("Read Byte[%d/%d]: 0x%02x\n", i + 1, num_bytes, read_buffer_dlc[i]);
+      msg.push_back(read_buffer_dlc[i]);
     }
     
     try{
@@ -401,7 +412,7 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
       is_connected_ = true;
     } catch(int i){
       if (i == -4){
-        printf("Not a valid RPM packet. Connection = False\n");
+        printf("Failed to pass content mask.\n");
       }
     }
     msg.clear();
