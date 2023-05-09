@@ -448,9 +448,9 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
     _print_bits(data);
 
     uint32_t can_id = (read_buffer_id[0] << 3) + (read_buffer_id[1] << 5);
-    can_id = (can_id << 2) + (read_buffer_id[1] & 0x03);
-    can_id = (can_id << 8) + (read_buffer_id[2]);
-    can_id = (can_id << 8) + (read_buffer_id[3]);
+    // can_id = (can_id << 2) + (read_buffer_id[1] & 0x03);
+    // can_id = (can_id << 8) + (read_buffer_id[2]);
+    // can_id = (can_id << 8) + (read_buffer_id[3]);
     printf("Read CAN ID: 0x%x DLC Size = %d DLC Size X = 0x%02x\n", can_id, dlc_size, read_dlc_size[0]);
     int num_bytes = dlc_size;
 
