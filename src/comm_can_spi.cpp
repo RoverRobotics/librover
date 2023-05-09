@@ -329,14 +329,16 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
 
   // start read thread
 
+  /*
   while(true){
     spin_one_wheel(ftdi);
   }
+  */
 
-  /*
+  
   Can_read_thread_ = std::thread(
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
-  */
+  
 }
 
 
@@ -448,7 +450,7 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
     can_id = (can_id << 2) + (read_buffer_id[1] & 0x03);
     can_id = (can_id << 8) + (read_buffer_id[2]);
     can_id = (can_id << 8) + (read_buffer_id[3]);
-    printf("Read CAN ID: 0x%x\n", can_id);
+    printf("Read CAN ID: 0x%x DLC Size = %d\n", can_id, dlc_size);
     int num_bytes = dlc_size;
 
     is_connected_ = true;
