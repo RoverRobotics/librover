@@ -13,6 +13,7 @@ vescChannelStatus BridgedVescArray::parseReceivedMessage(
   auto full_msg =
       static_cast<uint32_t>((robotmsg[0] << 24) + (robotmsg[1] << 16) +
                             (robotmsg[2] << 8) + robotmsg[3]);
+  printf("Vesc Received CAN ID: 0x%x\n", full_msg);
   /* process valid RPM packets */
   if ((full_msg & CONTENT_MASK) ==
       (vescPacketFlags::PACKET_FLAG | vescPacketFlags::RPM)) {
