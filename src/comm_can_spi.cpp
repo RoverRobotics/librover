@@ -457,10 +457,10 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
     is_connected_ = true;
 
     std::vector<uint8_t> msg;
-    msg.push_back((static_cast<uint8_t>((can_id >> 24) & 0xFF)));
-    msg.push_back((static_cast<uint8_t>((can_id >> 16) & 0xFF)));
-    msg.push_back((static_cast<uint8_t>((can_id >> 8) & 0xFF)));
-    msg.push_back((static_cast<uint8_t>(can_id & 0xFF)));
+    msg.push_back((static_cast<uint8_t>((can_id >> 24))));
+    msg.push_back((static_cast<uint8_t>((can_id >> 16))));
+    msg.push_back((static_cast<uint8_t>((can_id >> 8))));
+    msg.push_back((static_cast<uint8_t>(can_id)));
     msg.push_back(read_dlc_size[0]);
 
     for (int i = 0; i < dlc_size; i++) {
