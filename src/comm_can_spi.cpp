@@ -121,28 +121,30 @@ void spin_one_wheel(mpsse_context* ftdi){
   Stop(ftdi);
 
   _transmit_message(ftdi);
+   _clear_can_int(ftdi);
 
   Start(ftdi);
   Write(ftdi, spin_fr, sizeof(spin_fr));
   Stop(ftdi);
 
   _transmit_message(ftdi);
+   _clear_can_int(ftdi);
 
   Start(ftdi);
   Write(ftdi, spin_bl, sizeof(spin_bl));
   Stop(ftdi);
 
   _transmit_message(ftdi);
+   _clear_can_int(ftdi);
 
   Start(ftdi);
   Write(ftdi, spin_br, sizeof(spin_br));
   Stop(ftdi);
 
   _transmit_message(ftdi);
+   _clear_can_int(ftdi);
 
   sleep(0.05);
-
-  _clear_can_int(ftdi);
 }
 
 CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_t>)> parsefunction, std::vector<uint8_t> setting) : is_connected_(false) {
