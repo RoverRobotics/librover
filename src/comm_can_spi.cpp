@@ -63,7 +63,7 @@ static int _configure_mpsse_context(mpsse_context* ftdi){
 }
 
 void spin_one_wheel(mpsse_context* ftdi){
-  char send_one_msg[] = {
+  char spin_fl[] = {
     MCP_CMD_WRITE,
     0x31,
     0x00,
@@ -76,9 +76,66 @@ void spin_one_wheel(mpsse_context* ftdi){
     0x01,
     0x68
   };
+  char spin_fr[] = {
+    MCP_CMD_WRITE,
+    0x31,
+    0x00,
+    0x08,
+    0x01,
+    0x02,
+    0x04,
+    0x00,
+    0x00,
+    0x01,
+    0x68
+  };
+  char spin_bl[] = {
+    MCP_CMD_WRITE,
+    0x31,
+    0x00,
+    0x08,
+    0x01,
+    0x03,
+    0x04,
+    0x00,
+    0x00,
+    0x01,
+    0x68
+  };
+  char spin_br[] = {
+    MCP_CMD_WRITE,
+    0x31,
+    0x00,
+    0x08,
+    0x01,
+    0x04,
+    0x04,
+    0x00,
+    0x00,
+    0x01,
+    0x68
+  };
   printf("Sending 360 erpm...\n");
   Start(ftdi);
-  Write(ftdi, send_one_msg, sizeof(send_one_msg));
+  Write(ftdi, spin_fl, sizeof(spin_fl));
+  Stop(ftdi);
+
+  _transmit_message(ftdi);
+
+  Start(ftdi);
+  Write(ftdi, spin_fr, sizeof(spin_fr));
+  Stop(ftdi);
+
+  _transmit_message(ftdi);
+
+  Start(ftdi);
+  Write(ftdi, spin_bl, sizeof(spin_bl));
+  Stop(ftdi);
+
+  _transmit_message(ftdi);
+
+  Start(ftdi);
+  Write(ftdi, spin_br, sizeof(spin_br));
   Stop(ftdi);
 
   _transmit_message(ftdi);
@@ -273,7 +330,7 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   while(true){
     spin_one_wheel(ftdi);
   }
-  
+
   /*
   Can_read_thread_ = std::thread(
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
