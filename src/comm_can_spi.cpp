@@ -436,6 +436,7 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
     read_buffer_dlc = Read(ftdi, dlc_size);
     Stop(ftdi);
     
+    printf("Received Data: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x \n", read_buffer_id[0], read_buffer_id[1], read_buffer_id[2], read_buffer_id[3], read_dlc_size[0], read_buffer_dlc[0], read_buffer_dlc[1], read_buffer_dlc[2]);
     _clear_can_int(ftdi);
 
     printf("Reading CANINTF...\n");
