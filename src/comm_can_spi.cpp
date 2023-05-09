@@ -259,9 +259,7 @@ void spin_one_wheel(mpsse_context* ftdi){
   Write(ftdi, send_one_msg, sizeof(send_one_msg));
   Stop(ftdi);
 
-  Start(ftdi);
-  Write(ftdi, "\x81", 1);
-  Stop(ftdi);
+  _transmit_message(ftdi);
 
   sleep(0.05);
 
@@ -275,10 +273,8 @@ CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_
   _configure_mpsse_context(ftdi);  
 
   // start read thread
-  /*
   Can_read_thread_ = std::thread(
       [this, parsefunction]() { this->read_device_loop(parsefunction); });
-  */
 }
 
 
