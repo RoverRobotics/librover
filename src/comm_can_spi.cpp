@@ -59,6 +59,39 @@ static void _transmit_message(mpsse_context* ftdi){
 
 // Configures MPSSE | returns 1 on success & returns 0 on failure
 static int _configure_mpsse_context(mpsse_context* ftdi){
+  
+}
+
+void spin_one_wheel(mpsse_context* ftdi){
+  char send_one_msg[] = {
+    MCP_CMD_WRITE,
+    0x31,
+    0x00,
+    0x08,
+    0x01,
+    0x01,
+    0x04,
+    0x00,
+    0x00,
+    0x01,
+    0x68
+  };
+  printf("Sending 360 erpm...\n");
+  Start(ftdi);
+  Write(ftdi, send_one_msg, sizeof(send_one_msg));
+  Stop(ftdi);
+
+  _transmit_message(ftdi);
+
+  sleep(0.05);
+
+  _clear_can_int(ftdi);
+}
+
+CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_t>)> parsefunction, std::vector<uint8_t> setting) : is_connected_(false) {
+  // FTDI Setup for MPSSE Mode
+  char* data = NULL;
+
   char read_canctrl_cmd[] = {
     MCP_CMD_READ,
     MCP_REG_CANCNTRL
@@ -231,46 +264,10 @@ static int _configure_mpsse_context(mpsse_context* ftdi){
 
     printf("EFLG is now: 0x%02x | ", data[0]);
     _print_bits(data);
-
-    return 1;
   }
   else {
     printf("Failed to initialize MPSSE: %s\n", ErrorString(ftdi));
-    return 0;
-  }
-}
-
-void spin_one_wheel(mpsse_context* ftdi){
-  char send_one_msg[] = {
-    MCP_CMD_WRITE,
-    0x31,
-    0x00,
-    0x08,
-    0x01,
-    0x01,
-    0x04,
-    0x00,
-    0x00,
-    0x01,
-    0x68
-  };
-  printf("Sending 360 erpm...\n");
-  Start(ftdi);
-  Write(ftdi, send_one_msg, sizeof(send_one_msg));
-  Stop(ftdi);
-
-  _transmit_message(ftdi);
-
-  sleep(0.05);
-
-  _clear_can_int(ftdi);
-}
-
-CommCanSPI::CommCanSPI(const char *device, std::function<void(std::vector<uint8_t>)> parsefunction, std::vector<uint8_t> setting) : is_connected_(false) {
-  // FTDI Setup for MPSSE Mode
-  char* data = NULL;
-
-  _configure_mpsse_context(ftdi);  
+  } 
 
   // start read thread
   /*
