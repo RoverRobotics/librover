@@ -420,19 +420,19 @@ void CommCanSPI::read_device_loop(std::function<void(std::vector<uint8_t>)> pars
   while (true) {
     Can_write_mutex_.lock();
     Start(ftdi);
-    Write(ftdi, "\x03\x61", 2);
+    Write(ftdi, "\x03\x71", 2);
     read_buffer_id = Read(ftdi, 4);
     Stop(ftdi);
 
     Start(ftdi);
-    Write(ftdi, "\x03\x65", 2);
+    Write(ftdi, "\x03\x75", 2);
     read_dlc_size = Read(ftdi, 1);
     Stop(ftdi);
 
     int dlc_size = (short) strtol(read_dlc_size, NULL, 16);
 
     Start(ftdi);
-    Write(ftdi, "\x03\x66", 2);
+    Write(ftdi, "\x03\x76", 2);
     read_buffer_dlc = Read(ftdi, dlc_size);
     Stop(ftdi);
     
