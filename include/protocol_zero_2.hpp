@@ -26,7 +26,7 @@ private:
   const float MOTOR_MIN_ = -0.95;
   const float LINEAR_JERK_LIMIT_ = 5;
   const double odom_angular_coef_ = 2.3;    
-  const double odom_traction_factor_ = 0.7; 
+  const double odom_traction_factor_ = 0.7; // Default for 2WD is 0.9877, 4WD is 0.7, flipper is 0.98
   const double CONTROL_LOOP_TIMEOUT_MS_ = 200;
   const uint8_t PAYLOAD_BYTE_SIZE_ = 2;
   const uint8_t STOP_BYTE_ = 3;
