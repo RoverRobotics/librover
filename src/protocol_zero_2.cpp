@@ -50,36 +50,37 @@ Zero2ProtocolObject::Zero2ProtocolObject(
         {std::numeric_limits<float>::max(), std::numeric_limits<float>::max()});
     robotmode_num_ = 0;
   }
-    
+
   /* set up the comm port */
-    
+
   /*
-  
+
   std::cerr << "establishing connection to rover zero..." << std::endl;
   try{
-  
+
   */
-    
+
   register_comm_base(device);
-    
-    /*
-  }
-  catch{
-      std::cerr << "error establishing connection to Rover Zero, please check cabling and power to the motor controller (VESC)" << std::endl;
-  }
-  
-  */
-    
-    
+
+  /*
+}
+catch{
+    std::cerr << "error establishing connection to Rover Zero, please check
+cabling and power to the motor controller (VESC)" << std::endl;
+}
+
+*/
+
   /* create a dedicated write thread to send commands to the robot on fixed
    * interval */
- /* std::cerr << "creating thread to communicate with rover zero..." << std::endl; */
+  /* std::cerr << "creating thread to communicate with rover zero..." <<
+   * std::endl; */
   write_to_robot_thread_ =
-  
+
       std::thread([this]() { this->send_getvalues_command(10); });
-    
-  /* create a dedicate thread to compute the desired robot motion, runs on fixed
-   * interval */
+
+  /* create a dedicate thread to compute the desired robot motion, runs on
+   * fixed interval */
   motor_speed_update_thread_ =
       std::thread([this]() { this->motors_control_loop(30); });
   std::cerr << "protocol is running..." << std::endl;
@@ -150,8 +151,8 @@ void Zero2ProtocolObject::motors_control_loop(int sleeptime) {
     robotstatus_mutex_.lock();
     linear_vel_target = robotstatus_.cmd_linear_vel;
     angular_vel_target = robotstatus_.cmd_angular_vel;
-    /* Convert from motors to wheels RPM based on the robot geometry and gear
-     * ratio */
+    /* Convert from motors to wheels RPM based on the robot geometry and
+     * gear ratio */
     rpm_FL = robotstatus_.motor1_rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
     rpm_FR = robotstatus_.motor2_rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
     rpm_BL = robotstatus_.motor1_rpm / MOTOR_RPM_TO_WHEEL_RPM_RATIO_;
@@ -352,7 +353,15 @@ void Zero2ProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
     robotstatus_.battery2_temp = 0;
     robotstatus_.battery1_current = vesc_all_input_current_;
     robotstatus_.battery2_current = 0;
-    robotstatus_.battery1_SOC = 0;
+    if (robotstatus_.battery1_voltage >= 16) {
+      robotstatus_.battery1_SOC = 100;
+    } else if (robotstatus_.battery1_voltage >= 15) {
+      robotstatus_.battery1_SOC = 75;
+    } else if (robotstatus_.battery1_voltage >= 14) {
+      robotstatus_.battery1_SOC = 50;
+    } else if (robotstatus_.battery1_voltage >= 13) {
+      robotstatus_.battery1_SOC = 25;
+    }
     robotstatus_.battery2_SOC = 0;
     robotstatus_.battery1_fault_flag = 0;
     robotstatus_.battery2_fault_flag = 0;
@@ -380,7 +389,8 @@ void Zero2ProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
       msgqueue.clear();
       return;
     } else {
-      // !Reconstruct the vector so that the start byte is at the 0 position
+      // !Reconstruct the vector so that the start byte is at the 0
+      // position
       std::vector<uint8_t> temp;
       for (int x = start_byte_index; x < msgqueue.size(); x++) {
         temp.push_back(msgqueue[x]);
