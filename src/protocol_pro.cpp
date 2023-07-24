@@ -20,7 +20,7 @@ ProProtocolObject::ProProtocolObject(const char *device,
       REG_MOTOR_FB_CURRENT_LEFT, REG_MOTOR_FB_CURRENT_RIGHT,
       REG_MOTOR_TEMP_LEFT,       REG_MOTOR_TEMP_RIGHT,
       REG_MOTOR_CHARGER_STATE,   BuildNO,
-      BATTERY_VOLTAGE_A};
+      BATTERY_VOLTAGE_A,         REG_PWR_BAT_VOLTAGE_A};
   pid_ = pid;
   PidGains oldgain = {pid_.kp, pid_.ki, pid_.kd};
   if (robot_mode_ != Control::OPEN_LOOP)
@@ -51,9 +51,7 @@ void ProProtocolObject::send_estop(bool estop) {
   robotstatus_mutex_.unlock();
 }
 
-robotData ProProtocolObject::status_request() {
-  return robotstatus_;
-}
+robotData ProProtocolObject::status_request() { return robotstatus_; }
 
 robotData ProProtocolObject::info_request() { return robotstatus_; }
 
@@ -163,7 +161,8 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
       msgqueue.clear();
       return;
     } else {
-      // !Reconstruct the vector so that the start byte is at the 0 position
+      // !Reconstruct the vector so that the start byte is at the 0
+      // position
       std::vector<uint32_t> temp;
       for (int x = startbyte_index; x < msgqueue.size(); x++) {
         temp.push_back(msgqueue[x]);
@@ -221,6 +220,9 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
           robotstatus_.motor2_temp = b;
           break;
         case REG_PWR_BAT_VOLTAGE_A:
+          if (robotstatus_.robot_firmware == 10009) {
+            robotstatus_.battery1_SOC = b;
+          }
           break;
         case REG_PWR_BAT_VOLTAGE_B:
           break;
@@ -231,7 +233,9 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
         case EncoderInterval_2:
           break;
         case REG_ROBOT_REL_SOC_A:
-          robotstatus_.battery1_SOC = b;
+          if (robotstatus_.robot_firmware != OVF_FIXED_FIRM_VER_) {
+            robotstatus_.battery1_SOC = b;
+          }
           break;
         case REG_ROBOT_REL_SOC_B:
           break;
@@ -257,28 +261,44 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
         case BATTERY_STATUS_B:
           break;
         case BATTERY_MODE_A:
-          robotstatus_.battery1_fault_flag = b;
+          if (robotstatus_.robot_firmware != OVF_FIXED_FIRM_VER_) {
+            robotstatus_.battery1_fault_flag = b;
+          }
           break;
         case BATTERY_MODE_B:
-          robotstatus_.battery2_fault_flag = b;
+          if (robotstatus_.robot_firmware != OVF_FIXED_FIRM_VER_) {
+            robotstatus_.battery2_fault_flag = b;
+          }
           break;
         case BATTERY_TEMP_A:
-          robotstatus_.battery1_temp = b;
+          if (robotstatus_.robot_firmware != OVF_FIXED_FIRM_VER_) {
+            robotstatus_.battery1_temp = b;
+          }
           break;
         case BATTERY_TEMP_B:
-          robotstatus_.battery2_temp = b;
+          if (robotstatus_.robot_firmware != OVF_FIXED_FIRM_VER_) {
+            robotstatus_.battery2_temp = b;
+          }
           break;
         case BATTERY_VOLTAGE_A:
-          robotstatus_.battery1_voltage = b;
+          if (robotstatus_.robot_firmware != OVF_FIXED_FIRM_VER_) {
+            robotstatus_.battery1_voltage = b;
+          }
           break;
         case BATTERY_VOLTAGE_B:
-          robotstatus_.battery2_voltage = b;
+          if (robotstatus_.robot_firmware != OVF_FIXED_FIRM_VER_) {
+            robotstatus_.battery2_voltage = b;
+          }
           break;
         case BATTERY_CURRENT_A:
-          robotstatus_.battery1_current = b;
+          if (robotstatus_.robot_firmware != OVF_FIXED_FIRM_VER_) {
+            robotstatus_.battery1_current = b;
+          }
           break;
         case BATTERY_CURRENT_B:
-          robotstatus_.battery2_current = b;
+          if (robotstatus_.robot_firmware != OVF_FIXED_FIRM_VER_) {
+            robotstatus_.battery2_current = b;
+          }
           break;
       }
       // !Same battery system for both A and B on this robot
@@ -300,7 +320,7 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
       robotstatus_.motor4_mos_temp = 0;
       robotstatus_.robot_guid = 0;
       robotstatus_.robot_speed_limit = 0;
-      if (robotstatus_.robot_firmware == OVF_FIXED_FIRM_VER_) {  // check firmware version
+      if (robotstatus_.robot_firmware == OVF_FIXED_FIRM_VER_) {
         robotstatus_.linear_vel =
             0.5 * (robotstatus_.motor1_rpm * 2 / MOTOR_RPM_TO_MPS_RATIO_ +
                    robotstatus_.motor2_rpm * 2 / MOTOR_RPM_TO_MPS_RATIO_);
@@ -329,8 +349,8 @@ void ProProtocolObject::unpack_comm_response(std::vector<uint8_t> robotmsg) {
       msgqueue.resize(0);
       msgqueue = temp;
       temp.clear();
-    } else {  // !Found start byte but the msg contents were invalid, throw away
-              // broken message
+    } else {  // !Found start byte but the msg contents were invalid, throw
+              // away broken message
       std::vector<uint32_t> temp;
       for (int x = 1; x < msgqueue.size(); x++) {
         temp.push_back(msgqueue[x]);
