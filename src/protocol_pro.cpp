@@ -115,8 +115,8 @@ void ProProtocolObject::motors_control_loop(int sleeptime) {
       }
     }
     // !Applying some Skid-steer math
-    double motor1_vel = linear_vel - 0.5 * wheel2wheelDistance * angular_vel;
-    double motor2_vel = linear_vel + 0.5 * wheel2wheelDistance * angular_vel;
+    double motor1_vel = linear_vel - 0.5 * wheel2wheelDistance * angular_vel / odom_traction_factor_;
+    double motor2_vel = linear_vel + 0.5 * wheel2wheelDistance * angular_vel / odom_traction_factor_;
     if (motor1_vel == 0) motor1_control_.reset();
     if (motor2_vel == 0) motor2_control_.reset();
     if (firmware == OVF_FIXED_FIRM_VER_) {  // check firmware version
